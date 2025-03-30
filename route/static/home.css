@@ -90,18 +90,18 @@ th{
 .second_line{
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start
 }
 
 .second_right{
-    padding-top: 1vh;
+    margin-top: 1vh;
     width: 25%;
     background-color: white;
     border: #ccc 1px solid;
     border-radius: 10px;
 }
 .second_center{
-    padding-top: 1vh;
+    margin-top: 1vh;
     width: 25%;
     background-color: white;
     border: #ccc 1px solid;
@@ -122,16 +122,17 @@ th{
 
 .bath_area{
     display: flex;
+    justify-content: center;
     border: #ccc 1px solid;
     border-radius: 10px;
     background-color: white;
-    width: 58%;
+    width: 49%;
     padding: 10px;
     box-sizing: border-box;
     overflow: hidden;
 }
 .input_bath{
-    width: 20%;
+    width: 15%;
 }
 .floor_area{
     display: flex;
@@ -139,11 +140,24 @@ th{
     border: #ccc 1px solid;
     border-radius: 10px;
     background-color: white;
-    width: 40%;
+    width: 49%;
     padding: 10px;
     box-sizing: border-box;
     overflow: hidden;
 }
 .input_delete_floor{
     width: 20%;
+}
+.input_no{
+    width: 90%;
+}
+.input_name{
+    width: 90%;
+}
+
+.td_no{
+    width: 15%;
+}
+.td_name{
+    width: 45%;
 }
