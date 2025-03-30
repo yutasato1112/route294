@@ -9,12 +9,78 @@
     padding-top: 5vh;
 }
 .input_date{
-    width: 40%;
+    width: 25%;
     height: 6vh;
     padding: 0.5rem;
-    border-radius: 5px;
+    border-radius: 10px;
     border: 1px solid #ccc;
+    cursor: pointer;
+    box-sizing: border-box;
 }
-.input_time_per_room{
+
+.input_time_per_room_type{
+    height: 6vh;
+    background-color: white;
     display: flex;
+    justify-content: center;
+    width: 55%;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    align-items: center;
+    text-align: center;
 }
+
+.p_title{
+    font-size: medium;
+    width:  15%;
+}
+.p_topics{
+    font-size: medium;
+    width:  12%;
+}
+.input_time{
+    width: 11%;
+}
+
+.submit{
+    width: 15%;
+    height: 6vh;
+}
+
+.room_table_area {
+    border: #ccc 1px solid;
+    border-radius: 10px;
+    background-color: white;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.room_table_area table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* ← セル幅を均等に */
+    font-size: 12px;      /* ← フォントを小さく */
+}
+
+.room_table_area td {
+    padding: 4px 6px;     /* ← 余白も減らす */
+    text-align: center;
+}
+
+.input_room {
+    width: 100%;
+    font-size: 11px;      /* ← 入力欄の文字も小さく */
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+
+
+
+.second_left{
+    padding-top: 3vh;
+    width: 50%;
+}
+

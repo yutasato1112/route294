@@ -8,13 +8,40 @@
         {% csrf_token %}
         <div class="first_line">
             <!--日付-->
-            <input class="input_date" type="date" name="date" id="date" required>
-            <!--部屋タイプ別清掃時間-->
+            <input class="input_date" type="date" name="date" id="date" required value="{{ today|date:'Y-m-d' }}">
+            <div class="input_time_per_room_type">
+                <!--部屋タイプ別清掃時間-->
+                <p class="p_title">目標時間/min</p>
+                <p class="p_topics">S　:　</p>
+                <input class="input_time" type="number" name="single_time" id="single_time" required value="{{single_time}}">
+                <p class="p_topics"> T　:　</p>
+                <input class="input_time" type="number" name="twin_time" id="twin_time" required value="{{twin_time}}">
+                <p class="p_topics"> 大浴場　:　</p>
+                <input class="input_time" type="number" name="bath_time" id="bath_time" required value="{{bath_time}}">
+            </div>
             <!--プレビュー表示ボタン-->
+            <input type="submit" value="プレビュー表示" class="btn btn-primary submit">
         </div>
         <div class="second_line">
             <div class="second_left">
                 <!--部屋別清掃指示入力-->
+                <div class="room_table_area">
+                    <table class="table table-striped">
+                        <tbody>
+                            <!--部屋情報-->
+                            {% for floor in rooms %}
+                            <tr>
+                                {% for room in floor %}
+                                <td>
+                                    {{room}}
+                                    <input type="text" name="room_{{room}}" id="room_{{room}}" class="input_room" >
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 <div class="third_line">
                     <!--大浴場清掃-->
                     <!--フロア別一括操作-->
