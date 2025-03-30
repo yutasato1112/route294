@@ -1,7 +1,20 @@
-.title_name{
-    background-color: #f0f0f0;
-    color: red;
-    font-size: 16px;
-    padding: 10px;
+.main{
+    width: 90%;
+    margin: auto;
+}
+.first_line{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 5vh;
+}
+.input_date{
+    width: 40%;
+    height: 6vh;
+    padding: 0.5rem;
     border-radius: 5px;
+    border: 1px solid #ccc;
+}
+.input_time_per_room{
+    display: flex;
 }

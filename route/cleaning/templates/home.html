@@ -3,6 +3,35 @@
 {% block content %}
 <title>home</title>
 <link rel="stylesheet" href="{% static 'home.css' %}">
-
+<div class="main">
+    <form action="{% url 'preview' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="first_line">
+            <!--日付-->
+            <input class="input_date" type="date" name="date" id="date" required>
+            <!--部屋タイプ別清掃時間-->
+            <!--プレビュー表示ボタン-->
+        </div>
+        <div class="second_line">
+            <div class="second_left">
+                <!--部屋別清掃指示入力-->
+                <div class="third_line">
+                    <!--大浴場清掃-->
+                    <!--フロア別一括操作-->
+                </div>
+                
+            </div>
+            <div class="second_center">
+                <!--ハウスさん情報-->
+            </div>
+            <div class="second_right">
+                <!--エコ・アメ・デュべ-->
+            </div>
+        </div>
+        <div class="fourth_line">
+            <!--備考-->
+        </div>
+    </form>
+</div>
 
 {% endblock %}
