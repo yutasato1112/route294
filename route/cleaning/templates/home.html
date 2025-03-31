@@ -33,7 +33,7 @@
                             {% for floor in rooms %}
                             <tr>
                                 {% for room in floor %}
-                                <td>
+                                <td data-room="{{room}}">
                                     {{room}}
                                     <input type="text" name="room_{{room}}" id="room_{{room}}" class="input_room" >
                                 </td>

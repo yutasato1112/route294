@@ -158,3 +158,36 @@ $(document).ready(function () {
         checkAndAddRemarkRow();
     });
 });
+
+$(document).ready(function () {
+    function highlightRooms() {
+        // 一旦すべてリセット
+        $('[data-room]').css('background-color', '');
+
+        // まず eco の部屋番号をリストに入れて黄色に
+        let ecoRooms = new Set();
+        $('.input_eco').each(function () {
+            let roomNumber = $(this).val().trim();
+            if (roomNumber !== '') {
+                ecoRooms.add(roomNumber);
+                $('[data-room="' + roomNumber + '"]').css('background-color', 'yellow');
+            }
+        });
+
+        // duvet の部屋番号で、ecoに含まれてない部屋だけ青に
+        $('.input_duvet').each(function () {
+            let roomNumber = $(this).val().trim();
+            if (roomNumber !== '' && !ecoRooms.has(roomNumber)) {
+                $('[data-room="' + roomNumber + '"]').css('background-color', 'lightblue');
+            }
+        });
+    }
+
+    // 入力イベントでチェック
+    $(document).on('input', '.input_eco, .input_duvet', function () {
+        highlightRooms();
+    });
+
+    // ページ読み込み時にも実行
+    highlightRooms();
+});
