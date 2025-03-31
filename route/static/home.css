@@ -183,3 +183,14 @@ th{
 .input_duvet{
     width: 3vw
 }
+.remark_room{
+    width: 8%;
+}
+.input_remark_room{
+    width: 3vw;
+}
+.input_remark{
+    width: 98%;
+    margin: auto;
+    display: block;
+}

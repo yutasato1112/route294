@@ -65,10 +65,10 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>部屋番号</th>
-                                <th>備考</th>
+                                <th class="remark_room">部屋番号</th>
+                                <th >備考</th>
                             </tr>
-                        <tbody>
+                        <tbody id="remark_table_body">
                             {% with ''|center:3 as range %}
                                 {% for _ in range %}
                                 <tr>

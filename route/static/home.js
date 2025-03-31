@@ -111,3 +111,50 @@ $(document).ready(function () {
         checkAndAddCleanMethodRow();
     });
 });
+
+$(document).ready(function () {
+    function checkAndAddRemarkRow() {
+        let allRoomsFilled = true;
+        let allRemarksFilled = true;
+
+        // 部屋番号チェック
+        $(".input_remark_room").each(function () {
+            if ($(this).val().trim() === "") {
+                allRoomsFilled = false;
+            }
+        });
+
+        // 備考欄チェック
+        $(".input_remark").each(function () {
+            if ($(this).val().trim() === "") {
+                allRemarksFilled = false;
+            }
+        });
+
+        // 最後の行が空なら追加しない
+        let lastRow = $(".input_remark_room").last().val().trim() === "" &&
+                      $(".input_remark").last().val().trim() === "";
+
+        if ((allRoomsFilled || allRemarksFilled) && !lastRow) {
+            let rowCount = $(".input_remark").length + 1;
+
+            let newRow = `
+                <tr>
+                    <td>
+                        <input type="text" name="remark_room_${rowCount}" id="remark_room_${rowCount}" class="input_remark_room">
+                    </td>
+                    <td>
+                        <input type="text" name="remark_${rowCount}" id="remark_${rowCount}" class="input_remark">
+                    </td>
+                </tr>
+            `;
+
+            $("#remark_table_body").append(newRow);
+        }
+    }
+
+    // 入力があったらチェック
+    $(document).on("input", ".input_remark_room, .input_remark", function () {
+        checkAndAddRemarkRow();
+    });
+});
