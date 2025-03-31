@@ -161,3 +161,25 @@ th{
 .td_name{
     width: 45%;
 }
+.third_plus_line{
+    align-items: center;
+    margin-top: 1vh;
+    border: #ccc 1px solid;
+    border-radius: 10px;
+    background-color: white;
+}
+.td_eco{
+    display: flex;
+}
+.td_duvet{
+    display: flex;
+}
+.input_eco{
+    width: 3vw
+}
+.input_amenity{
+    width: 3vw
+}
+.input_duvet{
+    width: 3vw
+}
