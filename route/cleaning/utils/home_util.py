@@ -8,9 +8,13 @@ def read_csv():
     with open('static/times_by_type.csv', 'r') as f:
         reader = csv.reader(f)
         times_by_time_raw_data = [row for row in reader]
+    with open('static/master_key.csv', 'r') as f:
+        reader = csv.reader(f)
+        master_key_raw_data = [row for row in reader]
     room_info_data = room_info_raw_data[1:]
     times_by_time_data = times_by_time_raw_data[1:]
-    return room_info_data, times_by_time_data
+    master_key_data = master_key_raw_data[1:]
+    return room_info_data, times_by_time_data, master_key_data
 
 
 def processing_list(room_info_data):

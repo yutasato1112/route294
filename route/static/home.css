@@ -85,7 +85,14 @@ th{
     padding: 2px;
     box-sizing: border-box;
 }
+.room-muted {
+    background-color: #f0f0f0 !important;
+    opacity: 0.2;
+}
 
+.attention_note{
+    margin-bottom: 0;
+}
 
 .second_line{
     display: flex;
@@ -153,6 +160,15 @@ th{
 }
 .input_name{
     width: 90%;
+}
+.count_cell{
+    font-weight: bold;
+}
+.floor_cell{
+    font-weight: bold;
+}
+.key_cell{
+    font-weight: bold;
 }
 
 .td_no{

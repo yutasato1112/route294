@@ -27,17 +27,20 @@ $(document).ready(function () {
         if ((allNameFilled || allNoFilled) && !lastEmpty) {
             let rowCount = $(".tr_house").length + 1;
 
+            // 9行目までは value を設定、10行目は空欄
+            let valueAttr = rowCount <= 10 ? `value="${rowCount}"` : "";
+
             let newRow = `
                 <tr class="tr_house">
                     <td class="td_no">
-                        <input type="number" name="no_${rowCount}" id="no_${rowCount}" class="input_no">
+                        <input type="number" name="no_${rowCount}" id="no_${rowCount}" class="input_no" ${valueAttr} min="1">
                     </td>
                     <td class="td_name">
                         <input type="text" name="name_${rowCount}" id="name_${rowCount}" class="input_name">
                     </td>
-                    <td><p>0</p></td>
-                    <td><p>0</p></td>
-                    <td><p>2A</p></td>
+                    <td><p class="count_cell">0</p></td>
+                    <td><p class="floor_cell">None</p></td>
+                    <td><p>None</p></td>
                 </tr>
             `;
 
@@ -190,4 +193,149 @@ $(document).ready(function () {
 
     // ページ読み込み時にも実行
     highlightRooms();
+});
+
+$(document).ready(function () {
+    function updateHouseCount() {
+        // 1. すべての input_room の値を収集
+        let roomValues = [];
+        $(".input_room").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") {
+                roomValues.push(val);
+            }
+        });
+
+        // 2. 各ハウスの No を取得して、roomValues に一致する数をカウント
+        $(".tr_house").each(function () {
+            const $row = $(this);
+            const noVal = $row.find(".input_no").val().trim();
+            let count = 0;
+
+            if (noVal !== "") {
+                count = roomValues.filter(room => room === noVal).length;
+            }
+
+            // 数欄に反映
+            $row.find(".count_cell").text(count);
+        });
+    }
+
+    // 入力が変更されたときにカウントを更新
+    $(document).on("input", ".input_room, .input_no", function () {
+        updateHouseCount();
+    });
+
+    // 初期化時に1回実行
+    updateHouseCount();
+});
+
+$(document).ready(function () {
+    function checkDuplicateNo(currentInput) {
+        const currentVal = currentInput.val().trim();
+        if (currentVal === "") return;
+
+        let isDuplicate = false;
+
+        $(".input_no").each(function () {
+            const val = $(this).val().trim();
+            if (val === "") return;
+
+            if (val === currentVal && this !== currentInput[0]) {
+                isDuplicate = true;
+                return false;
+            }
+        });
+
+        if (isDuplicate) {
+            alert("このNoはすでに使われています。別の番号を入力してください。");
+            currentInput.val("").focus();
+
+            // フォーム送信を防ぐ（ここが重要！）
+            return false;
+        }
+    }
+
+    // 入力完了後のチェック（changeイベント）
+    $(document).on("change", ".input_no", function (e) {
+        const result = checkDuplicateNo($(this));
+        if (result === false) {
+            e.preventDefault(); // ← これで送信を止める！
+        }
+    });
+});
+
+$(document).ready(function () {
+    function updateHouseFloorAssignments() {
+        const roomAssignments = {};
+
+        $(".input_room").each(function () {
+            const roomNumber = $(this).closest("td").data("room");
+            const no = $(this).val().trim();
+
+            if (roomNumber && no !== "") {
+                roomAssignments[roomNumber] = no;
+            }
+        });
+
+        $(".tr_house").each(function () {
+            const $row = $(this);
+            const no = $row.find(".input_no").val().trim();
+
+            if (no === "") {
+                $row.find(".floor_cell").text("None");
+                return;
+            }
+
+            const floors = [];
+
+            for (const [room, assignedNo] of Object.entries(roomAssignments)) {
+                if (assignedNo === no) {
+                    const floor = Math.floor(parseInt(room, 10) / 100);
+                    if (!floors.includes(floor)) {
+                        floors.push(floor);
+                    }
+                }
+            }
+
+            if (floors.length > 0) {
+                floors.sort((a, b) => a - b);
+                $row.find(".floor_cell").text(floors.join(","));
+            } else {
+                $row.find(".floor_cell").text("None");
+            }
+        });
+    }
+
+    // 入力イベント時に担当階更新
+    $(document).on("input", ".input_room, .input_no", function () {
+        updateHouseFloorAssignments();
+    });
+
+    // 初期表示時にも実行
+    updateHouseFloorAssignments();
+});
+
+$(document).ready(function () {
+    function updateMutedRooms() {
+        $(".input_room").each(function () {
+            const $input = $(this);
+            const value = $input.val().trim();
+            const $cell = $input.closest("td");
+
+            if (value === "0") {
+                $cell.addClass("room-muted");
+            } else {
+                $cell.removeClass("room-muted");
+            }
+        });
+    }
+
+    // 入力イベントでチェック
+    $(document).on("input", ".input_room", function () {
+        updateMutedRooms();
+    });
+
+    // 初期表示時にもチェック
+    updateMutedRooms();
 });

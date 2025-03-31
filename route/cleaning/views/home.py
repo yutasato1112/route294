@@ -13,7 +13,7 @@ class homeView(TemplateView):
     def get(self, request, *args, **kwargs):
         #初回アクセス時
         #csv読み込み
-        room_info_data, times_by_time_data = read_csv()
+        room_info_data, times_by_time_data, master_key_data = read_csv()
         
         #部屋を階別に二次元配列へ加工
         room_num_table = processing_list(room_info_data)
@@ -27,6 +27,7 @@ class homeView(TemplateView):
             'bath_time':int(times_by_time_data[2][1]),
             'today':today,
             'rooms':room_num_table,
+            'master_key':master_key_data,
         }
         return render(self.request, self.template_name, context)
     

@@ -42,6 +42,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    <p class="attention_note">※清掃不要の場合は0を入力</p>
                 </div>
                 <div class="third_line">
                     <!--大浴場清掃-->
@@ -102,14 +103,14 @@
                             {% for _ in range %}
                             <tr class="tr_house">
                                 <td class="td_no">
-                                    <input type="number" name="no_{{forloop.counter}}" id="no_{{forloop.counter}}" class="input_no">
+                                    <input type="number" name="no_{{forloop.counter}}" id="no_{{forloop.counter}}" class="input_no" {% if not forloop.last %} value="{{forloop.counter}}" {% endif %} min="1">
                                 </td>
                                 <td class="td_name">
                                     <input type="text" name="name_{{forloop.counter}}" id="name_{{forloop.counter}}" class="input_name">
                                 </td>
-                                <td><p>0</p></td>
-                                <td><p>0</p></td>
-                                <td><p>2A</p></td>
+                                <td><p class="count_cell">0</p></td>
+                                <td><p class="floor_cell">None</p></td>
+                                <td><p class="key_cell">None</p></td>
                             </tr>
                             {% endfor %}
                         {% endwith %}
