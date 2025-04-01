@@ -110,7 +110,7 @@
                                 </td>
                                 <td><p class="count_cell">0</p></td>
                                 <td><p class="floor_cell">None</p></td>
-                                <td><p class="key_cell">None</p></td>
+                                <td><input type="text" class="key_cell" value="None"></td>
                             </tr>
                             {% endfor %}
                         {% endwith %}
@@ -153,4 +153,7 @@
     </form>
 </div>
 
+<script>
+    window.master_key = {{ master_key|safe }};
+  </script>
 {% endblock %}

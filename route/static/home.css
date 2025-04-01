@@ -167,9 +167,10 @@ th{
 .floor_cell{
     font-weight: bold;
 }
-.key_cell{
-    font-weight: bold;
+.non-bold {
+    font-weight: normal !important;
 }
+
 
 .td_no{
     width: 15%;
@@ -209,4 +210,15 @@ th{
     width: 98%;
     margin: auto;
     display: block;
+}
+input.key_cell {
+    font-weight: bold;
+    width: 100%;
+    font-size: 12px;
+    padding: 2px;
+    box-sizing: border-box;
+}
+input.key_cell.non-bold {
+    font-weight: normal;
+    color: #999;
 }
