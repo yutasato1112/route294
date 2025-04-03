@@ -24,3 +24,12 @@ def processing_list(room_info_data):
         floors[floor].append(room)
     room_num_table = [floors[f] for f in sorted(floors, reverse=True)]
     return room_num_table
+def dist_room(room_info_data):
+    single_room_list = []
+    twin_room_list = []
+    for room, room_type in room_info_data:
+        if room_type == 'S':
+            single_room_list.append(room)
+        elif room_type == 'T':
+            twin_room_list.append(room)
+    return single_room_list, twin_room_list

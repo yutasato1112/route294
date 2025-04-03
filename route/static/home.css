@@ -222,3 +222,17 @@ input.key_cell.non-bold {
     font-weight: normal;
     color: #999;
 }
+.fourth_line{
+    background-color: white;
+    border: #ccc 1px solid;
+    border-radius: 10px;
+    width: 100%;
+    margin-top: 1vh;
+    margin-bottom: 2vh;
+}
+.result_title{
+    font-size: medium;
+    font-weight: bold;
+    padding-left: 1vw;
+    padding-top: 0.5vh;
+}

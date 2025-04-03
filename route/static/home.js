@@ -296,6 +296,63 @@ $(document).ready(function () {
         }
     }
 
+    function updateResultTableColumns() {
+        const headerRow = $("#result_table_header");
+        headerRow.empty(); // 一度リセット
+    
+        const names = [];
+    
+        $(".input_name").each(function () {
+            const name = $(this).val().trim();
+            if (name && !names.includes(name)) {
+                names.push(name);
+            }
+        });
+    
+        names.forEach(name => {
+            headerRow.append(`<th>${name}</th>`);
+        });
+    }
+    function updateResultTableColumns() {
+        const headerRow = $("#result_table_header");
+        const bathRow = $("#bath_row");
+    
+        // 初期化
+        headerRow.empty().append("<th></th>");
+        bathRow.empty().append("<td><strong>大浴場清掃</strong></td>");
+    
+        const nameNoPairs = [];
+    
+        $(".tr_house").each(function () {
+            const name = $(this).find(".input_name").val().trim();
+            const no = $(this).find(".input_no").val().trim();
+            if (name && no) {
+                nameNoPairs.push({ name, no });
+            }
+        });
+    
+        const bathAssignedNos = [];
+        $(".input_bath").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") {
+                bathAssignedNos.push(val);
+            }
+        });
+    
+        nameNoPairs.forEach(pair => {
+            headerRow.append(`<th>${pair.name}</th>`);
+            if (bathAssignedNos.includes(pair.no)) {
+                bathRow.append("<td>〇</td>");
+            } else {
+                bathRow.append("<td></td>");
+            }
+        });
+    }
+    
+    
+    
+    
+
     $(document).on("input", ".input_no, .input_name", function () {
         checkAndAddRow();
         updateHouseCount();
@@ -328,6 +385,24 @@ $(document).ready(function () {
     $(document).on("input", ".input_remark_room, .input_remark", function () {
         checkAndAddRemarkRow();
     });
+
+    $(document).on("input", ".input_name", function () {
+        checkAndAddRow(); // 既存
+        updateHouseCount(); // 既存
+        updateHouseFloorAssignments(); // 既存
+        updateNoneStyling(); // 既存
+        updateResultTableColumns(); // ← 追加
+    });
+    $(document).on("input", ".input_name, .input_no, .input_bath", function () {
+        updateResultTableColumns();
+    });
+    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco", function () {
+        updateResultTableColumns();
+        updateAssignedRoomRows();
+    });    
+    
+    
+    
 
     updateHouseCount();
     updateHouseFloorAssignments();
