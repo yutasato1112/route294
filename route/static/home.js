@@ -441,6 +441,88 @@ $(document).ready(function () {
             }
         }        
     }
+
+    function updateEndTimeRow() {
+        $("#end_time_row").remove(); // 前回の出力を削除
+    
+        const nameNoPairs = [];
+        $(".tr_house").each(function () {
+            const name = $(this).find(".input_name").val().trim();
+            const no = $(this).find(".input_no").val().trim();
+            if (name && no) {
+                nameNoPairs.push({ name, no });
+            }
+        });
+    
+        const singleRooms = new Set(window.single_rooms || []);
+        const twinRooms = new Set(window.twin_rooms || []);
+    
+        const singleTime = parseInt($("#single_time").val()) || 0;
+        const twinTime = parseInt($("#twin_time").val()) || 0;
+        const bathTime = parseInt($("#bath_time").val()) || 0;
+        const ecoTime = 5;  // ✅ エコ部屋の清掃時間は固定5分
+    
+        const bathNos = [];
+        $(".input_bath").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") {
+                bathNos.push(val);
+            }
+        });
+    
+        // 割り当て部屋とエコ部屋を集計
+        const assignments = [];
+        $(".input_room").each(function () {
+            const no = $(this).val().trim();
+            const room = $(this).closest("td").data("room");
+            if (no && room) {
+                assignments.push({ room: String(room), no });
+            }
+        });
+    
+        const ecoRooms = new Set();
+        $(".input_eco").each(function () {
+            const eco = $(this).val().trim();
+            if (eco !== "") {
+                ecoRooms.add(eco);
+            }
+        });
+    
+        const $row = $("<tr id='end_time_row'><td><strong>終了予定</strong></td></tr>");
+    
+        nameNoPairs.forEach(({ no }) => {
+            const assignedRooms = assignments.filter(a => a.no === no).map(a => a.room);
+            let singleCount = 0, twinCount = 0, ecoCount = 0;
+    
+            assignedRooms.forEach(room => {
+                if (ecoRooms.has(room)) {
+                    ecoCount++;
+                } else if (singleRooms.has(room)) {
+                    singleCount++;
+                } else if (twinRooms.has(room)) {
+                    twinCount++;
+                }
+            });
+    
+            const hasBath = bathNos.includes(no);
+            const totalMin = (singleCount * singleTime) + (twinCount * twinTime) + (ecoCount * ecoTime) + (hasBath ? bathTime : 0);
+    
+            const base = new Date();
+            base.setHours(9);
+            base.setMinutes(30);
+            base.setSeconds(0);
+            base.setMilliseconds(0);
+            base.setMinutes(base.getMinutes() + totalMin);
+    
+            const hh = base.getHours().toString().padStart(2, "0");
+            const mm = base.getMinutes().toString().padStart(2, "0");
+            $row.append(`<td>${hh}:${mm}</td>`);
+        });
+    
+        $("#bath_row").before($row);
+    }
+    
+    
     
     $("#delete_floor_btn").on("click", function () {
         const floorVal = $("#delete_floor").val().trim();
@@ -513,6 +595,11 @@ $(document).ready(function () {
         updateAssignedRoomRows();
     });    
     
+    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, #single_time, #twin_time, #bath_time", function () {
+        updateResultTableColumns();
+        updateAssignedRoomRows();
+        updateEndTimeRow(); // ← 追加
+    });
     
     
 
@@ -521,4 +608,5 @@ $(document).ready(function () {
     updateMutedRooms();
     updateNoneStyling();
     highlightRooms();
+    updateEndTimeRow();
 });
