@@ -352,6 +352,7 @@ $(document).ready(function () {
     function updateAssignedRoomRows() {
         $(".room_cell_row").remove();
     
+        //番号と名前のペアを取得
         const nameNoPairs = [];
         $(".tr_house").each(function () {
             const name = $(this).find(".input_name").val().trim();
@@ -361,6 +362,7 @@ $(document).ready(function () {
             }
         });
     
+        // 部屋の割り当てを取得
         const roomAssignments = [];
         $(".input_room").each(function () {
             const val = $(this).val().trim();
@@ -370,25 +372,28 @@ $(document).ready(function () {
             }
         });
     
+        // エコ部屋のリストを取得
         const ecoRooms = new Set();
         $(".input_eco").each(function () {
             const eco = $(this).val().trim();
             if (eco !== "") ecoRooms.add(eco);
         });
-    
+        
+        // マッピング初期化
         const roomMap = {};
         nameNoPairs.forEach(({ no }) => {
             roomMap[no] = { normal: [], eco: [] };
         });
-    
+
         // 部屋の分類
         roomAssignments.forEach(({ room, no }) => {
-            if (roomMap[no]) {
-                if (ecoRooms.has(room)) {
-                    roomMap[no].eco.push(room);
-                } else {
-                    roomMap[no].normal.push(room);
-                }
+            const cleanRoom = String(room).trim();
+            if (!roomMap[no]) return;
+
+            if (ecoRooms.has(cleanRoom)) {
+                roomMap[no].eco.push(cleanRoom);  // ✅ エコ部屋
+            } else {
+                roomMap[no].normal.push(cleanRoom);  // ✅ 通常部屋
             }
         });
     
@@ -418,10 +423,14 @@ $(document).ready(function () {
         const maxEco = Math.max(...Object.values(roomMap).map(r => r.eco.length), 0);
         if (maxEco > 0) {
             const ecoLabelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>エコ部屋</strong></td>");
-            nameNoPairs.forEach(() => ecoLabelRow.append("<td></td>"));
+            nameNoPairs.forEach(({ no }) => {
+                const val = roomMap[no].eco[0] || "";  // ← ここでデータを含める
+                const cell = val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>";
+                ecoLabelRow.append(cell);
+            });
             $body.append(ecoLabelRow);
-    
-            for (let i = 0; i < maxEco; i++) {
+        
+            for (let i = 1; i < maxEco; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                 nameNoPairs.forEach(({ no }) => {
                     const val = roomMap[no].eco[i] || "";
@@ -430,7 +439,7 @@ $(document).ready(function () {
                 });
                 $body.append(row);
             }
-        }
+        }        
     }
     
     
