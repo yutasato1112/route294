@@ -108,9 +108,15 @@
                                 <td class="td_name">
                                     <input type="text" name="name_{{forloop.counter}}" id="name_{{forloop.counter}}" class="input_name">
                                 </td>
-                                <td><p class="count_cell">0</p></td>
-                                <td><p class="floor_cell">None</p></td>
-                                <td><input type="text" class="key_cell" value="None"></td>
+                                <td>
+                                    <p class="count_cell" id="count_{{forloop.counter}}">0</p>
+                                </td>
+                                <td>
+                                    <p class="floor_cell" id="floor_{{forloop.counter}}">None</p>
+                                </td>
+                                <td>
+                                    <input type="text" name="key_{{forloop.counter}}" id="key_{{forloop.counter}}" class="key_cell" value="None">
+                                </td>
                             </tr>
                             {% endfor %}
                         {% endwith %}

@@ -523,7 +523,6 @@ $(document).ready(function () {
     }
     
     
-    
     $("#delete_floor_btn").on("click", function () {
         const floorVal = $("#delete_floor").val().trim();
         if (floorVal === "") {
@@ -536,7 +535,7 @@ $(document).ready(function () {
             const $cell = $(this);
             const roomNumber = $cell.data("room");
             if (roomNumber && String(roomNumber).startsWith(floorVal)) {
-                $cell.find(".input_room").val(""); // 清掃指示を空にする
+                $cell.find(".input_room").val("0"); // 清掃指示を空にする
             }
         });
 
@@ -599,6 +598,10 @@ $(document).ready(function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
         updateEndTimeRow(); // ← 追加
+    });
+    
+    $(document).on("input", ".input_no, .input_name, .input_room", function () {
+        syncHiddenHouseFields();  // ← 追加
     });
     
     

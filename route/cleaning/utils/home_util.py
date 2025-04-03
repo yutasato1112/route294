@@ -33,3 +33,4 @@ def dist_room(room_info_data):
         elif room_type == 'T':
             twin_room_list.append(room)
     return single_room_list, twin_room_list
+
