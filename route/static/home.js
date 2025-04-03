@@ -442,6 +442,27 @@ $(document).ready(function () {
         }        
     }
     
+    $("#delete_floor_btn").on("click", function () {
+        const floorVal = $("#delete_floor").val().trim();
+        if (floorVal === "") {
+            alert("階数を入力してください。");
+            return;
+        }
+
+        // 指定された階に属する部屋番号を検出（例：501, 502... 5xx）
+        $('[data-room]').each(function () {
+            const $cell = $(this);
+            const roomNumber = $cell.data("room");
+            if (roomNumber && String(roomNumber).startsWith(floorVal)) {
+                $cell.find(".input_room").val(""); // 清掃指示を空にする
+            }
+        });
+
+        updateHouseCount();             // 数を再計算
+        updateHouseFloorAssignments(); // 担当階を再更新
+        updateMutedRooms();            // muted 表示再更新
+        updateAssignedRoomRows();      // 表示テーブル更新
+    });
     
 
     $(document).on("input", ".input_no, .input_name", function () {

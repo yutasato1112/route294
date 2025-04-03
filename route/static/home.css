@@ -236,3 +236,8 @@ input.key_cell.non-bold {
     padding-left: 1vw;
     padding-top: 0.5vh;
 }
+input[type="number"]::-webkit-outer-spin-button, 
+input[type="number"]::-webkit-inner-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+} 
