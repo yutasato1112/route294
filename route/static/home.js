@@ -349,7 +349,89 @@ $(document).ready(function () {
         });
     }
     
+    function updateAssignedRoomRows() {
+        $(".room_cell_row").remove();
     
+        const nameNoPairs = [];
+        $(".tr_house").each(function () {
+            const name = $(this).find(".input_name").val().trim();
+            const no = $(this).find(".input_no").val().trim();
+            if (name && no) {
+                nameNoPairs.push({ name, no });
+            }
+        });
+    
+        const roomAssignments = [];
+        $(".input_room").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") {
+                const room = $(this).closest("td").data("room");
+                roomAssignments.push({ room, no: val });
+            }
+        });
+    
+        const ecoRooms = new Set();
+        $(".input_eco").each(function () {
+            const eco = $(this).val().trim();
+            if (eco !== "") ecoRooms.add(eco);
+        });
+    
+        const roomMap = {};
+        nameNoPairs.forEach(({ no }) => {
+            roomMap[no] = { normal: [], eco: [] };
+        });
+    
+        // 部屋の分類
+        roomAssignments.forEach(({ room, no }) => {
+            if (roomMap[no]) {
+                if (ecoRooms.has(room)) {
+                    roomMap[no].eco.push(room);
+                } else {
+                    roomMap[no].normal.push(room);
+                }
+            }
+        });
+    
+        const $body = $("#result_table_body");
+    
+        // 通常部屋の最大行数
+        const maxNormal = Math.max(...Object.values(roomMap).map(r => r.normal.length), 0);
+        if (maxNormal > 0) {
+            const normalLabelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>担当部屋</strong></td>");
+            nameNoPairs.forEach(({ no }) => {
+                const val = roomMap[no].normal[0] || "";
+                normalLabelRow.append(`<td>${val}</td>`);
+            });
+            $body.append(normalLabelRow);
+    
+            for (let i = 1; i < maxNormal; i++) {
+                const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
+                nameNoPairs.forEach(({ no }) => {
+                    const val = roomMap[no].normal[i] || "";
+                    row.append(`<td>${val}</td>`);
+                });
+                $body.append(row);
+            }
+        }
+    
+        // エコ部屋の最大行数
+        const maxEco = Math.max(...Object.values(roomMap).map(r => r.eco.length), 0);
+        if (maxEco > 0) {
+            const ecoLabelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>エコ部屋</strong></td>");
+            nameNoPairs.forEach(() => ecoLabelRow.append("<td></td>"));
+            $body.append(ecoLabelRow);
+    
+            for (let i = 0; i < maxEco; i++) {
+                const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
+                nameNoPairs.forEach(({ no }) => {
+                    const val = roomMap[no].eco[i] || "";
+                    const cell = val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>";
+                    row.append(cell);
+                });
+                $body.append(row);
+            }
+        }
+    }
     
     
 
