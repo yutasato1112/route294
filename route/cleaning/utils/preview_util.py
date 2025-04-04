@@ -6,7 +6,7 @@ def catch_post(request):
     single_time = request.POST.get('single_time')
     twin_time = request.POST.get('twin_time')
     bath_time = request.POST.get('bath_time')
-    
+    editor_name = request.POST.get('editor_name')
     room_inputs = {}  # { room_number: value }
     for key, value in request.POST.items():
         if key.startswith("room_"):
@@ -42,7 +42,7 @@ def catch_post(request):
     
     room_info_data, times_by_time_data, master_key_data = read_csv()
     single_rooms, twin_rooms = dist_room(room_info_data)
-    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms
+    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name
 
 def is_bath(bath_person, person):
     if str(person) in bath_person:

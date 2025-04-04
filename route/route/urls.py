@@ -20,11 +20,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from cleaning.views import home as home_view
 from cleaning.views import preview as preview_view
+from cleaning.views import download_json as json_view
+from cleaning.views import upload_json as upload_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view.homeView.as_view(), name='home'),
     path('preview/', preview_view.previewView.as_view(), name='preview'),
+    path('download/json/', json_view.download_json, name='download_json'),
+    path('upload_json/', upload_view.upload_json_view, name='upload_json'),
 ]
 
 if settings.DEBUG:

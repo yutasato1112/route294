@@ -5,9 +5,11 @@
 <link rel="stylesheet" href="{% static 'home.css' %}">
 <script src="{% static 'home.js' %}"></script>
 <div class="main">
-    <form action="{% url 'preview' %}" method="post" enctype="multipart/form-data">
+    <form action="" method="post">
         {% csrf_token %}
         <div class="first_line">
+            <!--作業者名-->
+            <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字">
             <!--日付-->
             <input class="input_date" type="date" name="date" id="date" required value="{{ today|date:'Y-m-d' }}">
             <div class="input_time_per_room_type">
@@ -20,8 +22,10 @@
                 <p class="p_topics"> 大浴場　:　</p>
                 <input class="input_time" type="number" name="bath_time" id="bath_time" required value="{{bath_time}}">
             </div>
+            <!--中途編集ファイル作成-->
+            <button formaction="{% url 'download_json' %}" type="submit" class="btn btn-secondary">保存</button>
             <!--プレビュー表示ボタン-->
-            <input type="submit" value="プレビュー表示" class="btn btn-primary submit">
+            <input formaction="{% url 'preview' %}" type="submit" value="プレビュー表示" class="btn btn-primary submit">
         </div>
         <div class="second_line">
             <div class="second_left">

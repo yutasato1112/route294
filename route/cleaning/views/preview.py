@@ -15,7 +15,7 @@ class previewView(TemplateView):
     
     def post(self, request, *args, **kwargs):
         #データ受け取り
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name = catch_post(request)
 
         #パーソン人数
         person_count = len(house_data)
@@ -43,6 +43,7 @@ class previewView(TemplateView):
             }
             total_data.append(persons_cleaning_data)
         context = {
-            'data':total_data
+            'data':total_data,
+            'editor_name': editor_name,
         }
         return render(self.request, self.template_name, context)
