@@ -35,9 +35,15 @@ $(document).ready(function () {
                     <td class="td_name">
                         <input type="text" name="name_${rowCount}" id="name_${rowCount}" class="input_name">
                     </td>
-                    <td><p class="count_cell">0</p></td>
-                    <td><p class="floor_cell">None</p></td>
-                    <td><input type="text" class="key_cell" value="None"></td>
+                     <td>
+                        <p class="count_cell" id="count_${rowCount}">0</p>
+                    </td>
+                    <td>
+                        <p class="floor_cell" id="floor_${rowCount}">None</p>
+                    </td>
+                    <td>
+                        <input type="text" name="key_${rowCount}" id="key_${rowCount}" class="key_cell" value="None">
+                    </td>
                 </tr>
             `;
 

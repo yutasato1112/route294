@@ -1,0 +1,169 @@
+.preview_container{
+    padding-top: 5mm;
+    background-color: white;
+	width: 210mm;
+	height: 297mm;
+    margin: 0 auto;
+}
+.title{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.cleaner{
+    font-size: 16px;
+}
+.name{
+    font-weight: bold;
+    font-size: 20px;
+    text-decoration: underline;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+.mr{
+    font-size: 16px;
+}
+.hk{
+    font-size: 20px;
+    font-weight: bold;
+    padding-left: 20px;
+}
+.room_table{
+    width: 90%;
+    margin: auto;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+td{
+    font-size: 10px;
+}
+
+.room_num{
+    font-weight: bold;
+    font-size: 14px;
+}
+.mark{
+    width: 10.5mm;
+    font-size: 11px;
+}
+.room_num_title{
+    width: 21mm;
+    font-size: 11px;
+}
+.small_mark{
+    width: 3mm;
+    font-size: 11px;
+}
+.remarks{
+    font-size: 11px;
+}
+.cleaning_room_table{
+    height: 140mm;
+}
+
+.bath_and_spot{
+    width: 90%;
+    margin: auto;
+    margin-top: 0;
+    padding-top: 0;
+}
+.second_table_row{
+    width: 30mm;
+    font-size: 12px;
+}
+.bath_please{
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+.bottom_line{
+    width: 90%;
+    margin: auto;
+    display: flex ;
+}
+.bottom_line_left{
+    width: 40%;
+}
+.bottom_line_right{
+    width: 60%;
+}
+.note_title{
+    font-size: 12px;
+    font-weight: bold;
+}
+.note{
+    width: 90%;
+    height: 6mm;
+    border-bottom: 1px solid black;
+    margin: auto;
+}
+.special_menu{
+    margin: auto;
+    border-collapse: collapse;
+    border: 1px solid black;
+    margin-top: 2mm;
+}
+.num_air{
+    text-align: end;
+}
+.air_block {
+    border: 1px solid black;
+    padding: 4px;
+    text-align: center;
+}
+.num_air {
+    margin-top: 4px;
+}
+.special_menu_title{
+    border: 1px solid black;
+}
+.weekly{
+    width: 90%;
+    text-align: center;
+    margin: auto;
+    border-bottom: 1px solid black;
+}
+.affilication{
+    width: 90%;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+}
+.aff{
+    border-bottom: 1px solid black;
+}
+.floor_title{
+    width: 25%;
+}
+.floor{
+    width: 30%;
+}
+.stamp{
+    width: 47px;
+    height: 47px;
+    text-align: center;
+    color: gray;
+}
+.stamp_table{
+    height: 47px;
+}
+.forget_table{
+    width: 90%;
+    margin: auto;
+}
+.forget_room_no{
+    width: 15%;
+}
+.forget_col{
+    height: 26px;
+}
+.bottom_left_left{
+    width: 55%;
+}
+.bottom_left_right{
+    text-align: center;
+}
+.important{
+    font-weight: bold;
+    font-size: 12px;
+}
