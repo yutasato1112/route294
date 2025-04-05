@@ -88,14 +88,14 @@
                                 </td>
                             </tr>
                             {% endfor %}
-                            {% with ''|center:3 as range %}
+                            {% with ''|center:remarks_len as range %}
                                 {% for _ in range %}
                                 <tr>
                                     <td>
-                                        <input type="text" name="remark_room_{{forloop.counter}}" id="remark_room_{{forloop.counter}}" class="input_remark_room" >
+                                        <input type="text" name="remark_room_{{forloop.counter|add:add_remarks_len}}" id="remark_room_{{forloop.counter|add:add_remarks_len}}" class="input_remark_room" >
                                     </td>
                                     <td>
-                                        <input type="text" name="remark_{{forloop.counter}}" id="remark_{{forloop.counter}}" class="input_remark">
+                                        <input type="text" name="remark_{{forloop.counter|add:add_remarks_len}}" id="remark_{{forloop.counter|add:add_remarks_len}}" class="input_remark">
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -141,19 +141,19 @@
                             <tr class="tr_house">
                                 {% if method == 'POST' %}
                                     <td class="td_no">
-                                        <input type="number" name="no_{{forloop.counter|add:house_len}}" id="no_{{forloop.counter|add:house_len}}" class="input_no" {% if not forloop.last %} value="{{forloop.counter|add:house_len}}" {% endif %} min="1">
+                                        <input type="number" name="no_{{forloop.counter|add:add_house_len}}" id="no_{{forloop.counter|add:add_house_len}}" class="input_no" {% if not forloop.last %} value="{{forloop.counter|add:add_house_len}}" {% endif %} min="1">
                                     </td>
                                     <td class="td_name">
-                                        <input type="text" name="name_{{forloop.counter|add:house_len}}" id="name_{{forloop.counter|add:house_len}}" class="input_name" >
+                                        <input type="text" name="name_{{forloop.counter|add:add_house_len}}" id="name_{{forloop.counter|add:add_house_len}}" class="input_name" >
                                     </td>
                                     <td>
-                                        <p class="count_cell" id="count_{{forloop.counter|add:house_len}}">0</p>
+                                        <p class="count_cell" id="count_{{forloop.counter|add:add_house_len}}">0</p>
                                     </td>
                                     <td>
-                                        <p class="floor_cell" id="floor_{{forloop.counter|add:house_len}}">None</p>
+                                        <p class="floor_cell" id="floor_{{forloop.counter|add:add_house_len}}">None</p>
                                     </td>
                                     <td>
-                                        <input type="text" name="key_{{forloop.counter|add:house_len}}" id="key_{{forloop.counter|add:house_len}}" class="key_cell" value="None">
+                                        <input type="text" name="key_{{forloop.counter|add:add_house_len}}" id="key_{{forloop.counter|add:add_house_len}}" class="key_cell" value="None">
                                     </td>
                                 {% else %}
                                     <td class="td_no">

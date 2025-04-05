@@ -50,6 +50,8 @@ class homeView(TemplateView):
             'twin_rooms':twin_room_list,
             'house_len':10,
             'room_char_list_len':10,
+            'remarks_len':3,
+            'add_remarks_len':0,
         }
         return render(self.request, self.template_name, context)
     
@@ -85,6 +87,12 @@ class homeView(TemplateView):
         ame_rooms = data['ame_rooms']
         duvet_rooms = data['duvet_rooms']
         
+        #備考の欄数
+        if len(remarks) < 3:
+            remarks_len = 3-len(remarks)
+        else:
+            remarks_len=1
+        
         #部屋の清掃担当リストを加工
         combined_rooms = room_person(room_num_table, room_inputs)
         if len(house_person) < 10:
@@ -98,7 +106,7 @@ class homeView(TemplateView):
             room_char_list_len = 10-len(house_person)
         else:
             room_char_list_len = 1
-
+            
         context = {
             'method':method,
             'single_time':single_time,
@@ -109,7 +117,6 @@ class homeView(TemplateView):
             'single_rooms':single_room_list,
             'twin_rooms':twin_room_list,
             'rooms':room_num_table,
-            'room_person':room_person,
             'combined_rooms': combined_rooms,
             'editor_name': editor_name,
             'bath_persons': bath_persons,
@@ -119,7 +126,10 @@ class homeView(TemplateView):
             'ame_rooms': ame_rooms,
             'duvet_rooms': duvet_rooms,
             'house_len': house_len,
+            'add_house_len':len(house_person),
             'room_char_list':room_char_list,
             'room_char_list_len':room_char_list_len,
+            'remarks_len':remarks_len,
+            'add_remarks_len':len(remarks),
         }
         return render(self.request, self.template_name, context)
