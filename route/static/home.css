@@ -249,3 +249,13 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none; 
   margin: 0; 
 } 
+
+.edit_file_read{
+    height: 6vh;
+    width: 25%;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    background-color: white;
+    margin-top: 1vh;
+    padding-top: 1vh;
+}

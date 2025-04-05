@@ -609,8 +609,6 @@ $(document).ready(function () {
     $(document).on("input", ".input_no, .input_name, .input_room", function () {
         syncHiddenHouseFields();  // ← 追加
     });
-    
-    
 
     updateHouseCount();
     updateHouseFloorAssignments();
@@ -618,4 +616,11 @@ $(document).ready(function () {
     updateNoneStyling();
     highlightRooms();
     updateEndTimeRow();
+
+    if (window.method === "POST") {
+        updateResultTableColumns();
+        updateAssignedRoomRows();
+        updateEndTimeRow();
+    }
+    
 });
