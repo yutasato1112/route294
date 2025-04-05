@@ -73,10 +73,14 @@ def weekly_cleaning(date):
     
 def calc_room(room_inputs, eco_rooms, duvet_rooms, remarks, person, single_rooms, twin_rooms):
     #ルームナンバーのリストを作成
+    print(room_inputs)
     room_nums = []
     for key, value in room_inputs.items():
         if str(person) in value:
-            room_nums.append(key)
+            value_str = str(value)
+            person_str = str(person)
+            if len(person_str) == len(value_str):
+                room_nums.append(key)
     #ルームナンバーのリストをソート
     manage_rooms = []
     room_nums.sort(key=lambda x: int(x))

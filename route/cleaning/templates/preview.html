@@ -7,200 +7,198 @@
 <script src="{% static 'preview.js' %}"></script>
 
 
-<div class="preview_container">
-</div>
 {% for person_data in data %}
-    <div class="preview_container">
-        <div class="title">
-            <p class="cleaner">担当</p>
-            <p class="name">{{person_data.name}}</p>
-            <p class="mr">さん</p>
-            <p class="hk">HOUSE KEEPING</p>
-            <p class="hk">{{person_data.date}}</p>
+<div class="preview_container">
+    <div class="title">
+        <p class="cleaner">担当</p>
+        <p class="name">{{person_data.name}}</p>
+        <p class="mr">さん</p>
+        <p class="hk">HOUSE KEEPING</p>
+        <p class="hk">{{person_data.date}}</p>
+    </div>
+    <div class="room_table">
+        <table class="table table-striped table-bordered cleaning_room_table">
+            <thead>
+                <th class="small_mark main_table_title"></th>
+                <th class="room_num_title main_table_title">Room No</th>
+                <th class="mark main_table_title">連泊</th>
+                <th class="mark main_table_title">C/O</th>
+                <th class="mark main_table_title">エコ</th>
+                <th class="mark main_table_title">デュべ</th>
+                <th class="remarks main_table_title">備考</th>
+                <th class="mark main_table_title">清掃済</th>
+                <th class="mark main_table_title">インスペ</th>
+                <th class="mark main_table_title">TV</th>
+            </thead>
+            <tbody>
+                {% for room in person_data.rooms %}
+                <tr class="tr_data">
+                    <td class="main_table_content">{{forloop.counter}}</td>
+                    <td class="room_num main_table_content">{{room.room_num}} ({{room.room_type}})</td>
+                    <td class="main_table_content"><!--連泊(空欄)--></td>
+                    <td class="main_table_content"><!--C/O(空白)--></td>
+                    {% if room.eco == True %}
+                    <td class="content_mark main_table_content">★</td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                    {% if room.duvet == True %}
+                    <td class="content_mark main_table_content">○</td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                    <td class="main_table_content">{{room.remark}}</td>
+                    <td class="main_table_content"><!--清掃済--></td>
+                    <td class="main_table_content"><!--インスペ--></td>
+                    <td class="main_table_content"><!--TV--></td>
+                </tr>
+                {% endfor %}
+                {# 空白行を補完（17行まで） #}
+                {% for i in person_data.rooms|length|add:'1'|until:18 %}
+                <tr>
+                    <td>{{ i }}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="bath_and_spot">
+        <table class="table table-striped table-bordered bottom_table">
+            <tbody>
+                <tr>
+                    <td class="second_table_row">大浴場清掃</td>
+                    {% if person_data.bath == True %}
+                    <td class="bath_please">大浴場清掃よろしくお願いいたします。</td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="bottom_line">
+        <div class="bottom_line_left">
+            <table class="table table-bordered bottom_table">
+                <tbody>
+                    <tr>
+                        <td class="bottom_left_left">マスターキー番号</td>
+                        <td class="bottom_left_right important">{{person_data.key}}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="table table-bordered bottom_table">
+                <tbody>
+                    <tr>
+                        <td class="bottom_left_left">清掃終了目標時刻</td>
+                        <td class="bottom_left_right important">{{person_data.end_time}}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="table table-bordered bottom_table">
+                <tbody>
+                    <tr>
+                        <td class="bottom_left_left">清掃終了時刻</td>
+                        <td class="bottom_left_right">:</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="table table-bordered bottom_table">
+                <tbody>
+                    <tr>
+                        <td class="bottom_left_left">大浴場清掃・リラクゼーション</td>
+                        <td class="bottom_left_right">：</td>
+                </tbody>
+            </table>
+            <table class="table table-bordered bottom_table">
+                <tbody>
+                    <tr>
+                        <td class="bottom_left_left">スポット清掃・ミーティング</td>
+                        <td class="bottom_left_right">：</td>
+                </tbody>
+            </table>
+            <table class="table table-bordered stamp_table bottom_table">
+                <tbody>
+                    <tr>
+                        <td>作成者</td>
+                        <td class="stamp">{{editor_name}}</td>
+                        <td>早番</td>
+                        <td class="stamp">印</td>
+                        <td>インスペクション</td>
+                        <td class="stamp">印</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        <div class="room_table">
-            <table class="table table-striped table-bordered cleaning_room_table">
+        <div class="bottom_line_right">
+            <!--連絡事項-->
+            <p class="note_title note">[連絡事項]</p>
+            <p class="note"></p>
+            <p class="note"></p>
+            <p class="note"></p>
+            <p class="note"></p>
+
+            <table class="special_menu bottom_table">
+                <tbody>
+                    <tr>
+                        <td class="special_menu_title">特別清掃(該当に◯)</td>
+                        <td>　棚卸　　草取り</td>
+                        <td rowspan="2" class="air_block">
+                            <div>エアコンフィルター清掃</div>
+                            <div class="num_air">台</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>新人研修　　改装関連</td>
+                        <td>　　ミーティング参加</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="weekly">{{person_data.weekly}}</p>
+            <table class="table table-bordered forget_table bottom_table">
                 <thead>
-                    <th class="small_mark"></th>
-                    <th class="room_num_title">Room No</th>
-                    <th class="mark">連泊</th>
-                    <th class="mark">C/O</th>
-                    <th class="mark">エコ</th>
-                    <th class="mark">デュべ</th>
-                    <th class="remarks">備考</th>
-                    <th class="mark">清掃済</th>
-                    <th class="mark">インスペ</th>
-                    <th class="mark">TV</th>
+                    <td class="forget_room_no forget">部屋番号</td>
+                    <td class="forget">忘れ物</td>
+                    <td class="forget_room_no forget">部屋番号</td>
+                    <td class="forget">忘れ物</td>
                 </thead>
                 <tbody>
-                    {% for room in person_data.rooms %}
-                        <tr class="tr_data">
-                            <td>{{forloop.counter}}</td>
-                            <td class="room_num">{{room.room_num}} ({{room.room_type}})</td>
-                            <td><!--連泊(空欄)--></td>
-                            <td><!--C/O(空白)--></td>
-                            {% if room.eco == True %}
-                                <td class="content_mark">★</td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
-                            {% if room.duvet == True %}
-                                <td class="content_mark">○</td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
-                            <td>{{room.remark}}</td>
-                            <td><!--清掃済--></td>
-                            <td><!--インスペ--></td>
-                            <td><!--TV--></td>
-                        </tr>
-                    {% endfor %}
-                    {# 空白行を補完（17行まで） #}
-                    {% for i in person_data.rooms|length|add:'1'|until:18 %}
-                    <tr>
-                        <td>{{ i }}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                    <tr class="forget_col">
                         <td></td>
                         <td></td>
                         <td></td>
                         <td></td>
                     </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="bath_and_spot">
-            <table class="table table-striped table-bordered">
-                <tbody>
-                    <tr>
-                        <td class="second_table_row">大浴場清掃</td>
-                        {% if person_data.bath == True %}
-                            <td class="bath_please">大浴場清掃よろしくお願いいたします。</td>
-                        {% else %}
-                            <td></td>
-                        {% endif %}
+                    <tr class="forget_col">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr class="forget_col">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
                     </tr>
                 </tbody>
             </table>
-        </div>
-        <div class="bottom_line">
-            <div class="bottom_line_left">
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <td class="bottom_left_left">マスターキー番号</td>
-                            <td class="bottom_left_right important">{{person_data.key}}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <td class="bottom_left_left">清掃終了目標時刻</td>
-                            <td class="bottom_left_right important">{{person_data.end_time}}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <td class="bottom_left_left">清掃終了時刻</td>
-                            <td class="bottom_left_right">:</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <td class="bottom_left_left">大浴場清掃・リラクゼーション</td>
-                            <td class="bottom_left_right">：</td>
-                    </tbody>
-                </table>
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <td class="bottom_left_left">スポット清掃・ミーティング</td>
-                            <td class="bottom_left_right">：</td>
-                    </tbody>
-                </table>
-                <table class="table table-bordered stamp_table">
-                    <tbody>
-                        <tr>
-                            <td>作成者</td>
-                            <td class="stamp">{{editor_name}}</td>
-                            <td>早番</td>
-                            <td class="stamp">印</td>
-                            <td>インスペクション</td>
-                            <td class="stamp">印</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="bottom_line_right">
-                <!--連絡事項-->
-                <p class="note_title note">[連絡事項]</p>
-                <p class="note"></p>
-                <p class="note"></p>
-                <p class="note"></p>
-                <p class="note"></p>
-
-                <table class="special_menu">
-                    <tbody>
-                        <tr>
-                            <td class="special_menu_title">特別清掃(該当に◯)</td>
-                            <td>　棚卸　　草取り</td>
-                            <td rowspan="2" class="air_block">
-                                <div>エアコンフィルター清掃</div>
-                                <div class="num_air">台</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>新人研修　　改装関連</td>
-                            <td>　　ミーティング参加</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <p class="weekly">{{person_data.weekly}}</p>
-                <table class="table table-bordered forget_table">
-                    <thead>
-                        <td class="forget_room_no forget">部屋番号</td>
-                        <td class="forget">忘れ物</td>
-                        <td class="forget_room_no forget">部屋番号</td>
-                        <td class="forget">忘れ物</td>
-                    </thead>
-                    <tbody>
-                        <tr class="forget_col">
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                        <tr class="forget_col">
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                        <tr class="forget_col">
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="affilication">
-            <p class="aff">ルートイン水海道駅前</p>
-            <p class="aff">上記日程を終了致しました。</p>
-            <p class="aff">(清掃担当者)署名　　　　　　　　　　</p>
         </div>
     </div>
+    <div class="affilication">
+        <p class="aff">ルートイン水海道駅前</p>
+        <p class="aff">上記日程を終了致しました。</p>
+        <p class="aff">(清掃担当者)署名　　　　　　　　　　</p>
+    </div>
+</div>
 {% endfor %}
 <div style="height: 2vh;"></div>
 {% endblock %}

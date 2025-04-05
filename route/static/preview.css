@@ -6,10 +6,6 @@
     margin: 0 auto;
 }
 
-#表紙
-
-
-#コンテンツ
 .title{
     display: flex;
     justify-content: center;
@@ -20,7 +16,7 @@
 }
 .name{
     font-weight: bold;
-    font-size: 20px;
+    font-size: 30px;
     text-decoration: underline;
     padding-left: 10px;
     padding-right: 10px;
@@ -52,27 +48,30 @@ td{
 }
 .mark{
     width: 10.5mm;
-    font-size: 11px;
+    font-size: 10px;
+}
+.main_table_title{
+    line-height: 0.8;
+    font-size: 10px;
+}
+.main_table_content{
+    line-height: 0.8;
 }
 .content_mark{
     text-align: center;
     font-size: 18px;
-    line-height: 1.2;
+    line-height: 0.8;
     padding: 2px 4px;
 }
 .room_num_title{
     width: 21mm;
-    font-size: 11px;
 }
 .small_mark{
     width: 3mm;
-    font-size: 11px;
-}
-.remarks{
-    font-size: 11px;
 }
 .cleaning_room_table{
     height: 140mm;
+    border-color: #666666;
 }
 
 .bath_and_spot{
@@ -80,6 +79,10 @@ td{
     margin: auto;
     margin-top: 0;
     padding-top: 0;
+    border-color: #666666;
+}
+.bottom_table{
+    border-color: #666666;
 }
 .second_table_row{
     width: 30mm;
@@ -108,20 +111,21 @@ td{
 .note{
     width: 90%;
     height: 6mm;
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid #666666;
     margin: auto;
 }
 .special_menu{
     margin: auto;
     border-collapse: collapse;
-    border: 1px solid black;
+    border: 1px solid #666666;
     margin-top: 2mm;
+    width: 90%;
 }
 .num_air{
     text-align: end;
 }
 .air_block {
-    border: 1px solid black;
+    border: 1px solid #666666;
     padding: 4px;
     text-align: center;
 }
@@ -129,13 +133,13 @@ td{
     margin-top: 4px;
 }
 .special_menu_title{
-    border: 1px solid black;
+    border: 1px solid #666666;
 }
 .weekly{
     width: 90%;
     text-align: center;
     margin: auto;
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid #666666;
     font-size: 15px;
 }
 .affilication{
@@ -145,7 +149,7 @@ td{
     justify-content: space-between;
 }
 .aff{
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid #666666;
 }
 .floor_title{
     width: 25%;
@@ -180,8 +184,9 @@ td{
 }
 .bottom_left_right{
     text-align: center;
+    line-height: 1;
+    font-size: 20px;
 }
 .important{
     font-weight: bold;
-    font-size: 12px;
 }

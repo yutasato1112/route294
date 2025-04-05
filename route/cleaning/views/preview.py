@@ -30,7 +30,6 @@ class previewView(TemplateView):
             room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, remarks, i+1, single_rooms, twin_rooms)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
             date_jp = changeDate(date)
-            
             persons_cleaning_data = {
                 'name':name,
                 'rooms':room,
