@@ -5,6 +5,11 @@
 	height: 297mm;
     margin: 0 auto;
 }
+
+#表紙
+
+
+#コンテンツ
 .title{
     display: flex;
     justify-content: center;
@@ -40,11 +45,20 @@ td{
 
 .room_num{
     font-weight: bold;
-    font-size: 14px;
+    font-size: 17px;
+    white-space: nowrap;
+    line-height: 1.2;
+    padding: 2px 4px;
 }
 .mark{
     width: 10.5mm;
     font-size: 11px;
+}
+.content_mark{
+    text-align: center;
+    font-size: 18px;
+    line-height: 1.2;
+    padding: 2px 4px;
 }
 .room_num_title{
     width: 21mm;
@@ -154,6 +168,9 @@ td{
 }
 .forget_room_no{
     width: 15%;
+}
+.forget{
+    line-height: 0.1;
 }
 .forget_col{
     height: 26px;

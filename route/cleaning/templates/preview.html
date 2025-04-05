@@ -6,6 +6,9 @@
 <link rel="stylesheet" href="{% static 'preview.css' %}">
 <script src="{% static 'preview.js' %}"></script>
 
+
+<div class="preview_container">
+</div>
 {% for person_data in data %}
     <div class="preview_container">
         <div class="title">
@@ -37,12 +40,12 @@
                             <td><!--連泊(空欄)--></td>
                             <td><!--C/O(空白)--></td>
                             {% if room.eco == True %}
-                                <td>★</td>
+                                <td class="content_mark">★</td>
                             {% else %}
                                 <td></td>
                             {% endif %}
                             {% if room.duvet == True %}
-                                <td>○</td>
+                                <td class="content_mark">○</td>
                             {% else %}
                                 <td></td>
                             {% endif %}
@@ -52,8 +55,8 @@
                             <td><!--TV--></td>
                         </tr>
                     {% endfor %}
-                    {# 空白行を補完（16行まで） #}
-                    {% for i in person_data.rooms|length|add:'1'|until:15 %}
+                    {# 空白行を補完（17行まで） #}
+                    {% for i in person_data.rooms|length|add:'1'|until:18 %}
                     <tr>
                         <td>{{ i }}</td>
                         <td></td>
@@ -81,25 +84,11 @@
                             <td></td>
                         {% endif %}
                     </tr>
-                    <tr>
-                        <td class="second_table_row">スポット清掃</td>
-                        <td></td>
-                    </tr>
                 </tbody>
             </table>
         </div>
         <div class="bottom_line">
             <div class="bottom_line_left">
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <td class="floor_title">担当フロア(在庫確認)</td>
-                            <td class="floor">{{person_data.floor}}</td>
-                            <td class="lock_linen_title">リネン庫施錠</td>
-                            <td class="stamp">印</td>
-                        </tr>
-                    </tbody>
-                </table>
                 <table class="table table-bordered">
                     <tbody>
                         <tr>
@@ -138,8 +127,6 @@
                             <td class="bottom_left_right">：</td>
                     </tbody>
                 </table>
-            </div>
-            <div class="bottom_line_right">
                 <table class="table table-bordered stamp_table">
                     <tbody>
                         <tr>
@@ -147,15 +134,17 @@
                             <td class="stamp">{{editor_name}}</td>
                             <td>早番</td>
                             <td class="stamp">印</td>
-                            <td>鍵返却</td>
-                            <td class="stamp">印</td>
                             <td>インスペクション</td>
                             <td class="stamp">印</td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="bottom_line_right">
                 <!--連絡事項-->
                 <p class="note_title note">[連絡事項]</p>
+                <p class="note"></p>
+                <p class="note"></p>
                 <p class="note"></p>
                 <p class="note"></p>
 
@@ -178,12 +167,18 @@
                 <p class="weekly">{{person_data.weekly}}</p>
                 <table class="table table-bordered forget_table">
                     <thead>
-                        <td class="forget_room_no">部屋番号</td>
-                        <td>忘れ物</td>
-                        <td class="forget_room_no">部屋番号</td>
-                        <td>忘れ物</td>
+                        <td class="forget_room_no forget">部屋番号</td>
+                        <td class="forget">忘れ物</td>
+                        <td class="forget_room_no forget">部屋番号</td>
+                        <td class="forget">忘れ物</td>
                     </thead>
                     <tbody>
+                        <tr class="forget_col">
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
                         <tr class="forget_col">
                             <td></td>
                             <td></td>
