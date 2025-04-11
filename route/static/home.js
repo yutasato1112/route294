@@ -6,13 +6,6 @@ $(document).ready(function () {
         // Enterキー押下時
         if (e.key === "Enter") {
             e.preventDefault();  // フォーム送信を防止
-
-            const inputs = $('input:visible:not([type="hidden"])'); // 表示されているすべての入力欄
-            const idx = inputs.index(this);
-
-            if (idx !== -1 && idx + 1 < inputs.length) {
-                inputs.eq(idx + 1).focus(); // 次の入力欄へ移動
-            }
         }
     });
     $(document).on("keydown", ".input_room", function (e) {
