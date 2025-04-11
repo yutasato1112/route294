@@ -142,7 +142,7 @@
             {% for remark in remarks %}
             <tr class="cover_tr">
                 <td class="cover_room_num">{{ remark.0 }}号室</td>
-                <td>{{ remark.1 }}</td>
+                <td class="cover_remark_content">{{ remark.1 }}</td>
                 <td class="cover_name">{{ remark.2 }}さん</td>
             </tr>
             {% endfor %}
@@ -284,7 +284,7 @@
                 <tbody>
                     <tr>
                         <td>作成者</td>
-                        <td class="stamp">{{editor_name}}</td>
+                        <td class="stamp"><p class="stamp_name">{{editor_name}}</p></td>
                         <td>早番</td>
                         <td class="stamp">印</td>
                         <td>インスペクション</td>

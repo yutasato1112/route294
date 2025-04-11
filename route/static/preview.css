@@ -157,12 +157,30 @@ td{
 .floor{
     width: 30%;
 }
-.stamp{
+.stamp {
     width: 47px;
     height: 47px;
     text-align: center;
-    color: gray;
+    vertical-align: middle;
+    padding: 0;
 }
+
+.stamp_name {
+    width: 35px;
+    height: 35px;
+    line-height: 35px;
+    border: 2px solid red;
+    border-radius: 50%;
+    color: red;
+    font-weight: bold;
+    font-family: "serif";
+    display: inline-block;
+    text-align: center;
+    white-space: nowrap;
+    margin: 0;        
+    box-sizing: border-box;
+}
+
 .stamp_table{
     height: 47px;
 }
@@ -274,9 +292,14 @@ td{
 }
 .cover_room_num{
     width: 15%;
+    font-size: 12px;
 }
 .cover_name{
     width: 20%;
+    font-size: 12px;
+}
+.cover_remark_content{
+    font-size: 12px;
 }
 .cover_room_num_null{
     text-align: end;
@@ -285,5 +308,6 @@ td{
     text-align: end;
 }
 .cover_tr{
-    line-height: 10px;
+    line-height: 12px;
+    font-weight: bold;
 }
