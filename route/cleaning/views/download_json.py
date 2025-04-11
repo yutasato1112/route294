@@ -1,7 +1,10 @@
 from django.http import JsonResponse, HttpResponse
+from django.conf import settings
 import json
 from ..utils.preview_util import catch_post
 import datetime
+import os
+
 
 def download_json(request):
     if request.method == 'POST':
@@ -31,6 +34,12 @@ def download_json(request):
         # HTTPレスポンスにJSONファイルとして送信
         response = HttpResponse(json_data, content_type='application/json')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
+       
+        media_path = os.path.join(settings.MEDIA_ROOT, filename)
+        os.makedirs(os.path.dirname(media_path), exist_ok=True)
+        with open(media_path, 'w', encoding='utf-8') as f:
+            f.write(json_data)
+
         return response
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)
