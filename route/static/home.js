@@ -734,11 +734,11 @@ $(document).ready(function () {
     });
 
     $(document).on("input", ".input_name", function () {
-        checkAndAddRow(); // 既存
-        updateHouseCount(); // 既存
-        updateHouseFloorAssignments(); // 既存
-        updateNoneStyling(); // 既存
-        updateResultTableColumns(); // ← 追加
+        checkAndAddRow(); 
+        updateHouseCount(); 
+        updateHouseFloorAssignments(); 
+        updateNoneStyling(); 
+        updateResultTableColumns(); 
     });
     $(document).on("input", ".input_name, .input_no, .input_bath", function () {
         updateResultTableColumns();
