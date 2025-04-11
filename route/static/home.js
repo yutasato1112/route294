@@ -2,6 +2,161 @@ $(document).ready(function () {
     let masterKeyList = window.master_key || [];
     let usedKeys = [];
 
+    $(document).on("keydown", "input", function (e) {
+        // Enterキー押下時
+        if (e.key === "Enter") {
+            e.preventDefault();  // フォーム送信を防止
+
+            const inputs = $('input:visible:not([type="hidden"])'); // 表示されているすべての入力欄
+            const idx = inputs.index(this);
+
+            if (idx !== -1 && idx + 1 < inputs.length) {
+                inputs.eq(idx + 1).focus(); // 次の入力欄へ移動
+            }
+        }
+    });
+    $(document).on("keydown", ".input_room", function (e) {
+        const inputs = $(".input_room");
+        const index = inputs.index(this);
+
+        // Enterキーで次の行の同じ列へ
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const currentTd = $(this).closest("td");
+            const currentTr = $(this).closest("tr");
+            const colIndex = currentTr.find("td").index(currentTd);
+
+            const nextTr = currentTr.next("tr");
+            if (nextTr.length) {
+                const nextInput = nextTr.find("td").eq(colIndex).find(".input_room");
+                if (nextInput.length) {
+                    nextInput.focus();
+                }
+            }
+        }
+
+        // Tabキーで通常の右移動だが、最終列なら次行の先頭へ（オプション）
+        if (e.key === "Tab" && !e.shiftKey) {
+            const isLast = index === inputs.length - 1;
+            if (!isLast) {
+                setTimeout(() => {
+                    inputs.eq(index + 1).focus();
+                }, 0);
+            }
+        }
+    });
+    $(document).on("keydown", "#house_table_body input", function (e) {
+        const inputs = $("#house_table_body input:visible");
+        const index = inputs.index(this);
+
+        if (e.key === "Enter") {
+            e.preventDefault();
+
+            // 現在のinputのセル、列インデックスを取得
+            const currentTd = $(this).closest("td");
+            const currentTr = $(this).closest("tr");
+            const colIndex = currentTr.find("td").index(currentTd);
+
+            // 次の行を取得
+            const nextTr = currentTr.next("tr");
+            if (nextTr.length) {
+                const nextInput = nextTr.find("td").eq(colIndex).find("input");
+                if (nextInput.length) {
+                    nextInput.focus();
+                }
+            }
+        }
+
+        // オプション：最後の input 以外で Tab で右へ
+        if (e.key === "Tab" && !e.shiftKey) {
+            const isLast = index === inputs.length - 1;
+            if (!isLast) {
+                setTimeout(() => {
+                    inputs.eq(index + 1).focus();
+                }, 0);
+            }
+        }
+    });
+    $(document).on("keydown", "#clean_method_body input", function (e) {
+        const $inputsInRow = $(this).closest("tr").find("input");
+        const $inputsAll = $("#clean_method_body input");
+        const colIndex = $(this).closest("td").index();
+        const $currentInput = $(this);
+
+        // タブキー：次の input（ただし行内限定）
+        if (e.key === "Tab" && !e.shiftKey) {
+            const indexInRow = $inputsInRow.index(this);
+            if (indexInRow < $inputsInRow.length - 1) {
+                e.preventDefault();
+                $inputsInRow.eq(indexInRow + 1).focus();
+            }
+            // 行末では通常の Tab 処理に任せる（次の input へ）
+        }
+
+        // エンターキー：同じ列の次の行の input
+        if (e.key === "Enter") {
+            e.preventDefault();
+
+            const $currentTd = $currentInput.closest("td");
+            const currentCol = $currentTd.index();
+            const $currentTr = $currentTd.closest("tr");
+            const $nextTr = $currentTr.next("tr");
+
+            if ($nextTr.length > 0) {
+                const $nextInput = $nextTr.find("td").eq(currentCol).find("input").eq(0);
+                if ($nextInput.length > 0) {
+                    $nextInput.focus();
+                }
+            }
+        }
+    });
+    function setupNavigation(inputClass, tdClass) {
+        $(document).on("keydown", inputClass, function (e) {
+            const $current = $(this);
+            const $td = $current.closest(tdClass);
+            const $tr = $current.closest("tr");
+            const $inputs = $td.find(inputClass);
+            const index = $inputs.index(this);
+
+            // Enterキー: 次の行の同じ列の同じ位置へ
+            if (e.key === "Enter") {
+                e.preventDefault();
+                const $nextTr = $tr.next("tr");
+                if ($nextTr.length > 0) {
+                    const $nextTd = $nextTr.find(tdClass);
+                    const $nextInputs = $nextTd.find(inputClass);
+                    if ($nextInputs.length > index) {
+                        $nextInputs.eq(index).focus();
+                    }
+                }
+            }
+
+            // Tabキー: 同じ列の中で移動し、最後なら次の行へ
+            if (e.key === "Tab" && !e.shiftKey) {
+                e.preventDefault();
+                if (index < $inputs.length - 1) {
+                    $inputs.eq(index + 1).focus();
+                } else {
+                    const $nextTr = $tr.next("tr");
+                    if ($nextTr.length > 0) {
+                        const $nextTd = $nextTr.find(tdClass);
+                        const $nextInputs = $nextTd.find(inputClass);
+                        if ($nextInputs.length > 0) {
+                            $nextInputs.eq(0).focus();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // エコ・アメ・デュべに対して適用
+    setupNavigation(".input_eco", ".td_eco");
+    setupNavigation(".input_amenity", "td:nth-child(2)");
+    setupNavigation(".input_duvet", ".td_duvet");
+
+
+
     function checkAndAddRow() {
         let allNameFilled = true;
         let allNoFilled = true;
@@ -126,14 +281,14 @@ $(document).ready(function () {
         $(".count_cell, .floor_cell, .key_cell").each(function () {
             const isInput = $(this).is("input");
             const value = isInput ? $(this).val().trim() : $(this).text().trim();
-        
+
             if (value === "None") {
                 $(this).addClass("non-bold");
             } else {
                 $(this).removeClass("non-bold");
             }
         });
-        
+
     }
 
     function updateHouseCount() {
@@ -282,7 +437,7 @@ $(document).ready(function () {
         });
 
         let lastRow = $(".input_remark_room").last().val().trim() === "" &&
-                      $(".input_remark").last().val().trim() === "";
+            $(".input_remark").last().val().trim() === "";
 
         if ((allRoomsFilled || allRemarksFilled) && !lastRow) {
             let rowCount = $(".input_remark").length + 1;
@@ -305,16 +460,16 @@ $(document).ready(function () {
     function updateResultTableColumns() {
         const headerRow = $("#result_table_header");
         headerRow.empty(); // 一度リセット
-    
+
         const names = [];
-    
+
         $(".input_name").each(function () {
             const name = $(this).val().trim();
             if (name && !names.includes(name)) {
                 names.push(name);
             }
         });
-    
+
         names.forEach(name => {
             headerRow.append(`<th>${name}</th>`);
         });
@@ -322,13 +477,13 @@ $(document).ready(function () {
     function updateResultTableColumns() {
         const headerRow = $("#result_table_header");
         const bathRow = $("#bath_row");
-    
+
         // 初期化
         headerRow.empty().append("<th></th>");
         bathRow.empty().append("<td><strong>大浴場清掃</strong></td>");
-    
+
         const nameNoPairs = [];
-    
+
         $(".tr_house").each(function () {
             const name = $(this).find(".input_name").val().trim();
             const no = $(this).find(".input_no").val().trim();
@@ -336,7 +491,7 @@ $(document).ready(function () {
                 nameNoPairs.push({ name, no });
             }
         });
-    
+
         const bathAssignedNos = [];
         $(".input_bath").each(function () {
             const val = $(this).val().trim();
@@ -344,7 +499,7 @@ $(document).ready(function () {
                 bathAssignedNos.push(val);
             }
         });
-    
+
         nameNoPairs.forEach(pair => {
             headerRow.append(`<th>${pair.name}</th>`);
             if (bathAssignedNos.includes(pair.no)) {
@@ -354,10 +509,10 @@ $(document).ready(function () {
             }
         });
     }
-    
+
     function updateAssignedRoomRows() {
         $(".room_cell_row").remove();
-    
+
         //番号と名前のペアを取得
         const nameNoPairs = [];
         $(".tr_house").each(function () {
@@ -367,7 +522,7 @@ $(document).ready(function () {
                 nameNoPairs.push({ name, no });
             }
         });
-    
+
         // 部屋の割り当てを取得
         const roomAssignments = [];
         $(".input_room").each(function () {
@@ -377,14 +532,14 @@ $(document).ready(function () {
                 roomAssignments.push({ room, no: val });
             }
         });
-    
+
         // エコ部屋のリストを取得
         const ecoRooms = new Set();
         $(".input_eco").each(function () {
             const eco = $(this).val().trim();
             if (eco !== "") ecoRooms.add(eco);
         });
-        
+
         // マッピング初期化
         const roomMap = {};
         nameNoPairs.forEach(({ no }) => {
@@ -402,9 +557,9 @@ $(document).ready(function () {
                 roomMap[no].normal.push(cleanRoom);  // ✅ 通常部屋
             }
         });
-    
+
         const $body = $("#result_table_body");
-    
+
         // 通常部屋の最大行数
         const maxNormal = Math.max(...Object.values(roomMap).map(r => r.normal.length), 0);
         if (maxNormal > 0) {
@@ -414,7 +569,7 @@ $(document).ready(function () {
                 normalLabelRow.append(`<td>${val}</td>`);
             });
             $body.append(normalLabelRow);
-    
+
             for (let i = 1; i < maxNormal; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                 nameNoPairs.forEach(({ no }) => {
@@ -424,7 +579,7 @@ $(document).ready(function () {
                 $body.append(row);
             }
         }
-    
+
         // エコ部屋の最大行数
         const maxEco = Math.max(...Object.values(roomMap).map(r => r.eco.length), 0);
         if (maxEco > 0) {
@@ -435,7 +590,7 @@ $(document).ready(function () {
                 ecoLabelRow.append(cell);
             });
             $body.append(ecoLabelRow);
-        
+
             for (let i = 1; i < maxEco; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                 nameNoPairs.forEach(({ no }) => {
@@ -445,12 +600,12 @@ $(document).ready(function () {
                 });
                 $body.append(row);
             }
-        }        
+        }
     }
 
     function updateEndTimeRow() {
         $("#end_time_row").remove(); // 前回の出力を削除
-    
+
         const nameNoPairs = [];
         $(".tr_house").each(function () {
             const name = $(this).find(".input_name").val().trim();
@@ -459,15 +614,15 @@ $(document).ready(function () {
                 nameNoPairs.push({ name, no });
             }
         });
-    
+
         const singleRooms = new Set(window.single_rooms || []);
         const twinRooms = new Set(window.twin_rooms || []);
-    
+
         const singleTime = parseInt($("#single_time").val()) || 0;
         const twinTime = parseInt($("#twin_time").val()) || 0;
         const bathTime = parseInt($("#bath_time").val()) || 0;
         const ecoTime = 5;  // ✅ エコ部屋の清掃時間は固定5分
-    
+
         const bathNos = [];
         $(".input_bath").each(function () {
             const val = $(this).val().trim();
@@ -475,7 +630,7 @@ $(document).ready(function () {
                 bathNos.push(val);
             }
         });
-    
+
         // 割り当て部屋とエコ部屋を集計
         const assignments = [];
         $(".input_room").each(function () {
@@ -485,7 +640,7 @@ $(document).ready(function () {
                 assignments.push({ room: String(room), no });
             }
         });
-    
+
         const ecoRooms = new Set();
         $(".input_eco").each(function () {
             const eco = $(this).val().trim();
@@ -493,13 +648,13 @@ $(document).ready(function () {
                 ecoRooms.add(eco);
             }
         });
-    
+
         const $row = $("<tr id='end_time_row'><td><strong>終了予定</strong></td></tr>");
-    
+
         nameNoPairs.forEach(({ no }) => {
             const assignedRooms = assignments.filter(a => a.no === no).map(a => a.room);
             let singleCount = 0, twinCount = 0, ecoCount = 0;
-    
+
             assignedRooms.forEach(room => {
                 if (ecoRooms.has(room)) {
                     ecoCount++;
@@ -509,26 +664,26 @@ $(document).ready(function () {
                     twinCount++;
                 }
             });
-    
+
             const hasBath = bathNos.includes(no);
             const totalMin = (singleCount * singleTime) + (twinCount * twinTime) + (ecoCount * ecoTime) + (hasBath ? bathTime : 0);
-    
+
             const base = new Date();
             base.setHours(9);
             base.setMinutes(30);
             base.setSeconds(0);
             base.setMilliseconds(0);
             base.setMinutes(base.getMinutes() + totalMin);
-    
+
             const hh = base.getHours().toString().padStart(2, "0");
             const mm = base.getMinutes().toString().padStart(2, "0");
             $row.append(`<td>${hh}:${mm}</td>`);
         });
-    
+
         $("#bath_row").before($row);
     }
-    
-    
+
+
     $("#delete_floor_btn").on("click", function () {
         const floorVal = $("#delete_floor").val().trim();
         if (floorVal === "") {
@@ -550,7 +705,7 @@ $(document).ready(function () {
         updateMutedRooms();            // muted 表示再更新
         updateAssignedRoomRows();      // 表示テーブル更新
     });
-    
+
 
     $(document).on("input", ".input_no, .input_name", function () {
         checkAndAddRow();
@@ -598,14 +753,14 @@ $(document).ready(function () {
     $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco", function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
-    });    
-    
+    });
+
     $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, #single_time, #twin_time, #bath_time", function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
         updateEndTimeRow(); // ← 追加
     });
-    
+
     $(document).on("input", ".input_no, .input_name, .input_room", function () {
         syncHiddenHouseFields();  // ← 追加
     });
@@ -622,5 +777,5 @@ $(document).ready(function () {
         updateAssignedRoomRows();
         updateEndTimeRow();
     }
-    
+
 });
