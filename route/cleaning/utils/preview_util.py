@@ -73,7 +73,6 @@ def weekly_cleaning(date):
     
 def calc_room(room_inputs, eco_rooms, duvet_rooms, remarks, person, single_rooms, twin_rooms):
     #ルームナンバーのリストを作成
-    print(room_inputs)
     room_nums = []
     for key, value in room_inputs.items():
         if str(person) in value:
@@ -155,3 +154,23 @@ def changeDate(date_str):
     weekday_jp = weekday_map[date_obj.weekday()]
     date_jp = str(date_obj.month) + '月' + str(date_obj.day) + '日 ('+ weekday_jp + ')'
     return date_jp
+
+def search_bath_person(bath_person, key_name_list):
+    name_list = []
+    for i in bath_person:
+        for j in key_name_list:
+            if str(i) == str(j[0]):
+                name_list.append(j[1])
+                break
+    return name_list
+
+def search_remarks_name_list(key_name_list, rooms):
+    remarks_list = []
+    for i, person_rooms in enumerate(rooms):
+        name = key_name_list[i][1]
+        for room in person_rooms:
+            remark = room.get("remark", "").strip()
+            room_num = room.get("room_num", "")
+            if remark:  # 備考がある場合のみ
+                remarks_list.append((room_num, remark, name))
+    return remarks_list

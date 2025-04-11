@@ -6,7 +6,162 @@
 <link rel="stylesheet" href="{% static 'preview.css' %}">
 <script src="{% static 'preview.js' %}"></script>
 
+<div class="preview_container">
+    <p class="cover_title">清掃指示内容</p>
+    <div class="cover_second_line">
+        <p>{{date}}</p>
+        <div class="house_people">
+            <p>ハウスさん</p>
+            <p>{{house_person_count}}</p>
+            <p>名</p>
+        </div>
+    </div>
+    <div class="cleaning_room_num">
+        <p>ナイト清掃指示部屋総数</p>
+        <p class="total_rooms">　{{total_cleaning_room}}　</p>
+        <p>部屋</p>
+    </div>
+    <p class="cover_semi_title">大浴場担当者</p>
+    <div class="bath_persons">
+        {% for person in bath_person %}
+        <p>{{person}}</p>
+        <p>さん　</p>
+        {% endfor %}
+    </div>
+    <p class="cover_semi_title">ルームチェンジ</p>
+    <div class="room_change">
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん　　　</p>
+        <p>→</p>
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん</p>
+    </div>
+    <div class="room_change">
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん　　　</p>
+        <p>→</p>
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん</p>
+    </div>
+    <div class="room_change">
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん　　　</p>
+        <p>→</p>
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん</p>
+    </div>
+    <div class="room_change">
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん　　　</p>
+        <p>→</p>
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん</p>
+    </div>
+    <div class="room_change">
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん　　　</p>
+        <p>→</p>
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん</p>
+    </div>
+    <div class="cover_outin_roomchange">
+        <div >
+            <p class="cover_semisemi_title">アウト/イン</p>
+            <div class="outin_line">
+                <p>　　　　　</p>
+                <p>号室</p>
+                <p>　　　　　　　</p>
+                <p>号室</p>
+            </div>
+            <div class="outin_line">
+                <p>　　　　　</p>
+                <p>号室</p>
+                <p>　　　　　　　</p>
+                <p>号室</p>
+            </div>
+            <div class="outin_line">
+                <p>　　　　　</p>
+                <p>号室</p>
+                <p>　　　　　　　</p>
+                <p>号室</p>
+            </div>
+            <div class="outin_line">
+                <p>　　　　　</p>
+                <p>号室</p>
+                <p>　　　　　　　</p>
+                <p>号室</p>
+            </div>
+        </div>
+        <div class="room_change_reason">
+            <p class="cover_semisemi_title">ルームチェンジ等の為要清掃　理由</p>
+            <div class="outin_line">
+                <p>　　　　　</p>
+                <p>号室</p>
+                <p>　　　　　　　　　　</p>
+            </div>
+            <div class="outin_line">
+                <p>　　　　　</p>
+                <p>号室</p>
+                <p>　　　　　　　　　　</p>
+            </div>
+            <div class="outin_line">
+                <p>　　　　　</p>
+                <p>号室</p>
+                <p>　　　　　　　　　　</p>
+            </div>
+            <div class="outin_line">
+                <p>　　　　　</p>
+                <p>号室</p>
+                <p>　　　　　　　　　　</p>
+            </div>
+        </div>
+    </div>
+    <p class="cover_semi_title">入れ込み・回収指示</p>
+    <div class="cover_remark">
+        <table class="table table-striped table-bordered bottom_table">
+            {% for remark in remarks %}
+            <tr class="cover_tr">
+                <td class="cover_room_num">{{ remark.0 }}号室</td>
+                <td>{{ remark.1 }}</td>
+                <td class="cover_name">{{ remark.2 }}さん</td>
+            </tr>
+            {% endfor %}
+        
+            {# 1行追加した上で最低12行になるよう空行追加 #}
+            {% with remarks|length as remark_len %}
+                {% for i in remark_len|add:"1"|until:13 %}
+                <tr class="cover_tr">
+                    <td class="cover_room_num_null">　　　号室</td>
+                    <td></td>
+                    <td class="cover_name_null">　　　　さん</td>
+                </tr>
+                {% endfor %}
+            {% endwith %}
+        </table>
+        
+    </div>
 
+</div>
 {% for person_data in data %}
 <div class="preview_container">
     <div class="title">
