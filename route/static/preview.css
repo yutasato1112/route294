@@ -311,3 +311,24 @@ td{
     line-height: 12px;
     font-weight: bold;
 }
+
+@media print {
+    @page {
+        margin: 1cm;
+    }
+
+    body {
+        margin: 0 !important;
+    }
+
+    .preview_container {
+        box-shadow: none !important; 
+        margin: 0 auto;
+        width: auto;
+        height: auto;
+        page-break-inside: avoid;
+    }
+
+    /* 印刷に不要な要素があれば非表示にする */
+    /* .non-print { display: none; } など */
+}
