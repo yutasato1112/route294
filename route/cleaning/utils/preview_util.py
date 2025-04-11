@@ -71,7 +71,7 @@ def weekly_cleaning(date):
     else:
         return 'Invalid date'
     
-def calc_room(room_inputs, eco_rooms, duvet_rooms, remarks, person, single_rooms, twin_rooms):
+def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms):
     #ルームナンバーのリストを作成
     room_nums = []
     for key, value in room_inputs.items():
@@ -87,10 +87,14 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, remarks, person, single_rooms
     for room_num in room_nums:
         eco = False
         duvet = False
+        ame = False
         remark_comment = ''
         #eco_roomsのリストを作成
         if room_num in eco_rooms:
             eco = True
+        #ame_roomsのリスト作成
+        if room_num in ame_rooms:
+            ame = True
         #duvet_roomsのリストを作成
         if room_num in duvet_rooms:
             duvet = True
@@ -98,6 +102,15 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, remarks, person, single_rooms
         for remark in remarks:
             if room_num in remark['room']:
                 remark_comment = remark['comment']
+                if eco == True and ame == True:
+                    remark_comment = 'エコ外　' + remark_comment
+                elif eco == True:
+                    remark_comment = 'エコ　' + remark_comment
+            else:
+                if eco == True and ame == True:
+                    remark_comment = 'エコ外　' + remark_comment
+                elif eco == True:
+                    remark_comment = 'エコ　' + remark_comment
         #部屋タイプ
         room_type = 'E'
         if room_num in single_rooms:
@@ -172,5 +185,6 @@ def search_remarks_name_list(key_name_list, rooms):
             remark = room.get("remark", "").strip()
             room_num = room.get("room_num", "")
             if remark:  # 備考がある場合のみ
-                remarks_list.append((room_num, remark, name))
+                if remark !="エコ" and remark != "エコ外":
+                    remarks_list.append((room_num, remark.replace("エコ外", "").replace("エコ", "").strip(), name))
     return remarks_list

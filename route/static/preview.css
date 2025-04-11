@@ -190,7 +190,10 @@ td{
 .important{
     font-weight: bold;
 }
-
+.remark_content{
+    font-size: 14px;
+    font-weight: bold;
+}
 
 
 
