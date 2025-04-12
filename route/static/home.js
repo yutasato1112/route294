@@ -1,13 +1,16 @@
 $(document).ready(function () {
     let masterKeyList = window.master_key || [];
     let usedKeys = [];
-
+    
+    //キーイベント系
+    //enterで送信しない
     $(document).on("keydown", "input", function (e) {
         // Enterキー押下時
         if (e.key === "Enter") {
             e.preventDefault();  // フォーム送信を防止
         }
     });
+    //部屋情報表のtab・enter移動
     $(document).on("keydown", ".input_room", function (e) {
         const inputs = $(".input_room");
         const index = inputs.index(this);
@@ -27,7 +30,6 @@ $(document).ready(function () {
                 }
             }
         }
-
         // Tabキーで通常の右移動だが、最終列なら次行の先頭へ（オプション）
         if (e.key === "Tab" && !e.shiftKey) {
             const isLast = index === inputs.length - 1;
@@ -38,6 +40,7 @@ $(document).ready(function () {
             }
         }
     });
+    //ハウスさん表のtab・enter移動
     $(document).on("keydown", "#house_table_body input", function (e) {
         const inputs = $("#house_table_body input:visible");
         const index = inputs.index(this);
@@ -70,6 +73,7 @@ $(document).ready(function () {
             }
         }
     });
+    //エコ・アメ・デュべ表のtab・enter移動
     $(document).on("keydown", "#clean_method_body input", function (e) {
         const $inputsInRow = $(this).closest("tr").find("input");
         const $inputsAll = $("#clean_method_body input");
@@ -103,6 +107,81 @@ $(document).ready(function () {
             }
         }
     });
+    //ハウスさん表の番号が入力された際の処理
+    $(document).on("input", ".input_no, .input_name", function () {
+        checkAndAddRow();
+        updateHouseCount();
+        updateHouseFloorAssignments();
+        updateNoneStyling();
+    });
+    //部屋情報表が入力された際の処理
+    $(document).on("input", ".input_room", function () {
+        updateHouseCount();
+        updateHouseFloorAssignments();
+        updateMutedRooms();
+        updateNoneStyling();
+    });
+    //ハウスさん表の番号が変更された際の処理
+    $(document).on("change", ".input_no", function (e) {
+        const result = checkDuplicateNo($(this));
+        if (result === false) {
+            e.preventDefault();
+        }
+    });
+    //エコ・アメ・デュべ表のエコ・デュべが入力された時の処理
+    $(document).on("input", ".input_eco, .input_duvet", function () {
+        highlightRooms();
+    });
+    //エコ・アメ・デュべ表のエコ・アメ・デュべが入力された時の処理
+    $(document).on("input", ".input_eco, .input_amenity, .input_duvet", function () {
+        checkAndAddCleanMethodRow();
+    });
+    //備考表の部屋番号・備考が入力された時の処理
+    $(document).on("input", ".input_remark_room, .input_remark", function () {
+        checkAndAddRemarkRow();
+    });
+    //ハウスさん表の名前が入力された時の処理
+    $(document).on("input", ".input_name", function () {
+        checkAndAddRow(); 
+        updateHouseCount(); 
+        updateHouseFloorAssignments(); 
+        updateNoneStyling(); 
+        updateResultTableColumns(); 
+    });
+    //
+    $(document).on("input", ".input_name, .input_no, .input_bath", function () {
+        updateResultTableColumns();
+    });
+    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco", function () {
+        updateResultTableColumns();
+        updateAssignedRoomRows();
+    });
+
+    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, #single_time, #twin_time, #bath_time", function () {
+        updateResultTableColumns();
+        updateAssignedRoomRows();
+        updateEndTimeRow();
+    });
+
+    $(document).on("input", ".input_no, .input_name, .input_room", function () {
+        syncHiddenHouseFields();  
+    });
+
+    updateHouseCount();
+    updateHouseFloorAssignments();
+    updateMutedRooms();
+    updateNoneStyling();
+    highlightRooms();
+    updateEndTimeRow();
+
+    if (window.method === "POST") {
+        updateResultTableColumns();
+        updateAssignedRoomRows();
+        updateEndTimeRow();
+    }
+
+
+    //表移動
     function setupNavigation(inputClass, tdClass) {
         $(document).on("keydown", inputClass, function (e) {
             const $current = $(this);
@@ -149,7 +228,7 @@ $(document).ready(function () {
     setupNavigation(".input_duvet", ".td_duvet");
 
 
-
+    //ハウスさん表の行追加
     function checkAndAddRow() {
         let allNameFilled = true;
         let allNoFilled = true;
@@ -199,6 +278,7 @@ $(document).ready(function () {
         }
     }
 
+    //マスターキーの更新
     function updateHouseKeys() {
         usedKeys = [];
 
@@ -227,6 +307,7 @@ $(document).ready(function () {
         });
     }
 
+    //担当階を更新
     function updateHouseFloorAssignments() {
         const roomAssignments = {};
 
@@ -270,6 +351,7 @@ $(document).ready(function () {
         updateHouseKeys();
     }
 
+    //ハウスさん表でNone表示の時の処理
     function updateNoneStyling() {
         $(".count_cell, .floor_cell, .key_cell").each(function () {
             const isInput = $(this).is("input");
@@ -284,6 +366,7 @@ $(document).ready(function () {
 
     }
 
+    //担当部屋数カウント
     function updateHouseCount() {
         let roomValues = [];
         $(".input_room").each(function () {
@@ -306,6 +389,7 @@ $(document).ready(function () {
         });
     }
 
+    //清掃不要の場合の処理
     function updateMutedRooms() {
         $(".input_room").each(function () {
             const $input = $(this);
@@ -320,6 +404,7 @@ $(document).ready(function () {
         });
     }
 
+    //エコ・デュべの時の処理
     function highlightRooms() {
         $('[data-room]').css('background-color', '');
 
@@ -340,6 +425,7 @@ $(document).ready(function () {
         });
     }
 
+    //ハウスさん表で番号重複を管理
     function checkDuplicateNo(currentInput) {
         const currentVal = currentInput.val().trim();
         if (currentVal === "") return;
@@ -363,6 +449,7 @@ $(document).ready(function () {
         }
     }
 
+    //エコ・アメ・デュべ表で行追加
     function checkAndAddCleanMethodRow() {
         let allEcoFilled = true;
         let allAmenityFilled = true;
@@ -413,6 +500,7 @@ $(document).ready(function () {
         }
     }
 
+    //備考表の行追加
     function checkAndAddRemarkRow() {
         let allRoomsFilled = true;
         let allRemarksFilled = true;
@@ -450,23 +538,7 @@ $(document).ready(function () {
         }
     }
 
-    function updateResultTableColumns() {
-        const headerRow = $("#result_table_header");
-        headerRow.empty(); // 一度リセット
-
-        const names = [];
-
-        $(".input_name").each(function () {
-            const name = $(this).val().trim();
-            if (name && !names.includes(name)) {
-                names.push(name);
-            }
-        });
-
-        names.forEach(name => {
-            headerRow.append(`<th>${name}</th>`);
-        });
-    }
+    //清掃指示表の氏名(列数)と大浴場清掃を管理
     function updateResultTableColumns() {
         const headerRow = $("#result_table_header");
         const bathRow = $("#bath_row");
@@ -503,6 +575,7 @@ $(document).ready(function () {
         });
     }
 
+    //清掃指示表で担当部屋・エコ部屋を管理
     function updateAssignedRoomRows() {
         $(".room_cell_row").remove();
 
@@ -596,6 +669,7 @@ $(document).ready(function () {
         }
     }
 
+    //清掃指示表で終了予定時刻を管理
     function updateEndTimeRow() {
         $("#end_time_row").remove(); // 前回の出力を削除
 
@@ -676,7 +750,7 @@ $(document).ready(function () {
         $("#bath_row").before($row);
     }
 
-
+    //階数の一括処理
     $("#delete_floor_btn").on("click", function () {
         const floorVal = $("#delete_floor").val().trim();
         if (floorVal === "") {
@@ -698,77 +772,4 @@ $(document).ready(function () {
         updateMutedRooms();            // muted 表示再更新
         updateAssignedRoomRows();      // 表示テーブル更新
     });
-
-
-    $(document).on("input", ".input_no, .input_name", function () {
-        checkAndAddRow();
-        updateHouseCount();
-        updateHouseFloorAssignments();
-        updateNoneStyling();
-    });
-
-    $(document).on("input", ".input_room", function () {
-        updateHouseCount();
-        updateHouseFloorAssignments();
-        updateMutedRooms();
-        updateNoneStyling();
-    });
-
-    $(document).on("change", ".input_no", function (e) {
-        const result = checkDuplicateNo($(this));
-        if (result === false) {
-            e.preventDefault();
-        }
-    });
-
-    $(document).on("input", ".input_eco, .input_duvet", function () {
-        highlightRooms();
-    });
-
-    $(document).on("input", ".input_eco, .input_amenity, .input_duvet", function () {
-        checkAndAddCleanMethodRow();
-    });
-
-    $(document).on("input", ".input_remark_room, .input_remark", function () {
-        checkAndAddRemarkRow();
-    });
-
-    $(document).on("input", ".input_name", function () {
-        checkAndAddRow(); 
-        updateHouseCount(); 
-        updateHouseFloorAssignments(); 
-        updateNoneStyling(); 
-        updateResultTableColumns(); 
-    });
-    $(document).on("input", ".input_name, .input_no, .input_bath", function () {
-        updateResultTableColumns();
-    });
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco", function () {
-        updateResultTableColumns();
-        updateAssignedRoomRows();
-    });
-
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, #single_time, #twin_time, #bath_time", function () {
-        updateResultTableColumns();
-        updateAssignedRoomRows();
-        updateEndTimeRow(); // ← 追加
-    });
-
-    $(document).on("input", ".input_no, .input_name, .input_room", function () {
-        syncHiddenHouseFields();  // ← 追加
-    });
-
-    updateHouseCount();
-    updateHouseFloorAssignments();
-    updateMutedRooms();
-    updateNoneStyling();
-    highlightRooms();
-    updateEndTimeRow();
-
-    if (window.method === "POST") {
-        updateResultTableColumns();
-        updateAssignedRoomRows();
-        updateEndTimeRow();
-    }
-
 });
