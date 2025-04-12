@@ -52,6 +52,9 @@ class homeView(TemplateView):
             'room_char_list_len':10,
             'remarks_len':3,
             'add_remarks_len':0,
+            'room_changes_len':3,
+            'outins_len':3,
+            'must_cleans_len':3
         }
         return render(self.request, self.template_name, context)
     
@@ -86,6 +89,10 @@ class homeView(TemplateView):
         eco_rooms = data['eco_rooms']
         ame_rooms = data['ame_rooms']
         duvet_rooms = data['duvet_rooms']
+        room_changes = data['room_changes']
+        outins = data['outins']
+        must_cleans = data['must_cleans']
+        others = data['others']
         
         #備考の欄数
         if len(remarks) < 3:
@@ -106,7 +113,13 @@ class homeView(TemplateView):
             room_char_list_len = 10-len(house_person)
         else:
             room_char_list_len = 1
-            
+        
+        #大浴場追加要員
+        original_add_bath = data['add_bath']
+        add_bath = []
+        for i in original_add_bath:
+            if i != '':
+                add_bath.append(i)
         context = {
             'method':method,
             'single_time':single_time,
@@ -131,5 +144,13 @@ class homeView(TemplateView):
             'room_char_list_len':room_char_list_len,
             'remarks_len':remarks_len,
             'add_remarks_len':len(remarks),
+            'room_changes_len':len(room_changes),
+            'outins_len':len(outins),
+            'must_cleans_len':len(must_cleans),
+            'room_changes':room_changes,
+            'outins':outins,
+            'must_cleans':must_cleans,
+            'others':others,
+            'add_bath':add_bath
         }
         return render(self.request, self.template_name, context)

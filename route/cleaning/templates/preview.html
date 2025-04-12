@@ -29,13 +29,26 @@
         {% endfor %}
     </div>
     <p class="cover_semi_title">ルームチェンジ</p>
+    {% for room_change in room_changes_persons %}
+    <div class="room_change">
+        <p>　　{{room_change.original}}</p>
+        <p>号室</p>
+        <p>　　{{room_change.original_name}}</p>
+        <p>さん　　　</p>
+        <p>→</p>
+        <p>　　{{room_change.destination}}</p>
+        <p>号室</p>
+        <p>　　{{room_change.destination_name}}</p>
+        <p>さん</p>
+    </div>
+    {% endfor %}
     <div class="room_change">
         <p>　　　　　</p>
         <p>号室</p>
         <p>　　　　　</p>
         <p>さん　　　</p>
         <p>→</p>
-        <p>　　　　　</p>
+        <p>　　　　　　</p>
         <p>号室</p>
         <p>　　　　　</p>
         <p>さん</p>
@@ -46,59 +59,24 @@
         <p>　　　　　</p>
         <p>さん　　　</p>
         <p>→</p>
-        <p>　　　　　</p>
+        <p>　　　　　　</p>
         <p>号室</p>
         <p>　　　　　</p>
         <p>さん</p>
     </div>
-    <div class="room_change">
-        <p>　　　　　</p>
-        <p>号室</p>
-        <p>　　　　　</p>
-        <p>さん　　　</p>
-        <p>→</p>
-        <p>　　　　　</p>
-        <p>号室</p>
-        <p>　　　　　</p>
-        <p>さん</p>
-    </div>
-    <div class="room_change">
-        <p>　　　　　</p>
-        <p>号室</p>
-        <p>　　　　　</p>
-        <p>さん　　　</p>
-        <p>→</p>
-        <p>　　　　　</p>
-        <p>号室</p>
-        <p>　　　　　</p>
-        <p>さん</p>
-    </div>
-    <div class="room_change">
-        <p>　　　　　</p>
-        <p>号室</p>
-        <p>　　　　　</p>
-        <p>さん　　　</p>
-        <p>→</p>
-        <p>　　　　　</p>
-        <p>号室</p>
-        <p>　　　　　</p>
-        <p>さん</p>
-    </div>
+
+    
     <div class="cover_outin_roomchange">
-        <div >
+        <div>
             <p class="cover_semisemi_title">アウト/イン</p>
+            {% for outinA, outinB in outins %}
             <div class="outin_line">
-                <p>　　　　　</p>
+                <p>{{outinA}}</p>
                 <p>号室</p>
-                <p>　　　　　　　</p>
+                <p>{{outinB}}</p>
                 <p>号室</p>
             </div>
-            <div class="outin_line">
-                <p>　　　　　</p>
-                <p>号室</p>
-                <p>　　　　　　　</p>
-                <p>号室</p>
-            </div>
+            {% endfor %}
             <div class="outin_line">
                 <p>　　　　　</p>
                 <p>号室</p>
@@ -114,16 +92,13 @@
         </div>
         <div class="room_change_reason">
             <p class="cover_semisemi_title">ルームチェンジ等の為要清掃　理由</p>
+            {% for must_clean in must_cleans %}
             <div class="outin_line">
-                <p>　　　　　</p>
+                <p>　　{{must_clean.room}}　</p>
                 <p>号室</p>
-                <p>　　　　　　　　　　</p>
+                <p>　　{{must_clean.reason}}</p>
             </div>
-            <div class="outin_line">
-                <p>　　　　　</p>
-                <p>号室</p>
-                <p>　　　　　　　　　　</p>
-            </div>
+            {% endfor %}
             <div class="outin_line">
                 <p>　　　　　</p>
                 <p>号室</p>
@@ -147,9 +122,9 @@
             </tr>
             {% endfor %}
         
-            {# 1行追加した上で最低12行になるよう空行追加 #}
+            {# 1行追加した上で最低10行になるよう空行追加 #}
             {% with remarks|length as remark_len %}
-                {% for i in remark_len|add:"1"|until:13 %}
+                {% for i in remark_len|add:"1"|until:11 %}
                 <tr class="cover_tr">
                     <td class="cover_room_num_null">　　　号室</td>
                     <td></td>
@@ -158,7 +133,10 @@
                 {% endfor %}
             {% endwith %}
         </table>
-        
+    </div>
+    <p class="cover_semi_title">その他備考</p>
+    <div class="cover_others">
+        <p>{{others}}</p>
     </div>
 
 </div>

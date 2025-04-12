@@ -271,6 +271,9 @@ td{
     font-size: 15px;
     height: 22px;
 }
+.room_change p{
+    margin:auto
+}
 .cover_outin_roomchange{
     display: flex;
     justify-content: space-between;
@@ -313,6 +316,11 @@ td{
     line-height: 12px;
     font-weight: bold;
 }
+.cover_others{
+    width: 70%;
+    margin: auto;
+}
+
 
 @media print {
     @page {

@@ -89,18 +89,36 @@ th{
 
 .input_room {
     width: 100%;
-    font-size: 11px;      /* ← 入力欄の文字も小さく */
+    font-size: 11px;      
     padding: 2px;
     box-sizing: border-box;
+}
+.selected {
+    border: 2px solid blue;
+    background-color: #eef;
 }
 .room-muted {
     background-color: #f0f0f0 !important;
     opacity: 0.2;
 }
 
-.attention_note{
+.room_table_bottom{
     margin-bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    margin: auto;
 }
+.all_clean_rooms{
+    display: flex;
+}
+.instruction_rooms{
+    display: flex;
+}
+.rooms_judge{
+    display: flex;
+}
+
 
 .second_line{
     display: flex;
@@ -262,4 +280,79 @@ input[type="number"]::-webkit-inner-spin-button {
     background-color: white;
     margin-top: 1vh;
     padding-top: 1vh;
+}
+
+.bottom_line {
+    display: flex;
+    justify-content: space-between;
+}
+
+.bottom_line > div {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    margin-bottom: 2vh;
+    padding: 0.5vh;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* 横幅設定（現状維持） */
+.room_change {
+    width: 15%;
+}
+.outin {
+    width: 10%;
+}
+.must_clean {
+    width: 37%;
+}
+.others {
+    width: 37%;
+}
+
+/* テーブルとセル設定 */
+.bottom_table {
+    width: 100%;
+    table-layout: fixed; /* セル幅均等 */
+    border-collapse: collapse;
+}
+
+.bottom_table th,
+.bottom_table td {
+    padding: 4px;
+    text-align: center;
+    vertical-align: middle;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+/* inputをセルに収める */
+.bottom_table input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 3px 5px;
+    font-size: 0.9em;
+}
+
+/* 備考エリア */
+.others textarea {
+    width: 100%;
+    height: 100px;
+    box-sizing: border-box;
+    resize: vertical;
+    padding: 6px;
+    font-size: 0.9em;
+}
+.must_clean_room{
+    width: 20%;
+}
+
+.bath_only_area{
+    background-color: white;
+    border:  1px solid #ccc;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    padding: 2%;
 }

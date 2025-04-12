@@ -10,6 +10,44 @@ $(document).ready(function () {
             e.preventDefault();  // フォーム送信を防止
         }
     });
+
+    // 選択に追加
+    function addSelection(input) {
+        selectedInputs.add(input);
+        $(input).addClass("selected");
+    }
+
+    // 選択クリア
+    function clearSelection() {
+        selectedInputs.forEach(el => $(el).removeClass("selected"));
+        selectedInputs.clear();
+    }
+
+
+    //エンターの処理
+    $(document).on("keydown", ".bottom_table input", function (e) {
+        if (e.key !== "Enter") return;
+    
+        e.preventDefault();
+    
+        const $currentInput = $(this);
+        const $currentTd = $currentInput.closest("td");
+        const colIndex = $currentTd.index();
+        const $currentTr = $currentInput.closest("tr");
+        const $tableBody = $currentTr.closest("tbody");
+    
+        const $rows = $tableBody.find("tr");
+        const currentRowIndex = $rows.index($currentTr);
+        const $nextRow = $rows.eq(currentRowIndex + 1);
+    
+        if ($nextRow.length > 0) {
+            const $nextInput = $nextRow.find("td").eq(colIndex).find("input");
+            if ($nextInput.length > 0) {
+                $nextInput.focus();
+            }
+        }
+    });
+
     //部屋情報表のtab・enter移動
     $(document).on("keydown", ".input_room", function (e) {
         const inputs = $(".input_room");
@@ -73,40 +111,63 @@ $(document).ready(function () {
             }
         }
     });
-    //エコ・アメ・デュべ表のtab・enter移動
     $(document).on("keydown", "#clean_method_body input", function (e) {
-        const $inputsInRow = $(this).closest("tr").find("input");
-        const $inputsAll = $("#clean_method_body input");
-        const colIndex = $(this).closest("td").index();
         const $currentInput = $(this);
-
-        // タブキー：次の input（ただし行内限定）
+        const $currentTd = $currentInput.closest("td");
+        const $currentTr = $currentTd.closest("tr");
+        const $allRows = $("#clean_method_body tr");
+        const currentCol = $currentTd.index();
+        const currentRowIndex = $allRows.index($currentTr);
+    
+        const $inputsInRow = $currentTr.find("input");
+    
         if (e.key === "Tab" && !e.shiftKey) {
+            // 行内で右のセルに移動（列末なら通常のタブ動作）
             const indexInRow = $inputsInRow.index(this);
             if (indexInRow < $inputsInRow.length - 1) {
                 e.preventDefault();
                 $inputsInRow.eq(indexInRow + 1).focus();
             }
-            // 行末では通常の Tab 処理に任せる（次の input へ）
         }
-
-        // エンターキー：同じ列の次の行の input
+    
         if (e.key === "Enter") {
             e.preventDefault();
-
-            const $currentTd = $currentInput.closest("td");
-            const currentCol = $currentTd.index();
-            const $currentTr = $currentTd.closest("tr");
+    
             const $nextTr = $currentTr.next("tr");
-
+    
+            // 次の行があれば、同じ列の次行のセルに移動
             if ($nextTr.length > 0) {
                 const $nextInput = $nextTr.find("td").eq(currentCol).find("input").eq(0);
                 if ($nextInput.length > 0) {
                     $nextInput.focus();
+                    return;
+                }
+            }
+    
+            // ↓↓↓ 最後の行だった場合：同じグループの次の列の先頭へ ↓↓↓
+    
+            const isEco = $currentTd.hasClass("td_eco");
+            const isDuvet = $currentTd.hasClass("td_duvet");
+    
+            if (isEco || isDuvet) {
+                // 同じ tr を使って、同じグループ内の次の列へ
+                const $inputsInGroup = isEco ? $currentTr.find(".input_eco") :
+                                      isDuvet ? $currentTr.find(".input_duvet") : $();
+    
+                const indexInGroup = $inputsInGroup.index(this);
+                if (indexInGroup !== -1 && indexInGroup < $inputsInGroup.length - 1) {
+                    const $firstInputInNextCol = $allRows.eq(0)
+                        .find(isEco ? ".input_eco" : ".input_duvet")
+                        .eq(indexInGroup + 1);
+    
+                    if ($firstInputInNextCol.length > 0) {
+                        $firstInputInNextCol.focus();
+                    }
                 }
             }
         }
     });
+    
     //ハウスさん表の番号が入力された際の処理
     $(document).on("input", ".input_no, .input_name", function () {
         checkAndAddRow();
@@ -120,6 +181,7 @@ $(document).ready(function () {
         updateHouseFloorAssignments();
         updateMutedRooms();
         updateNoneStyling();
+        updateRoomStats();
     });
     //ハウスさん表の番号が変更された際の処理
     $(document).on("change", ".input_no", function (e) {
@@ -166,6 +228,16 @@ $(document).ready(function () {
     $(document).on("input", ".input_no, .input_name, .input_room", function () {
         syncHiddenHouseFields();  
     });
+    $(document).on("input", ".room_change_original, .room_change_destination", function () {
+        checkAndAddRoomChangeRow();
+    });
+    $(document).on("input", ".outin_room", function () {
+        checkAndAddOutInRow();
+    });
+    $(document).on("input", ".must_clean_room, .must_clean_reason", function () {
+        checkAndAddMustCleanRow();
+    });
+    
 
     updateHouseCount();
     updateHouseFloorAssignments();
@@ -173,6 +245,7 @@ $(document).ready(function () {
     updateNoneStyling();
     highlightRooms();
     updateEndTimeRow();
+    updateRoomStats();
 
     if (window.method === "POST") {
         updateResultTableColumns();
@@ -550,16 +623,18 @@ $(document).ready(function () {
         const bathAssignedNos = [];
         $(".input_bath").each(function () {
             const val = $(this).val().trim();
-            if (val !== "") {
+            if (val !== "" && val !== "0") {
                 bathAssignedNos.push(val);
             }
         });
     
-        // input_roomに記載された番号のユニーク集合
+        // input_roomに記載された番号のユニーク集合（0を除く）
         const assignedNos = new Set();
         $(".input_room").each(function () {
             const val = $(this).val().trim();
-            if (val !== "") assignedNos.add(val);
+            if (val !== "" && val !== "0") {
+                assignedNos.add(val);
+            }
         });
     
         // No → Name の対応辞書（ない場合は "None"）
@@ -581,26 +656,25 @@ $(document).ready(function () {
     function updateAssignedRoomRows() {
         $(".room_cell_row").remove();
     
-        // input_roomに記載された番号のユニーク集合
+        // input_roomに記載された番号のユニーク集合（0を除く）
         const assignedNos = new Set();
         $(".input_room").each(function () {
             const val = $(this).val().trim();
-            if (val !== "") assignedNos.add(val);
+            if (val !== "" && val !== "0") assignedNos.add(val);
         });
     
         const nos = [...assignedNos];
     
-        // 部屋の割り当て取得
+        // 部屋の割り当て取得（0を除く）
         const roomAssignments = [];
         $(".input_room").each(function () {
             const room = $(this).closest("td").data("room");
             const no = $(this).val().trim();
-            if (room && no) {
+            if (room && no !== "" && no !== "0") {
                 roomAssignments.push({ room: String(room), no });
             }
         });
     
-        // エコ部屋
         const ecoRooms = new Set();
         $(".input_eco").each(function () {
             const val = $(this).val().trim();
@@ -618,6 +692,12 @@ $(document).ready(function () {
                 roomMap[no].normal.push(room);
             }
         });
+
+        Object.values(roomMap).forEach(roomLists => {
+            roomLists.normal.sort((a, b) => parseInt(a) - parseInt(b));
+            roomLists.eco.sort((a, b) => parseInt(a) - parseInt(b));
+        });
+    
     
         const $body = $("#result_table_body");
     
@@ -660,8 +740,8 @@ $(document).ready(function () {
                 $body.append(row);
             }
         }
-    }    
-
+    }
+    
     //清掃指示表で終了予定時刻を管理
     function updateEndTimeRow() {
         $("#end_time_row").remove();
@@ -676,7 +756,7 @@ $(document).ready(function () {
         const bathNos = [];
         $(".input_bath").each(function () {
             const val = $(this).val().trim();
-            if (val !== "") {
+            if (val !== "" && val !== "0") {
                 bathNos.push(val);
             }
         });
@@ -685,7 +765,7 @@ $(document).ready(function () {
         $(".input_room").each(function () {
             const no = $(this).val().trim();
             const room = $(this).closest("td").data("room");
-            if (no && room) {
+            if (no !== "" && no !== "0" && room) {
                 assignments.push({ room: String(room), no });
             }
         });
@@ -731,6 +811,136 @@ $(document).ready(function () {
     }
     
 
+    //全体清掃部屋・清掃指示部屋数の管理
+    function updateRoomStats() {
+        let allCleanCountMinus = 0;
+        let instructionCount = 0;
+        let roomCount = 0
+    
+        $(".input_room").each(function () {
+            const val = $(this).val().trim();
+            roomCount++;
+            // 0以外なら全体清掃にカウント
+            if (val == "0" ) {
+                allCleanCountMinus++;
+            }
+    
+            // 空欄と0以外が入力されている場合、指示清掃にカウント
+            if (val !== "" && val !== "0") {
+                instructionCount++;
+            }
+        });
+        allCleanCount = roomCount - allCleanCountMinus;
+        $(".all_clean_rooms_num").text(allCleanCount);
+        $(".instruction_rooms_num").text(instructionCount);
+    
+        const result = (allCleanCount === instructionCount) ? "OK" : "NG";
+        $(".judge").text(result);
+    }
+
+    //ルームチェンジ表の行追加
+    function checkAndAddRoomChangeRow() {
+        let allRoomsFilled = true;
+        let allRemarksFilled = true;
+
+        $(".room_change_original").each(function () {
+            if ($(this).val().trim() === "") {
+                allRoomsFilled = false;
+            }
+        });
+
+        $(".room_change_destination").each(function () {
+            if ($(this).val().trim() === "") {
+                allRemarksFilled = false;
+            }
+        });
+
+        let lastRow = $(".room_change_original").last().val().trim() === "" &&
+            $(".room_change_destination").last().val().trim() === "";
+
+        if ((allRoomsFilled || allRemarksFilled) && !lastRow) {
+            let rowCount = $(".room_change_original").length + 1;
+
+            let newRow = `
+                <tr>
+                    <td>
+                        <input type="text" name="room_change_original" id="room_change_original_${rowCount}" class="room_change_original">
+                    </td>
+                    <td>
+                        <input type="text" name="room_change_destination" id="room_change_destination_${rowCount}" class="room_change_destination">
+                    </td>
+                </tr>
+            `;
+
+            $("#room_change_table_body").append(newRow);
+        }
+    }
+
+    //アウト/イン表の行追加
+    function checkAndAddOutInRow() {
+        let allRoomsFilled = true;
+
+        $(".outin_room").each(function () {
+            if ($(this).val().trim() === "") {
+                allRoomsFilled = false;
+            }
+        });
+
+        let lastRow = $(".outin_room").last().val().trim() === "";
+
+        if ((allRoomsFilled) && !lastRow) {
+            let rowCount = $(".outin_room").length + 1;
+
+            let newRow = `
+                <tr>
+                    <td>
+                        <input type="text" name="outin" id="outin class="outin_room">
+                    </td>
+                </tr>
+            `;
+
+            $("#outin_table_body").append(newRow);
+        }
+    }
+
+    //要清掃表の行追加
+    function checkAndAddMustCleanRow() {
+        let allRoomsFilled = true;
+        let allRemarksFilled = true;
+
+        $(".must_clean_room").each(function () {
+            if ($(this).val().trim() === "") {
+                allRoomsFilled = false;
+            }
+        });
+
+        $(".must_clean_reason").each(function () {
+            if ($(this).val().trim() === "") {
+                allRemarksFilled = false;
+            }
+        });
+
+        let lastRow = $(".must_clean_room").last().val().trim() === "" &&
+            $(".must_clean_reason").last().val().trim() === "";
+
+        if ((allRoomsFilled || allRemarksFilled) && !lastRow) {
+            let rowCount = $(".must_clean_room").length + 1;
+
+            let newRow = `
+                <tr>
+                    <td  class="must_clean_room">
+                        <input type="text" name="must_clean_room" id="must_clean_room_${rowCount}" class="must_clean_room" >
+                    </td>
+                    <td>
+                        <input type="text" name="must_clean_reason" id="must_clean_reason_${rowCount}" class="must_clean_reason">
+                    </td>
+                </tr>
+            `;
+
+            $("#must_clean_table_body").append(newRow);
+        }
+    }
+
     //階数の一括処理
     $("#delete_floor_btn").on("click", function () {
         const floorVal = $("#delete_floor").val().trim();
@@ -752,5 +962,6 @@ $(document).ready(function () {
         updateHouseFloorAssignments(); // 担当階を再更新
         updateMutedRooms();            // muted 表示再更新
         updateAssignedRoomRows();      // 表示テーブル更新
+        updateRoomStats();
     });
 });

@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 import json
-from ..utils.preview_util import catch_post
+from ..utils.preview_util import catch_post, get_cover
 import datetime
 import os
 
@@ -9,7 +9,13 @@ import os
 def download_json(request):
     if request.method == 'POST':
         date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name = catch_post(request)
-        
+        room_changes, outins, must_cleans, others = get_cover(request)
+        original_add_bath = request.POST.getlist('bath_only')
+        add_bath = []
+        for i in original_add_bath:
+            if i != '':
+                add_bath.append(i)
+                
         timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
         filename = f"worklog_{timestamp}.json"
         data = {
@@ -25,6 +31,11 @@ def download_json(request):
             'eco_rooms':eco_rooms,
             'ame_rooms':ame_rooms,
             'duvet_rooms':duvet_rooms,
+            'room_changes':room_changes,
+            'outins':outins,
+            'must_cleans':must_cleans,
+            'others':others,
+            'add_bath':add_bath
         }
         
 
