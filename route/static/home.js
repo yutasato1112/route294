@@ -542,21 +542,11 @@ $(document).ready(function () {
     function updateResultTableColumns() {
         const headerRow = $("#result_table_header");
         const bathRow = $("#bath_row");
-
+    
         // 初期化
         headerRow.empty().append("<th></th>");
         bathRow.empty().append("<td><strong>大浴場清掃</strong></td>");
-
-        const nameNoPairs = [];
-
-        $(".tr_house").each(function () {
-            const name = $(this).find(".input_name").val().trim();
-            const no = $(this).find(".input_no").val().trim();
-            if (name && no) {
-                nameNoPairs.push({ name, no });
-            }
-        });
-
+    
         const bathAssignedNos = [];
         $(".input_bath").each(function () {
             const val = $(this).val().trim();
@@ -564,132 +554,125 @@ $(document).ready(function () {
                 bathAssignedNos.push(val);
             }
         });
-
-        nameNoPairs.forEach(pair => {
-            headerRow.append(`<th>${pair.name}</th>`);
-            if (bathAssignedNos.includes(pair.no)) {
-                bathRow.append("<td>〇</td>");
-            } else {
-                bathRow.append("<td></td>");
-            }
+    
+        // input_roomに記載された番号のユニーク集合
+        const assignedNos = new Set();
+        $(".input_room").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") assignedNos.add(val);
+        });
+    
+        // No → Name の対応辞書（ない場合は "None"）
+        const noToName = {};
+        $(".tr_house").each(function () {
+            const no = $(this).find(".input_no").val().trim();
+            const name = $(this).find(".input_name").val().trim();
+            if (no) noToName[no] = name || "None";
+        });
+    
+        [...assignedNos].forEach(no => {
+            const name = noToName[no] || "None";
+            headerRow.append(`<th>${name}</th>`);
+            bathRow.append(bathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
         });
     }
-
+    
     //清掃指示表で担当部屋・エコ部屋を管理
     function updateAssignedRoomRows() {
         $(".room_cell_row").remove();
-
-        //番号と名前のペアを取得
-        const nameNoPairs = [];
-        $(".tr_house").each(function () {
-            const name = $(this).find(".input_name").val().trim();
-            const no = $(this).find(".input_no").val().trim();
-            if (name && no) {
-                nameNoPairs.push({ name, no });
-            }
-        });
-
-        // 部屋の割り当てを取得
-        const roomAssignments = [];
+    
+        // input_roomに記載された番号のユニーク集合
+        const assignedNos = new Set();
         $(".input_room").each(function () {
             const val = $(this).val().trim();
-            if (val !== "") {
-                const room = $(this).closest("td").data("room");
-                roomAssignments.push({ room, no: val });
+            if (val !== "") assignedNos.add(val);
+        });
+    
+        const nos = [...assignedNos];
+    
+        // 部屋の割り当て取得
+        const roomAssignments = [];
+        $(".input_room").each(function () {
+            const room = $(this).closest("td").data("room");
+            const no = $(this).val().trim();
+            if (room && no) {
+                roomAssignments.push({ room: String(room), no });
             }
         });
-
-        // エコ部屋のリストを取得
+    
+        // エコ部屋
         const ecoRooms = new Set();
         $(".input_eco").each(function () {
-            const eco = $(this).val().trim();
-            if (eco !== "") ecoRooms.add(eco);
+            const val = $(this).val().trim();
+            if (val !== "") ecoRooms.add(val);
         });
-
-        // マッピング初期化
+    
         const roomMap = {};
-        nameNoPairs.forEach(({ no }) => {
-            roomMap[no] = { normal: [], eco: [] };
-        });
-
-        // 部屋の分類
+        nos.forEach(no => roomMap[no] = { normal: [], eco: [] });
+    
         roomAssignments.forEach(({ room, no }) => {
-            const cleanRoom = String(room).trim();
             if (!roomMap[no]) return;
-
-            if (ecoRooms.has(cleanRoom)) {
-                roomMap[no].eco.push(cleanRoom);  // ✅ エコ部屋
+            if (ecoRooms.has(room)) {
+                roomMap[no].eco.push(room);
             } else {
-                roomMap[no].normal.push(cleanRoom);  // ✅ 通常部屋
+                roomMap[no].normal.push(room);
             }
         });
-
+    
         const $body = $("#result_table_body");
-
-        // 通常部屋の最大行数
+    
+        // 通常部屋
         const maxNormal = Math.max(...Object.values(roomMap).map(r => r.normal.length), 0);
         if (maxNormal > 0) {
-            const normalLabelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>担当部屋</strong></td>");
-            nameNoPairs.forEach(({ no }) => {
+            const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>担当部屋</strong></td>");
+            nos.forEach(no => {
                 const val = roomMap[no].normal[0] || "";
-                normalLabelRow.append(`<td>${val}</td>`);
+                labelRow.append(`<td>${val}</td>`);
             });
-            $body.append(normalLabelRow);
-
+            $body.append(labelRow);
+    
             for (let i = 1; i < maxNormal; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
-                nameNoPairs.forEach(({ no }) => {
+                nos.forEach(no => {
                     const val = roomMap[no].normal[i] || "";
                     row.append(`<td>${val}</td>`);
                 });
                 $body.append(row);
             }
         }
-
-        // エコ部屋の最大行数
+    
+        // エコ部屋
         const maxEco = Math.max(...Object.values(roomMap).map(r => r.eco.length), 0);
         if (maxEco > 0) {
-            const ecoLabelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>エコ部屋</strong></td>");
-            nameNoPairs.forEach(({ no }) => {
-                const val = roomMap[no].eco[0] || "";  // ← ここでデータを含める
-                const cell = val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>";
-                ecoLabelRow.append(cell);
+            const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>エコ部屋</strong></td>");
+            nos.forEach(no => {
+                const val = roomMap[no].eco[0] || "";
+                labelRow.append(val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>");
             });
-            $body.append(ecoLabelRow);
-
+            $body.append(labelRow);
+    
             for (let i = 1; i < maxEco; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
-                nameNoPairs.forEach(({ no }) => {
+                nos.forEach(no => {
                     const val = roomMap[no].eco[i] || "";
-                    const cell = val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>";
-                    row.append(cell);
+                    row.append(val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>");
                 });
                 $body.append(row);
             }
         }
-    }
+    }    
 
     //清掃指示表で終了予定時刻を管理
     function updateEndTimeRow() {
-        $("#end_time_row").remove(); // 前回の出力を削除
-
-        const nameNoPairs = [];
-        $(".tr_house").each(function () {
-            const name = $(this).find(".input_name").val().trim();
-            const no = $(this).find(".input_no").val().trim();
-            if (name && no) {
-                nameNoPairs.push({ name, no });
-            }
-        });
-
+        $("#end_time_row").remove();
+    
         const singleRooms = new Set(window.single_rooms || []);
         const twinRooms = new Set(window.twin_rooms || []);
-
         const singleTime = parseInt($("#single_time").val()) || 0;
         const twinTime = parseInt($("#twin_time").val()) || 0;
         const bathTime = parseInt($("#bath_time").val()) || 0;
-        const ecoTime = 5;  // ✅ エコ部屋の清掃時間は固定5分
-
+        const ecoTime = 5;
+    
         const bathNos = [];
         $(".input_bath").each(function () {
             const val = $(this).val().trim();
@@ -697,8 +680,7 @@ $(document).ready(function () {
                 bathNos.push(val);
             }
         });
-
-        // 割り当て部屋とエコ部屋を集計
+    
         const assignments = [];
         $(".input_room").each(function () {
             const no = $(this).val().trim();
@@ -707,21 +689,22 @@ $(document).ready(function () {
                 assignments.push({ room: String(room), no });
             }
         });
-
+    
         const ecoRooms = new Set();
         $(".input_eco").each(function () {
-            const eco = $(this).val().trim();
-            if (eco !== "") {
-                ecoRooms.add(eco);
+            const val = $(this).val().trim();
+            if (val !== "") {
+                ecoRooms.add(val);
             }
         });
-
+    
+        const assignedNos = [...new Set(assignments.map(a => a.no))];
+    
         const $row = $("<tr id='end_time_row'><td><strong>終了予定</strong></td></tr>");
-
-        nameNoPairs.forEach(({ no }) => {
+        assignedNos.forEach(no => {
             const assignedRooms = assignments.filter(a => a.no === no).map(a => a.room);
             let singleCount = 0, twinCount = 0, ecoCount = 0;
-
+    
             assignedRooms.forEach(room => {
                 if (ecoRooms.has(room)) {
                     ecoCount++;
@@ -731,24 +714,22 @@ $(document).ready(function () {
                     twinCount++;
                 }
             });
-
+    
             const hasBath = bathNos.includes(no);
             const totalMin = (singleCount * singleTime) + (twinCount * twinTime) + (ecoCount * ecoTime) + (hasBath ? bathTime : 0);
-
+    
             const base = new Date();
             base.setHours(9);
-            base.setMinutes(30);
-            base.setSeconds(0);
-            base.setMilliseconds(0);
-            base.setMinutes(base.getMinutes() + totalMin);
-
+            base.setMinutes(30 + totalMin);
             const hh = base.getHours().toString().padStart(2, "0");
             const mm = base.getMinutes().toString().padStart(2, "0");
+    
             $row.append(`<td>${hh}:${mm}</td>`);
         });
-
+    
         $("#bath_row").before($row);
     }
+    
 
     //階数の一括処理
     $("#delete_floor_btn").on("click", function () {
