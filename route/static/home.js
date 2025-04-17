@@ -789,6 +789,7 @@ $(document).ready(function () {
     }
     
     //清掃指示表で終了予定時刻を管理
+    //清掃指示表で終了予定時刻を管理
     function updateEndTimeRow() {
         $("#end_time_row").remove();
 
@@ -824,7 +825,7 @@ $(document).ready(function () {
             }
         });
 
-        const assignedNos = [...new Set(assignments.map(a => a.no))];
+        const assignedNos = [...new Set(assignments.map(a => a.no))].sort((a, b) => parseInt(a) - parseInt(b));
 
         const $row = $("<tr id='end_time_row'><td><strong>終了予定</strong></td></tr>");
         assignedNos.forEach(no => {

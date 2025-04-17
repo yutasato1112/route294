@@ -64,6 +64,17 @@
         <p>　　　　　</p>
         <p>さん</p>
     </div>
+    <div class="room_change">
+        <p>　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん　　　</p>
+        <p>→</p>
+        <p>　　　　　　</p>
+        <p>号室</p>
+        <p>　　　　　</p>
+        <p>さん</p>
+    </div>
 
     
     <div class="cover_outin_roomchange">
@@ -136,7 +147,7 @@
     </div>
     <p class="cover_semi_title">その他備考</p>
     <div class="cover_others">
-        <p>{{others}}</p>
+        <p>{{ others|linebreaksbr }}</p>
     </div>
 
 </div>
@@ -226,33 +237,17 @@
                         <td class="bottom_left_left">マスターキー番号</td>
                         <td class="bottom_left_right important">{{person_data.key}}</td>
                     </tr>
-                </tbody>
-            </table>
-            <table class="table table-bordered bottom_table">
-                <tbody>
                     <tr>
                         <td class="bottom_left_left">清掃終了目標時刻</td>
                         <td class="bottom_left_right important">{{person_data.end_time}}</td>
                     </tr>
-                </tbody>
-            </table>
-            <table class="table table-bordered bottom_table">
-                <tbody>
                     <tr>
                         <td class="bottom_left_left">清掃終了時刻</td>
                         <td class="bottom_left_right">:</td>
                     </tr>
-                </tbody>
-            </table>
-            <table class="table table-bordered bottom_table">
-                <tbody>
                     <tr>
                         <td class="bottom_left_left">大浴場清掃・リラクゼーション</td>
                         <td class="bottom_left_right">：</td>
-                </tbody>
-            </table>
-            <table class="table table-bordered bottom_table">
-                <tbody>
                     <tr>
                         <td class="bottom_left_left">スポット清掃・ミーティング</td>
                         <td class="bottom_left_right">：</td>
