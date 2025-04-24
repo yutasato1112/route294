@@ -213,20 +213,14 @@
                 </tr>
                 {% endfor %}
             </tbody>
-        </table>
-    </div>
-    <div class="bath_and_spot">
-        <table class="table table-striped table-bordered bottom_table">
-            <tbody>
-                <tr>
-                    <td class="second_table_row">大浴場清掃</td>
-                    {% if person_data.bath == True %}
-                    <td class="bath_please">大浴場清掃よろしくお願いいたします。</td>
-                    {% else %}
-                    <td></td>
-                    {% endif %}
-                </tr>
-            </tbody>
+            <tr>
+                <td colspan="2" class="second_table_row">大浴場清掃</td>
+                {% if person_data.bath == True %}
+                <td colspan="8" class="bath_please">大浴場清掃よろしくお願いいたします。</td>
+                {% else %}
+                <td colspan="8"></td>
+                {% endif %}
+            </tr>
         </table>
     </div>
     <div class="bottom_line">
