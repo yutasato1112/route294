@@ -11,7 +11,8 @@ def catch_post(request):
     for key, value in request.POST.items():
         if key.startswith("room_"):
             room_number = key.replace("room_", "")
-            room_inputs[room_number] = value.strip()
+            if len(room_number) < 5:    
+                room_inputs[room_number] = value.strip()
     
     bath_person = request.POST.getlist("bath") 
     
@@ -139,22 +140,32 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         if room_num in duvet_rooms:
             duvet = True
         #remarksのリストを作成
-        for remark in remarks:
-            if room_num in remark['room']:
-                remark_comment = remark['comment']
-                if eco == True and ame == True:
-                    if 'エコ外' not in remark_comment:
-                        remark_comment = 'エコ外　' + remark_comment
-                elif eco == True:
-                    if 'エコ' not in remark_comment:
-                        remark_comment = 'エコ　' + remark_comment
-            else:
-                if eco == True and ame == True:
-                    if 'エコ外' not in remark_comment:
-                        remark_comment = 'エコ外　' + remark_comment
-                elif eco == True:
-                    if 'エコ' not in remark_comment:
-                        remark_comment = 'エコ　' + remark_comment
+        if len(remarks) == 0:
+            if eco == True and ame == True:
+                if 'エコ外' not in remark_comment:
+                    remark_comment = 'エコ外　' + remark_comment
+            elif eco == True:
+                if 'エコ' not in remark_comment:
+                    remark_comment = 'エコ　' + remark_comment
+
+        else:
+            for remark in remarks:
+                if room_num in remark['room']:
+                    remark_comment = remark['comment']
+                    if eco == True and ame == True:
+                        if 'エコ外' not in remark_comment:
+                            remark_comment = 'エコ外　' + remark_comment
+                    elif eco == True:
+                        if 'エコ' not in remark_comment:
+                            remark_comment = 'エコ　' + remark_comment
+                else:
+                    if eco == True and ame == True:
+                        if 'エコ外' not in remark_comment:
+                            remark_comment = 'エコ外　' + remark_comment
+                    elif eco == True:
+                        if 'エコ' not in remark_comment:
+                            remark_comment = 'エコ　' + remark_comment
+
         #部屋タイプ
         room_type = 'E'
         if room_num in single_rooms:
@@ -245,3 +256,19 @@ def select_person_from_room_change(room_changes, key_name_list, rooms):
         tmp = {'original':i['original'], 'original_name':original_name, 'destination':i['destination'], 'destination_name':destination_name}
         result.append(tmp)
     return result
+
+def add_rc(total_data, room_changes_person):
+    for person in total_data:
+        for room_info in person['rooms']:
+            for rc in room_changes_person:
+                if room_info['room_num'] == rc['original']:
+                    if len(room_info['remark']) != 0:
+                        room_info['remark'] = room_info['remark'] + '　R/C #'+ rc['destination'] + 'へ('+ rc['destination_name'] +'さん)'
+                    else:
+                        room_info['remark'] = 'R/C #'+ rc['destination'] + 'へ('+ rc['destination_name'] +'さん)'
+                elif room_info['room_num'] == rc['destination']:
+                    if len(room_info['remark']) != 0:
+                        room_info['remark'] = room_info['remark'] + '　R/C #'+ rc['original'] + 'から('+ rc['original_name'] +'さん)'
+                    else:
+                        room_info['remark'] = 'R/C #'+ rc['original'] + 'から('+ rc['original_name'] +'さん)'
+    return total_data

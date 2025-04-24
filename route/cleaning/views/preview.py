@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
-from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change
+from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc
 
 # Create your views here.
 
@@ -25,7 +25,6 @@ class previewView(TemplateView):
         
         #部屋数のカウント
         total_cleaning_room = sum(1 for v in room_inputs.values() if v != '0')
-        
         #大浴場追加要員
         original_add_bath = request.POST.getlist('bath_only')
         add_bath = []
@@ -59,7 +58,7 @@ class previewView(TemplateView):
                 'room_changes':room_changes, 
                 'outins':outins,
                 'must_cleans':must_cleans,
-                'othrts':others,
+                'others':others,
                 'room_changes_len':len(room_changes),
                 'outins_len':len(outins),
                 'must_cleans_len':len(must_cleans),
@@ -75,6 +74,8 @@ class previewView(TemplateView):
         
         #ルームチェンジ情報とパーソンの突き合わせ
         room_changes_person = select_person_from_room_change(room_changes, key_name_list, rooms)
+        #ルームチェンジ情報を備考に追加
+        total_data = add_rc(total_data, room_changes_person)
         
         #outin表示用加工
         outins_list = []

@@ -467,7 +467,9 @@ $(document).ready(function () {
             }
         });
 
-        updateHouseKeys();
+        if(method === "GET"){ {
+            updateHouseKeys();
+        }}
     }
 
     //ハウスさん表でNone表示の時の処理
