@@ -284,6 +284,12 @@ $(document).ready(function () {
         checkAndAddMustCleanRow();
     });
 
+    //連絡事項欄
+    $(document).on("input", ".input_contact_number, .input_contact", function () {
+        checkAndAddContactRow();
+    });
+    
+
 
     updateHouseCount();
     updateHouseFloorAssignments();
@@ -989,6 +995,45 @@ $(document).ready(function () {
             $("#must_clean_table_body").append(newRow);
         }
     }
+
+    //連絡事項欄の処理
+    function checkAndAddContactRow() {
+        let allNumbersFilled = true;
+        let allCommentsFilled = true;
+    
+        $(".input_contact_number").each(function () {
+            if ($(this).val().trim() === "") {
+                allNumbersFilled = false;
+            }
+        });
+    
+        $(".input_contact").each(function () {
+            if ($(this).val().trim() === "") {
+                allCommentsFilled = false;
+            }
+        });
+    
+        let lastNumberEmpty = $(".input_contact_number").last().val().trim() === "";
+        let lastCommentEmpty = $(".input_contact").last().val().trim() === "";
+    
+        if ((allNumbersFilled || allCommentsFilled) && !(lastNumberEmpty && lastCommentEmpty)) {
+            let rowCount = $(".input_contact").length + 1;
+    
+            let newRow = `
+                <tr>
+                    <td>
+                        <input type="text" name="contact_number_${rowCount}" id="contact_number_${rowCount}" class="input_contact_number">
+                    </td>
+                    <td>
+                        <textarea type="text" name="contact_${rowCount}" id="contact_${rowCount}" class="input_contact"></textarea>
+                    </td>
+                </tr>
+            `;
+    
+            $("#contact_table_body").append(newRow);
+        }
+    }
+    
 
     //階数の一括処理
     $("#delete_floor_btn").on("click", function () {

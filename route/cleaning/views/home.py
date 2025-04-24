@@ -54,7 +54,9 @@ class homeView(TemplateView):
             'add_remarks_len':0,
             'room_changes_len':3,
             'outins_len':3,
-            'must_cleans_len':3
+            'must_cleans_len':3,
+            'add_contacts_len':0,
+            'contacts_len':3,
         }
         return render(self.request, self.template_name, context)
     
@@ -93,6 +95,7 @@ class homeView(TemplateView):
         outins = data['outins']
         must_cleans = data['must_cleans']
         others = data['others']
+        contacts = data['contacts']
         
         #備考の欄数
         if len(remarks) < 3:
@@ -151,6 +154,10 @@ class homeView(TemplateView):
             'outins':outins,
             'must_cleans':must_cleans,
             'others':others,
-            'add_bath':add_bath
+            'add_bath':add_bath,
+            'contacts': contacts,
+            'add_contacts_len':len(contacts),
+            'contacts_len':len(contacts),
+            
         }
         return render(self.request, self.template_name, context)

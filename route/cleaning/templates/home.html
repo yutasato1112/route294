@@ -264,6 +264,43 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="bottom_second_line">
+            <!--連絡事項-->
+            <table  class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="person_num">番号</th>
+                        <th>連絡事項</th>
+                    </tr>
+                </thead>
+                <tbody id="contact_table_body">
+                    {% for contact in contacts %}
+                    <tr>
+                        <td>
+                            <input type="text" name="contact_number_{{forloop.counter}}" id="contact_number_{{forloop.counter}}" class="input_contact_number" value="{{ contact.person_number }}">
+                        </td>
+                        <td>
+                            <textarea type="text" name="contact_{{forloop.counter}}" id="contact_{{forloop.counter}}" class="input_contact">{{ contact.contact}}</textarea> 
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% with ''|center:contacts_len as range %}
+                        {% for _ in range %}
+                        <tr>
+                            <td>
+                                <input type="text" name="contact_number_{{forloop.counter|add:add_contacts_len}}" id="contact_number_{{forloop.counter|add:add_contacts_len}}" class="input_contact_number">
+                            </td>
+                            <td>
+                                <textarea type="text" name="contact_{{forloop.counter|add:add_contacts_len}}" id="contact_{{forloop.counter|add:add_contacts_len}}" class="input_contact"></textarea>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endwith %}
+
+                </tbody>
+            </table>
+        </div>
         <div class="bottom_line">
             <!--ルームチェンジ-->
             <div class="room_change">

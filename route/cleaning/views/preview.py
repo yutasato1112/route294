@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
-from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc
+from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea
 
 # Create your views here.
 
@@ -15,7 +15,7 @@ class previewView(TemplateView):
     
     def post(self, request, *args, **kwargs):
         #データ受け取り
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts = catch_post(request)
 
         #表紙情報受け取り
         room_changes, outins, must_cleans, others = get_cover(request)
@@ -46,6 +46,15 @@ class previewView(TemplateView):
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
             date_jp = changeDate(date)
+
+            for item in contacts:
+                if item['person_number'] == str(i+1):
+                    contact = item['contact']
+                    break
+                else:
+                    contact = ''
+            contact_1, contact_2, contact_3, contact_4 = split_contact_textarea(contact)
+                    
             persons_cleaning_data = {
                 'name':name,
                 'rooms':room,
@@ -62,6 +71,10 @@ class previewView(TemplateView):
                 'room_changes_len':len(room_changes),
                 'outins_len':len(outins),
                 'must_cleans_len':len(must_cleans),
+                'contact_1':contact_1,
+                'contact_2':contact_2, 
+                'contact_3':contact_3,
+                'contact_4':contact_4,
             }
             total_data.append(persons_cleaning_data)
         #大浴場清掃担当者の名前リスト化

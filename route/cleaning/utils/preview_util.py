@@ -28,6 +28,17 @@ def catch_post(request):
             if room and comment:
                 remarks.append({"room": room, "comment": comment})
     
+    # POST データの key を全部ループ
+    contacts = []
+    for key in request.POST:
+        if key.startswith("contact_number_"):
+            index = key.split("_")[-1]  # 例: 'remark_room_3' → '3'
+            number = request.POST.get(f"contact_number_{index}", "").strip()
+            contact = request.POST.get(f"contact_{index}", "").strip()
+            # 両方に何か入力があるときだけ追加
+            if number and contact:
+                contacts.append({"person_number": number, "contact": contact})
+
     house_data = []
     for i in range(1, 100):  # 最大100人分を仮定
         no = request.POST.get(f'no_{i}', '').strip()
@@ -43,7 +54,7 @@ def catch_post(request):
     
     room_info_data, times_by_time_data, master_key_data = read_csv()
     single_rooms, twin_rooms = dist_room(room_info_data)
-    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name
+    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts
 
 def get_cover(request):
     post = request.POST
@@ -272,3 +283,18 @@ def add_rc(total_data, room_changes_person):
                     else:
                         room_info['remark'] = 'R/C #'+ rc['original'] + 'から('+ rc['original_name'] +'さん)'
     return total_data
+
+def split_contact_textarea(contact_text):
+    # 改行で分割（\r\n や \r も一応考慮）
+    lines = contact_text.replace('\r\n', '\n').replace('\r', '\n').split('\n')
+
+    # 空白行を無視したければ下記のようにフィルタも可能（必要に応じて）
+    # lines = [line for line in lines if line.strip() != ""]
+
+    # contact_1～contact_4までを取り、残りは5番目に詰める
+    contact_1 = lines[0] if len(lines) > 0 else ''
+    contact_2 = lines[1] if len(lines) > 1 else ''
+    contact_3 = lines[2] if len(lines) > 2 else ''
+    contact_4 = '\n'.join(lines[3:]) if len(lines) > 3 else ''
+
+    return contact_1, contact_2, contact_3, contact_4
