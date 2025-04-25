@@ -21,7 +21,12 @@ class previewView(TemplateView):
         room_changes, outins, must_cleans, others = get_cover(request)
         
         #パーソン人数
-        person_count = len(house_data)
+        person_count = 0
+        pages = 0
+        for i in range(len(house_data)):
+            pages +=1
+            if house_data[i][1] != '清掃不要':
+                person_count += 1
         
         #部屋数のカウント
         total_cleaning_room = sum(1 for v in room_inputs.values() if v != '0')
@@ -36,7 +41,7 @@ class previewView(TemplateView):
         #パーソンごとにデータを整理
         key_name_list = []
         rooms = []
-        for i in range(person_count):
+        for i in range(pages):
             name = house_data[i][1]
             key_name_list.append([house_data[i][0],name])
             key = house_data[i][2]
@@ -46,14 +51,20 @@ class previewView(TemplateView):
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
             date_jp = changeDate(date)
-
+        
+            contact = ''
             for item in contacts:
                 if item['person_number'] == str(i+1):
                     contact = item['contact']
                     break
-                else:
-                    contact = ''
-            contact_1, contact_2, contact_3, contact_4 = split_contact_textarea(contact)
+                    
+            if contact != '':
+                contact_1, contact_2, contact_3, contact_4 = split_contact_textarea(contact)
+            else:
+                contact_1 = ''
+                contact_2 = ''
+                contact_3 = ''
+                contact_4 = ''      
                     
             persons_cleaning_data = {
                 'name':name,
