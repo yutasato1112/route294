@@ -52,12 +52,12 @@ class previewView(TemplateView):
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
             date_jp = changeDate(date)
         
+            #連絡事項の分割
             contact = ''
             for item in contacts:
                 if item['person_number'] == str(i+1):
                     contact = item['contact']
                     break
-                    
             if contact != '':
                 contact_1, contact_2, contact_3, contact_4 = split_contact_textarea(contact)
             else:
