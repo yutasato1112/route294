@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 import datetime
 import json
 from django.http import JsonResponse
+from urllib.parse import urlparse
 
 from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char
 
@@ -14,6 +15,17 @@ class homeView(TemplateView):
     
     def get(self, request, *args, **kwargs):
         method = 'GET'
+        
+        #遷移前取得
+        referer = request.META.get('HTTP_REFERER')  # 直前のページURLを取得
+        from_report = False  # デフォルトはFalse
+        if referer:
+            # URLのパス部分だけ取り出す
+            path = urlparse(referer).path
+            if path.endswith('/report/') or path == '/report':
+                from_report = True
+                
+
         #初回アクセス時
         #csv読み込み
         room_info_data, times_by_time_data, master_key_data = read_csv()
@@ -57,6 +69,7 @@ class homeView(TemplateView):
             'must_cleans_len':3,
             'add_contacts_len':0,
             'contacts_len':3,
+            'from_report': from_report,
         }
         return render(self.request, self.template_name, context)
     
@@ -158,6 +171,6 @@ class homeView(TemplateView):
             'contacts': contacts,
             'add_contacts_len':len(contacts),
             'contacts_len':len(contacts),
-            
+            'from_report': False,
         }
         return render(self.request, self.template_name, context)

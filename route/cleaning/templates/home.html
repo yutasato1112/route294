@@ -5,6 +5,12 @@
 <link rel="stylesheet" href="{% static 'home.css' %}">
 <script src="{% static 'home.js' %}"></script>
 <div class="main">
+    {% if from_report == True %}
+    <div class="alert alert-success" role="alert">
+        送信いたしました。ご報告いただきありがとうございます。
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 0.5rem; right: 0.5rem;"></button>
+    </div>
+    {% endif %}
     <form action="" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="first_line">

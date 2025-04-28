@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<title>report</title>
+<link rel="stylesheet" href="{% static 'report.css' %}">
+<div class="main">
+    <h1>お問い合わせ</h1>
+    <form method="post" action="{% url 'report' %}">
+        {% csrf_token %}
+        <div class="form_group">
+            <div class="name_area">
+                <label for="name">氏名:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div>
+                <label for="emargency_level">緊急度:</label>
+                <select id="emargency_level" name="emargency_level" required>
+                    <option value="">-選択してください-</option>
+                    <option value="A">A -直ちに開発者の対応が必要-</option>
+                    <option value="B">B -数週間以内の対応が必要-</option>
+                    <option value="C">C -数ヶ月以内の対応が必要-</option>
+                    <option value="D">D -緊急ではない-</option>
+                </select>
+            </div>
+            <div>
+                <label for="genre">ジャンル:</label>
+                <select id="genre" name="genre" required>
+                    <option value="">-選択してください-</option>
+                    <option value="bug">不具合レポート</option>
+                    <option value="data">データ異常</option>
+                    <option value="security">セキュリティインシデント</option>
+                    <option value="feature">機能追加要望</option>
+                    <option value="performance">パフォーマンス改善要望</option>
+                    <option value="usability">ユーザビリティ改善要望</option>
+                    <option value="other">その他</option>
+                </select>
+            </div>
+            <div>
+                <label for="detail">詳細:</label>
+                <textarea id="detail" name="detail" required></textarea>
+            </div>
+            <input type="submit" class="btn btn-primary" value="送信">
+        </div>
+    </form>
+</div>
+{% endblock %}
