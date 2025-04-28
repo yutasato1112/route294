@@ -78,7 +78,7 @@
 
     
     <div class="cover_outin_roomchange">
-        <div>
+        <div class="outin_roomchange">
             <p class="cover_semisemi_title">アウト/イン</p>
             {% for outinA, outinB in outins %}
             <div class="outin_line">
@@ -104,21 +104,21 @@
         <div class="room_change_reason">
             <p class="cover_semisemi_title">ルームチェンジ等の為要清掃　理由</p>
             {% for must_clean in must_cleans %}
-            <div class="outin_line">
-                <p>　　{{must_clean.room}}　</p>
-                <p>号室</p>
-                <p>　　{{must_clean.reason}}</p>
+            <div class="room_change_line">
+                <p class="room_change_reason_room">{{must_clean.room}}</p>
+                <p style="width: 50px;">号室</p>
+                <p class="room_change_reason_contents">{{must_clean.reason}}</p>
             </div>
             {% endfor %}
-            <div class="outin_line">
-                <p>　　　　　</p>
-                <p>号室</p>
-                <p>　　　　　　　　　　</p>
+            <div class="room_change_line">
+                <p>　　 　　</p>
+                <p style="width: 50px;">号室</p>
+                <p class="room_change_reason_contents">　　　　　　　　　　</p>
             </div>
-            <div class="outin_line">
-                <p>　　　　　</p>
-                <p>号室</p>
-                <p>　　　　　　　　　　</p>
+            <div class="room_change_line">
+                <p>　　 　　</p>
+                <p style="width: 50px;">号室</p>
+                <p class="room_change_reason_contents">　　　　　　　　　　</p>
             </div>
         </div>
     </div>

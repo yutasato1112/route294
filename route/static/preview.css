@@ -272,16 +272,37 @@ td{
 .cover_outin_roomchange{
     display: flex;
     justify-content: space-between;
-    width: 70%;
+    width: 90%;
     margin: auto;
     padding-top: 15px;
     margin-bottom: 15px;
+}
+.room_change_reason{
+    width: 45%;
+}
+.outin_roomchange{
+    width: 45%;
+}
+.room_change_reason_contents{
+    padding-left: 20px;
 }
 .outin_line{
     display: flex;
     border-bottom: 1px solid #666666;
     font-size: 15px;
     height: 22px;   
+}
+.room_change_line{
+    display: flex;
+    border-bottom: 1px solid #666666;
+    font-size: 15px;
+}
+.room_change_line p{
+    margin-bottom: 0;
+}
+.room_change_reason_room{
+    padding-left: 25px;
+    padding-right: 14px;
 }
 .cover_semisemi_title{
     font-weight: bold;
