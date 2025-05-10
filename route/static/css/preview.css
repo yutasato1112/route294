@@ -39,7 +39,7 @@ td{
 
 .room_num{
     font-weight: bold;
-    font-size: 19px;
+    font-size: 18px;
     white-space: nowrap;
     line-height: 1.2;
     padding: 2px 4px;
@@ -207,7 +207,7 @@ td{
     font-weight: bold;
 }
 .remark_content{
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
 }
 
