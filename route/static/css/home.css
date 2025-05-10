@@ -281,6 +281,14 @@ input[type="number"]::-webkit-inner-spin-button {
     margin-top: 1vh;
     padding-top: 1vh;
 }
+.first_plus_line{
+    display: flex;
+}
+.first_plus_line > input{
+    height: 6vh;
+    margin-top: 1vh;
+    margin-left: 1vw;
+}
 
 .bottom_line {
     display: flex;

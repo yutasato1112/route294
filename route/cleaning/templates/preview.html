@@ -3,8 +3,8 @@
 {% load custom_tags %}
 {% block content %}
 <title>Preview</title>
-<link rel="stylesheet" href="{% static 'preview.css' %}">
-<script src="{% static 'preview.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/preview.css' %}">
+<script src="{% static 'js/preview.js' %}"></script>
 
 <div class="preview_container">
     <p class="cover_title">清掃指示内容</p>
@@ -107,15 +107,24 @@
             <div class="room_change_line">
                 <p class="room_change_reason_room">{{must_clean.room}}</p>
                 <p style="width: 50px;">号室</p>
+                <p>→</p>
+                <p class="room_change_reason_room">{{must_clean.room_to}}</p>
+                <p style="width: 50px;">号室</p>
                 <p class="room_change_reason_contents">{{must_clean.reason}}</p>
             </div>
             {% endfor %}
             <div class="room_change_line">
                 <p>　　 　　</p>
                 <p style="width: 50px;">号室</p>
+                <p>→</p>
+                <p>　　 　　</p>
+                <p style="width: 50px;">号室</p>
                 <p class="room_change_reason_contents">　　　　　　　　　　</p>
             </div>
             <div class="room_change_line">
+                <p>　　 　　</p>
+                <p style="width: 50px;">号室</p>
+                <p>→</p>
                 <p>　　 　　</p>
                 <p style="width: 50px;">号室</p>
                 <p class="room_change_reason_contents">　　　　　　　　　　</p>
@@ -187,7 +196,7 @@
                     <td></td>
                     {% endif %}
                     {% if room.duvet == True %}
-                    <td class="content_mark main_table_content">○</td>
+                    <td class="content_mark main_table_content">●</td>
                     {% else %}
                     <td></td>
                     {% endif %}

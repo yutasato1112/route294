@@ -17,8 +17,8 @@ class homeView(TemplateView):
         method = 'GET'
         
         #遷移前取得
-        referer = request.META.get('HTTP_REFERER')  # 直前のページURLを取得
-        from_report = False  # デフォルトはFalse
+        referer = request.META.get('HTTP_REFERER')  
+        from_report = False  
         if referer:
             # URLのパス部分だけ取り出す
             path = urlparse(referer).path

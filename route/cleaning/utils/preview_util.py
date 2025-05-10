@@ -78,18 +78,24 @@ def get_cover(request):
     # --- 要清掃 ---
     must_cleans = []
     must_clean_room_tmp = post.getlist("must_clean_room")
+    must_clean_room_to_tmo = post.getlist("must_clean_room_to")
     must_clean_reason_tmp = post.getlist("must_clean_reason")
     must_clean_room = []
+    must_clean_room_to = []
     must_clean_reason = []
     for i in must_clean_room_tmp:
         if i != '':
             must_clean_room.append(i)
+    for i in must_clean_room_to_tmo:
+        if i != '':
+            must_clean_room_to.append(i)
     for i in must_clean_reason_tmp:
         if i != '':
             must_clean_reason.append(i)
+    
     for i in range(len(must_clean_room)):
         if must_clean_room[i] != '':
-            must_cleans.append({"room":must_clean_room[i], "reason":must_clean_reason[i]})
+            must_cleans.append({"room":must_clean_room[i],"room_to":must_clean_room_to[i] , "reason":must_clean_reason[i]})
     # --- その他備考 ---
     others = post.get("others", "").strip()
     return room_changes, outins, must_cleans ,others

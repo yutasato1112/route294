@@ -22,6 +22,7 @@ from cleaning.views import home as home_view
 from cleaning.views import preview as preview_view
 from cleaning.views import download_json as json_view
 from cleaning.views import report as report_view
+from cleaning.views import ai_assist as ai_assist_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +30,7 @@ urlpatterns = [
     path('preview/', preview_view.previewView.as_view(), name='preview'),
     path('download/json/', json_view.download_json, name='download_json'),
     path('report/', report_view.reportView.as_view(), name='report'),
+    path('ai_assist/', ai_assist_view.aiAssistView.as_view(), name='ai_assist'),
 ]
 
 urlpatterns += static(

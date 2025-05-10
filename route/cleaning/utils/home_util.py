@@ -2,13 +2,13 @@ import csv
 from collections import defaultdict
 
 def read_csv():
-    with open('static/room_info.csv', 'r',encoding="utf-8") as f:
+    with open('static/csv/room_info.csv', 'r',encoding="utf-8") as f:
         reader = csv.reader(f)
         room_info_raw_data = [row for row in reader]
-    with open('static/times_by_type.csv', 'r',encoding="utf-8") as f:
+    with open('static/csv/times_by_type.csv', 'r',encoding="utf-8") as f:
         reader = csv.reader(f)
         times_by_time_raw_data = [row for row in reader]
-    with open('static/master_key.csv', 'r',encoding="utf-8") as f:
+    with open('static/csv/master_key.csv', 'r',encoding="utf-8") as f:
         reader = csv.reader(f)
         master_key_raw_data = [row for row in reader]
     room_info_data = room_info_raw_data[1:]

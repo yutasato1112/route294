@@ -39,7 +39,7 @@ td{
 
 .room_num{
     font-weight: bold;
-    font-size: 17px;
+    font-size: 19px;
     white-space: nowrap;
     line-height: 1.2;
     padding: 2px 4px;
@@ -207,7 +207,7 @@ td{
     font-weight: bold;
 }
 .remark_content{
-    font-size: 14px;
+    font-size: 18px;
     font-weight: bold;
 }
 
@@ -278,10 +278,10 @@ td{
     margin-bottom: 15px;
 }
 .room_change_reason{
-    width: 45%;
+    width: 48%;
 }
 .outin_roomchange{
-    width: 45%;
+    width: 48%;
 }
 .room_change_reason_contents{
     padding-left: 20px;
@@ -301,8 +301,8 @@ td{
     margin-bottom: 0;
 }
 .room_change_reason_room{
-    padding-left: 25px;
-    padding-right: 14px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 .cover_semisemi_title{
     font-weight: bold;

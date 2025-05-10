@@ -987,6 +987,9 @@ $(document).ready(function () {
                         <input type="text" name="must_clean_room" id="must_clean_room_${rowCount}" class="must_clean_room" >
                     </td>
                     <td>
+                        <input type="text" name="must_clean_room_to" id="must_clean_room_to" class="must_clean_room">
+                    </td>
+                    <td>
                         <input type="text" name="must_clean_reason" id="must_clean_reason_${rowCount}" class="must_clean_reason">
                     </td>
                 </tr>
