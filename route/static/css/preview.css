@@ -10,6 +10,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    top: -15px;
 }
 .cleaner{
     font-size: 16px;
@@ -32,6 +34,8 @@
 .room_table{
     width: 90%;
     margin: auto;
+    position: relative;
+    top: -30px;
 }
 td{
     font-size: 10px;
@@ -39,10 +43,11 @@ td{
 
 .room_num{
     font-weight: bold;
-    font-size: 18px;
+    font-size: 22px;
     white-space: nowrap;
     line-height: 1.2;
-    padding: 2px 4px;
+    display: flex;
+    justify-content:space-between
 }
 .mark{
     width: 10.5mm;
@@ -57,7 +62,7 @@ td{
 }
 .content_mark{
     text-align: center;
-    font-size: 18px;
+    font-size: 22px;
     line-height: 0.8;
     padding: 2px 4px;
     font-weight: bold;
@@ -70,16 +75,20 @@ td{
 }
 .cleaning_room_table{
     height: 140mm;
-    border-color: #666666;
+    border-color: black;
+    border: 1.5px solid black;
 }
-
+.cleaning_room_table th,
+.cleaning_room_table td {
+    border: 1.5px solid black;
+}
 .bath_and_spot{
     width: 90%;
     margin: auto;
-    border-color: #666666;
+    border-color: black;
 }
 .bottom_table{
-    border-color: #666666;
+    border-color: black;
 }
 .second_table_row{
     width: 30mm;
@@ -88,12 +97,15 @@ td{
 .bath_please{
     text-align: center;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 20px;
+    line-height: 1;
 }
 .bottom_line{
     width: 90%;
     margin: auto;
     display: flex ;
+    position: relative;
+    top: -40px;
 }
 .bottom_line_left{
     width: 40%;
@@ -102,19 +114,20 @@ td{
     width: 60%;
 }
 .note_title{
-    font-size: 12px;
+    font-size: 14px;
     font-weight: bold;
 }
 .note{
     width: 90%;
     height: 6mm;
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid black;
     margin: auto;
+    font-size: 18px;
 }
 .special_menu{
     margin: auto;
     border-collapse: collapse;
-    border: 1px solid #666666;
+    border: 1px solid black;
     margin-top: 2mm;
     width: 90%;
 }
@@ -122,7 +135,7 @@ td{
     text-align: end;
 }
 .air_block {
-    border: 1px solid #666666;
+    border: 1px solid black;
     padding: 4px;
     text-align: center;
 }
@@ -130,13 +143,13 @@ td{
     margin-top: 4px;
 }
 .special_menu_title{
-    border: 1px solid #666666;
+    border: 1px solid black;
 }
 .weekly{
     width: 90%;
     text-align: center;
     margin: auto;
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid black;
     font-size: 15px;
     font-weight: bold;
 }
@@ -145,9 +158,14 @@ td{
     margin: auto;
     display: flex;
     justify-content: space-between;
+    position: relative;
+    top: -38px;
 }
 .aff{
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid black;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    line-height: 1;
 }
 .floor_title{
     width: 25%;
@@ -197,6 +215,7 @@ td{
 }
 .bottom_left_left{
     width: 55%;
+    font-size: 10px;
 }
 .bottom_left_right{
     text-align: center;
@@ -207,7 +226,7 @@ td{
     font-weight: bold;
 }
 .remark_content{
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
 }
 
@@ -242,7 +261,7 @@ td{
 }
 .total_rooms{
     font-size: 24px;
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid black;
 }
 .cover_semi_title{
     font-size: 18px;
@@ -253,7 +272,7 @@ td{
     display: flex;
     justify-content: center;
     font-size: 18px;
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid black;
     width: 90%;
     margin: auto;
     margin-bottom: 15px;
@@ -261,7 +280,7 @@ td{
 .room_change{
     display: flex;
     margin: auto;
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid black;
     width: 90%;
     font-size: 15px;
     height: 22px;
@@ -288,13 +307,13 @@ td{
 }
 .outin_line{
     display: flex;
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid black;
     font-size: 15px;
     height: 22px;   
 }
 .room_change_line{
     display: flex;
-    border-bottom: 1px solid #666666;
+    border-bottom: 1px solid black;
     font-size: 15px;
 }
 .room_change_line p{

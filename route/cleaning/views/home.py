@@ -170,7 +170,7 @@ class homeView(TemplateView):
             'add_bath':add_bath,
             'contacts': contacts,
             'add_contacts_len':len(contacts),
-            'contacts_len':len(contacts),
+            'contacts_len':len(contacts)+3,
             'from_report': False,
         }
         return render(self.request, self.template_name, context)
