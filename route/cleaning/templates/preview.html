@@ -271,10 +271,11 @@
                     </tr>
                 </tbody>
             </table>
+            <p class="Amemo">{{ person_data.room_type_count_str }}</p>
         </div>
         <div class="bottom_line_right">
             <!--連絡事項-->
-            <p class="note_title note">[連絡事項]</p>
+            <p class="note_title note">[連絡事項]　　{% if person_data.DD_list != None  %}{{ person_data.DD_list }}{% endif %}</p>
             <p class="note">{{person_data.contact_1}}</p>
             <p class="note">{{person_data.contact_2}}</p>
             <p class="note">{{person_data.contact_3}}</p>

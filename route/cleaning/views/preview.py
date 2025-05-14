@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
-from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea
+from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list
 
 # Create your views here.
 
@@ -37,6 +37,14 @@ class previewView(TemplateView):
             if i != '':
                 add_bath.append(i)
         
+        #DDリストの作成
+        rooms = []
+        for i in range(pages):
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms)
+            rooms.append(room)
+        DD_list = calc_DD_list(rooms)
+            
+            
         total_data = []
         #パーソンごとにデータを整理
         key_name_list = []
@@ -65,7 +73,11 @@ class previewView(TemplateView):
                 contact_2 = ''
                 contact_3 = ''
                 contact_4 = ''      
-                    
+            
+            #部屋タイプ別カウント
+            room_type_count_str = calc_room_type_count(room)
+            
+            
             persons_cleaning_data = {
                 'name':name,
                 'rooms':room,
@@ -86,6 +98,8 @@ class previewView(TemplateView):
                 'contact_2':contact_2, 
                 'contact_3':contact_3,
                 'contact_4':contact_4,
+                'room_type_count_str':room_type_count_str,
+                'DD_list':DD_list[i],
             }
             total_data.append(persons_cleaning_data)
         #大浴場清掃担当者の名前リスト化

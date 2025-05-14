@@ -288,6 +288,14 @@ td{
 .room_change p{
     margin:auto
 }
+.Amemo{
+    line-height: 1;
+    position: relative;
+    top: -15px;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
 .cover_outin_roomchange{
     display: flex;
     justify-content: space-between;
