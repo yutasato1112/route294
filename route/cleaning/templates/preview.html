@@ -187,9 +187,11 @@
                 {% for room in person_data.rooms %}
                 <tr class="tr_data">
                     <td class="main_table_content">{{forloop.counter}}</td>
-                    <td class="room_num main_table_content">
-                        <div>{{room.room_num}}</div>
-                        <div>({{room.room_type}})</div>
+                    <td class="main_table_content">
+                        <div class="room_num">
+                            <div>{{room.room_num}}</div>
+                            <div>({{room.room_type}})</div>
+                        </div>
                     </td>
                     <td class="main_table_content"><!--連泊(空欄)--></td>
                     <td class="main_table_content"><!--C/O(空白)--></td>

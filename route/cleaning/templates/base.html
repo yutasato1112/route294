@@ -23,8 +23,12 @@
       <!-- footer -->
       {% if 'preview' not in request.path %}
       <div class="footer" style="background-color: black; height: 16vh; width: 100%;">
-        <img src="{% static 'logo.png' %}" alt="logo" style="height: 8vh; margin: auto; display: block; padding-top: 1vh;" >
-        <a href="/report/" style="display: block; text-align: center; color: whitesmoke; font-size: 1.5vh; padding-top: 0.5vh;">レポート</a>
+        <a href="/"><img src="{% static 'logo.png' %}" alt="logo" style="height: 8vh; margin: auto; display: block; padding-top: 1vh;" ></a>
+        <div style="display: flex; justify-content: center; ">
+          <a href="/report/" style="display: block; text-align: center; color: whitesmoke; font-size: 1.5vh; padding-top: 0.5vh; padding-right: 1vw;">レポート</a>
+          <a href="/release/" style="display: block; text-align: center; color: whitesmoke; font-size: 1.5vh; padding-top: 0.5vh;">リリースノート</a>
+          <a href="/technology/" style="display: block; text-align: center; color: whitesmoke; font-size: 1.5vh; padding-top: 0.5vh; padding-left: 1vw;">技術</a>
+        </div>
         <p style="color: whitesmoke; text-align: center; padding-top: 0.8vh;">Copyright © 2025 YutaSato,University of Tsukuba. All Rights Reserved.</p>
       </div>
       {% endif %}

@@ -42,7 +42,7 @@ class previewView(TemplateView):
         for i in range(pages):
             room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms)
             rooms.append(room)
-        DD_list = calc_DD_list(rooms)
+        DD_list = calc_DD_list(house_data)
             
             
         total_data = []

@@ -110,6 +110,7 @@ class homeView(TemplateView):
         others = data['others']
         contacts = data['contacts']
         
+        
         #備考の欄数
         if len(remarks) < 3:
             remarks_len = 3-len(remarks)

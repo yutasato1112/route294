@@ -45,9 +45,10 @@ def catch_post(request):
         no = request.POST.get(f'no_{i}', '').strip()
         name = request.POST.get(f'name_{i}', '').strip()
         key = request.POST.get(f'key_{i}', '').strip()
+        dd = request.POST.get(f'dd_{i}', '').strip()
 
-        if no and name:
-            house_data.append([no, name, key])
+        if any(x != '' for x in (name, key, dd)):
+            house_data.append([no,name, key, dd])
         
     eco_rooms = request.POST.getlist("eco_room")
     ame_rooms = request.POST.getlist("amenity")           
@@ -323,99 +324,21 @@ def calc_room_type_count(rooms):
     room_type_count_str = f"S:{single}, SE:{single_eco}, T:{twin}, TE:{twin_eco}"
     return room_type_count_str
 
-def calc_DD_list(rooms):
-    floor_room_house_list = []
-    for person in rooms:
-        floor_room_count = [0,0,0,0,0,0,0,0,0]
-        for room in person:
-            floor_str = room['room_num'][:2]
-            if floor_str == '20':
-                floor_room_count[0] += 1
-            elif floor_str == '21':
-                floor_room_count[0] += 1
-            elif floor_str == '30':
-                floor_room_count[1] += 1
-            elif floor_str == '31':
-                floor_room_count[1] += 1
-            elif floor_str == '40':
-                floor_room_count[2] += 1
-            elif floor_str == '41':
-                floor_room_count[2] += 1
-            elif floor_str == '50': 
-                floor_room_count[3] += 1
-            elif floor_str == '51':
-                floor_room_count[3] += 1
-            elif floor_str == '60':
-                floor_room_count[4] += 1
-            elif floor_str == '61':
-                floor_room_count[4] += 1
-            elif floor_str == '70':
-                floor_room_count[5] += 1
-            elif floor_str == '71':
-                floor_room_count[5] += 1
-            elif floor_str == '80':
-                floor_room_count[6] += 1
-            elif floor_str == '81':
-                floor_room_count[6] += 1
-            elif floor_str == '90':
-                floor_room_count[7] += 1
-            elif floor_str == '91':
-                floor_room_count[7] += 1
-            elif floor_str == '10':
-                floor_room_count[8] += 1
-        floor_room_house_list.append(floor_room_count)
-    #DDリストの作成
-    floor_house_T=[]
-    for i in range(len(floor_room_house_list[0])):
-        tmp = []
-        for v in floor_room_house_list:
-            tmp.append(v[i])
-        floor_house_T.append(tmp)
-        
-
-    """
-    フロア 2–10F（len=9）、清掃者数 N の場合：
-    ・平等性を最優先（各人 max 1 フロア, 差分 ≤ 1）
-    ・担当フロアは「その人が 1 部屋以上清掃したフロア」のみ
-    ・必達条件：そのフロアを 1 部屋以上清掃している人にしか割当ない
-    ・努力目標：「最多清掃者」を可能な限り選択
-    ・全室未清掃のフロアはスキップ（割当不要）
-    :param floor_house_T: List[List[int]]  # idx0→2F … idx8→10F
-    :return: List[Optional[List[int]]]   # 清掃者ごとの担当階リスト or None
-    """
-    num_floors   = len(floor_house_T)
-    num_cleaners = len(floor_house_T[0])
-
-    # 1) 各フロアの候補リスト（1部屋以上清掃した人）
-    floor_cands = [
-        [j for j in range(num_cleaners) if floor_house_T[i][j] > 0]
-        for i in range(num_floors)
-    ]
-
-    # 2) 割当対象フロアのみを，候補人数の少ない順にソート
-    floors_order = sorted(
-        (i for i, cands in enumerate(floor_cands) if cands),
-        key=lambda i: len(floor_cands[i])
-    )
-
-    assignments = [None] * num_cleaners  # 最終返却用
-    used = set()  # すでに1フロア割当済みの清掃者
-
-    # 3) 各フロアを順に，未割当の候補者の中から最多清掃者を割当
-    for i in floors_order:
-        # 未使用かつ候補者
-        avail = [j for j in floor_cands[i] if j not in used]
-        if not avail:
-            # すべて使用済みなら，候補全体から選択
-            avail = floor_cands[i]
-        # 努力目標として「最多清掃者」を優先
-        best = max(avail, key=lambda j: floor_house_T[i][j])
-        assignments[best] = [i + 2]  # フロア番号 = idx + 2
-        used.add(best)
-        
+def calc_DD_list(house_data):
+    assignments = []
+    for i in house_data:
+        dd = i[3]
+        if dd != '':
+            # DDのリストを作成
+            dd_list = []
+            for j in dd.split(','):
+                if j != '':
+                    dd_list.append(j)
+            assignments.append(dd_list)
+        else:
+            assignments.append(None)
     result = [
-    None if x is None else " ".join(f"{i}F D.D." for i in x)
-    for x in assignments
-    ]
-    
+                None if x is None else " ".join(f"{i}F D.D." for i in x)
+                for x in assignments
+            ]
     return result

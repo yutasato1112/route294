@@ -391,10 +391,13 @@ $(document).ready(function () {
                         <p class="count_cell" id="count_${rowCount}">0</p>
                     </td>
                     <td>
-                        <p class="floor_cell" id="floor_${rowCount}">None</p>
+                        <p class="floor_cell" id="floor_${rowCount}"></p>
                     </td>
                     <td>
-                        <input type="text" name="key_${rowCount}" id="key_${rowCount}" class="key_cell" value="None">
+                        <input type="text" name="key_${rowCount}" id="key_${rowCount}" class="key_cell" value="">
+                    </td>
+                    <td>
+                        <input type="text" name="dd_${rowCount}" id="dd_${rowCount}" class="dd_cell" value="">
                     </td>
                 </tr>
             `;
@@ -410,8 +413,8 @@ $(document).ready(function () {
         $(".tr_house").each(function () {
             const $row = $(this);
             const floorsText = $row.find(".floor_cell").text().trim();
-            if (!floorsText || floorsText === "None") {
-                $row.find(".key_cell").val("None");
+            if (!floorsText || floorsText === "") {
+                $row.find(".key_cell").val("");
                 return;
             }
 
@@ -450,7 +453,7 @@ $(document).ready(function () {
             const no = $row.find(".input_no").val().trim();
 
             if (no === "") {
-                $row.find(".floor_cell").text("None");
+                $row.find(".floor_cell").text("");
                 return;
             }
 
@@ -469,22 +472,23 @@ $(document).ready(function () {
                 floors.sort((a, b) => a - b);
                 $row.find(".floor_cell").text(floors.join(","));
             } else {
-                $row.find(".floor_cell").text("None");
+                $row.find(".floor_cell").text("");
             }
         });
 
         if(method === "GET"){ {
             updateHouseKeys();
+            updateDdCells();
         }}
     }
 
     //ハウスさん表でNone表示の時の処理
     function updateNoneStyling() {
-        $(".count_cell, .floor_cell, .key_cell").each(function () {
+        $(".count_cell, .floor_cell").each(function () {
             const isInput = $(this).is("input");
             const value = isInput ? $(this).val().trim() : $(this).text().trim();
 
-            if (value === "None") {
+            if (value === "") {
                 $(this).addClass("non-bold");
             } else {
                 $(this).removeClass("non-bold");
@@ -1037,6 +1041,98 @@ $(document).ready(function () {
         }
     }
     
+
+    // --- 1) 各清掃者ごとにフロア毎の清掃数を集計 ---
+    function buildFloorHouseT() {
+    // houseNos はテーブル上の清掃者 No のリスト（1,2,…）
+    const houseRows = $(".tr_house");
+    const houseNos = houseRows.map((i, tr) => $(tr).find(".input_no").val().trim()).get();
+    const numCleaners = houseNos.length;
+    
+    // floors 2〜10 のフロア数＝9
+    const numFloors = 9;
+    // floorHouseT[i][j] = 清掃者 j が (i+2)F で掃除した部屋数
+    const floorHouseT = Array.from({length: numFloors}, () => Array(numCleaners).fill(0));
+    
+    // room_assignments: room → houseNo
+    const roomAssignments = {};
+    $(".input_room").each(function() {
+        const room = $(this).closest("td").data("room");
+        const no = $(this).val().trim();
+        if (room && no !== "" && no !== "0") roomAssignments[room] = no;
+    });
+    
+    // 各 room を見て、floorHouseT に加算
+    Object.entries(roomAssignments).forEach(([room, no]) => {
+        const floor = Math.floor(parseInt(room, 10) / 100);
+        if (floor >= 2 && floor <= 10) {
+        const i = floor - 2;           // 2F→idx0 … 10F→idx8
+        const j = houseNos.indexOf(no);
+        if (j !== -1) floorHouseT[i][j] += 1;
+        }
+    });
+    return floorHouseT;
+    }
+
+    // --- 2) Python ロジックを JS 化して担当フロアを決定 ---
+    function assignDdByAlgorithm(floorHouseT) {
+    const numFloors   = floorHouseT.length;       // 9
+    const numCleaners = floorHouseT[0].length;    // houseRows.length
+
+    // 各フロアの「1 部屋以上清掃した人」一覧
+    const floorCands = floorHouseT.map(row =>
+        row.map((cnt,j) => cnt > 0 ? j : -1).filter(j => j >= 0)
+    );
+
+    // 割当対象フロアのみを「候補人数の少ない順」にソート
+    const floorsOrder = [];
+    floorCands.forEach((cands,i) => {
+        if (cands.length > 0) floorsOrder.push(i);
+    });
+    floorsOrder.sort((a,b) =>
+        floorCands[a].length - floorCands[b].length
+    );
+
+    // assignments[j] = 担当フロアリスト（数が 1 つか空）
+    const assignments = Array.from({length: numCleaners}, () => []);
+    const used = new Set();  // 既に1フロア割当を受けた清掃者
+
+    floorsOrder.forEach(i => {
+        // 未割当の候補
+        let avail = floorCands[i].filter(j => !used.has(j));
+        if (avail.length === 0) {
+        // いなければ全候補
+        avail = floorCands[i].slice();
+        }
+        // 努力目標として「最多掃除者」を優先
+        let best = avail[0];
+        let maxCnt = floorHouseT[i][best];
+        avail.forEach(j => {
+        if (floorHouseT[i][j] > maxCnt) {
+            best = j; maxCnt = floorHouseT[i][j];
+        }
+        });
+        assignments[best].push(i + 2);
+        // 1 フロアめなら used に追加
+        if (assignments[best].length === 1) used.add(best);
+    });
+
+    // None（担当なし）は空配列をそのままに
+    return assignments.map(a => a.length ? a : null);
+    }
+
+    // --- 3) .dd_cell に反映する関数 ---
+    function updateDdCells() {
+    const floorHouseT = buildFloorHouseT();
+    const ddAssigns  = assignDdByAlgorithm(floorHouseT);
+    // houseRows と対応して書き込む
+    $(".tr_house").each((idx, tr) => {
+        const $dd = $(tr).find(".dd_cell");
+        const assigned = ddAssigns[idx];
+        $dd.val(assigned ? assigned.join(",") : "");
+    });
+    }
+
 
     //階数の一括処理
     $("#delete_floor_btn").on("click", function () {

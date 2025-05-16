@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_tags %}
+{% block content %}
+<title>technology</title>
+<h1 style="text-align: center; padding: 3vh;">技術</h1>
+<div class="container" style="border: 1px solid #ccc; border-radius: 10px; background-color: white;">
+    <h2 style="text-align: center; padding: 1vh;">使用技術</h2>
+    <table class="table table-striped">
+        <tbody>
+            <tr>
+                <td>Webフレームワーク</td>
+                <td>Django</td>
+            </tr>
+            <tr>
+                <td>JavaScriptフレームワーク</td>
+                <td>jQuery</td>
+            </tr>
+            <tr>
+                <td>CSSフレームワーク</td>
+                <td>Bootstrap</td>
+            </tr>
+            <tr>
+                <td>使用言語</td>
+                <td>Python, HTML, CSS, JavaScript</td>
+            </tr>
+            <tr>
+                <td>バージョン管理</td>
+                <td>GitHub</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div class="container" style="border: 1px solid #ccc; border-radius: 10px; background-color: white; margin-top: 2vh;">
+    <h2 style="text-align: center; padding: 1vh;">開発環境</h2>
+    <table class="table table-striped">
+        <tbody>
+            <tr>
+                <td>機種</td>
+                <td>Apple Macbook Pro 13-inch, 2020, Four Thunderbolt 3 ports</td>
+            </tr>
+            <tr>
+                <td>CPU</td>
+                <td>2.3 GHz クアッドコアIntel Core i7</td>
+            </tr>
+            <tr>
+                <td>RAM</td>
+                <td>32 GB 3733 MHz </td>
+            </tr>
+            <tr>
+                <td>OS</td>
+                <td>macOS Sequoia ver.15.3.1</td>
+            </tr>
+            <tr>
+                <td>コーダ</td>
+                <td>VSCode</td>
+            </tr>
+            <tr>
+                <td>仮想環境</td>
+                <td>Virtualenv</td>
+            </tr>
+            <tr>
+                <td>テストブラウザ</td>
+                <td>Mozilla Firefox Developer Edition, Goofle Chrome</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div class="container" style="border: 1px solid #ccc; border-radius: 10px; background-color: white; margin-top: 2vh;">
+    <h2 style="text-align: center; padding: 1vh;">マスタデータ</h2>
+    <table class="table table-striped">
+        <tbody>
+            <tr>
+                <td>room_info.csv</td>
+                <td>部屋番号と部屋タイプを格納</td>
+            </tr>
+            <tr>
+                <td>master_key.csv</td>
+                <td>フロアとマスターキーを対応付</td>
+            </tr>
+            <tr>
+                <td>time_by_type.csv</td>
+                <td>部屋タイプ別のデフォルト清掃時間を格納</td>
+            </tr>
+            <tr>
+                <td>email.json</td>
+                <td>レポート機能での問い合わせ先を格納</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<div class="container" style="border: 1px solid #ccc; border-radius: 10px; background-color: white; margin-top: 2vh;">
+    <h2 style="text-align: center; padding: 1vh;">GitHubリポジトリ</h2>
+    <a href="https://github.com/yutasato1112/route294" target="_blank" style="display: flex; justify-content: center; padding-bottom: 2vh;">https://github.com/yutasato1112/route294</a>
+</div>
+<div style="height: 3vh;"></div>
+{% endblock %}
