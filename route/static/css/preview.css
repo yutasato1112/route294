@@ -130,6 +130,13 @@ td{
     border-bottom: 1px solid black;
     margin: auto;
     font-size: 18px;
+    line-height: 6mm; 
+    display: flex; 
+    align-items: center; 
+}
+.dd_data{
+    font-size: 26px;
+    line-height: 6mm;
 }
 .special_menu{
     margin: auto;
@@ -222,7 +229,8 @@ td{
 }
 .bottom_left_left{
     width: 55%;
-    font-size: 10px;
+    font-size: 17px;
+    line-height: 0.8;
 }
 .bottom_left_right{
     text-align: center;

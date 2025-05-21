@@ -254,10 +254,10 @@
                         <td class="bottom_left_right">:</td>
                     </tr>
                     <tr>
-                        <td class="bottom_left_left">大浴場清掃・リラクゼーション</td>
+                        <td class="bottom_left_left">大浴場清掃</td>
                         <td class="bottom_left_right">：</td>
                     <tr>
-                        <td class="bottom_left_left">スポット清掃・ミーティング</td>
+                        <td class="bottom_left_left">スポット清掃・<br>ミーティング</td>
                         <td class="bottom_left_right">：</td>
                 </tbody>
             </table>
@@ -277,7 +277,7 @@
         </div>
         <div class="bottom_line_right">
             <!--連絡事項-->
-            <p class="note_title note">[連絡事項]　　{% if person_data.DD_list != None  %}{{ person_data.DD_list }}{% endif %}</p>
+            <p class="note_title note">[連絡事項]　　{% if person_data.DD_list != None  %}<span class="dd_data">{{ person_data.DD_list }}</span>{% endif %}</p>
             <p class="note">{{person_data.contact_1}}</p>
             <p class="note">{{person_data.contact_2}}</p>
             <p class="note">{{person_data.contact_3}}</p>

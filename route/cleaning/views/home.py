@@ -47,7 +47,12 @@ class homeView(TemplateView):
 
 
         #日付取得
-        today = datetime.date.today()
+        #起動時刻が18時から24時の場合、翌日の日付を表示
+        #それ以外は当日の日付を表示
+        if datetime.datetime.now().hour >= 18:
+            today = datetime.date.today() + datetime.timedelta(days=1)
+        else:
+            today = datetime.date.today()
         
         context = {
             'method':method,

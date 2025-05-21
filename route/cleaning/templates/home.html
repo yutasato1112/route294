@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<title>home</title>
+<title>Home</title>
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
 <script src="{% static 'js/home.js' %}"></script>
 <div class="main">
@@ -15,7 +15,7 @@
         {% csrf_token %}
         <div class="first_line">
             <!--作業者名-->
-            <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if method == 'POST' %} value={{editor_name}} {% endif %} >
+            <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if method == 'POST' %} value={{editor_name}} {% endif %} required>
             <!--日付-->
             <input class="input_date" type="date" name="date" id="date" required  value="{{ today|date:'Y-m-d' }}">
             <div class="input_time_per_room_type">
