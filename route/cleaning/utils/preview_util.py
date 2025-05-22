@@ -349,11 +349,8 @@ def calc_DD_list(house_data):
     return result
 
 def calc_cover_remarks(remarks_name_list, remarks):
-    print(remarks_name_list)
-    print(remarks)
     remarks_name_list_rooms = {room for room, _, _ in remarks_name_list}
     diff = [item for item in remarks if item['room'] not in remarks_name_list_rooms]
-    print(diff)
     for i in diff:
         remarks_name_list.append((i['room'], i['comment'], '　　　　'))
     return remarks_name_list
