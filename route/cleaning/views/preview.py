@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
-from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list
+from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks
 
 # Create your views here.
 
@@ -16,7 +16,7 @@ class previewView(TemplateView):
     def post(self, request, *args, **kwargs):
         #データ受け取り
         date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts = catch_post(request)
-
+        
         #表紙情報受け取り
         room_changes, outins, must_cleans, others = get_cover(request)
         
@@ -25,7 +25,7 @@ class previewView(TemplateView):
         pages = 0
         for i in range(len(house_data)):
             pages +=1
-            if house_data[i][1] != '清掃不要':
+            if house_data[i][1] != '清掃不要' and house_data[i][1] != '残し部屋':
                 person_count += 1
         
         #部屋数のカウント
@@ -110,6 +110,9 @@ class previewView(TemplateView):
         #備考と名前のリスト化
         remarks_name_list = search_remarks_name_list(key_name_list, rooms)
         
+        #表紙用の備考作成
+        cover_remarks = calc_cover_remarks(remarks_name_list, remarks)
+        
         #ルームチェンジ情報とパーソンの突き合わせ
         room_changes_person = select_person_from_room_change(room_changes, key_name_list, rooms)
         #ルームチェンジ情報を備考に追加
@@ -121,7 +124,7 @@ class previewView(TemplateView):
             first = '　　　'+outins[i]
             second = '　　　'+outins[i+1] if i + 1 < len(outins) else '　　　　　'
             outins_list.append((first, second))
-        
+            
         context = {
             'data':total_data,
             'editor_name': editor_name,
@@ -134,5 +137,6 @@ class previewView(TemplateView):
             'outins':outins_list,
             'must_cleans':must_cleans,
             'others':others,
+            'cover_remarks':cover_remarks,
         }
         return render(self.request, self.template_name, context)

@@ -244,10 +244,6 @@ $(document).ready(function () {
     $(document).on("input", ".input_eco, .input_amenity, .input_duvet", function () {
         checkAndAddCleanMethodRow();
     });
-    //備考表の部屋番号・備考が入力された時の処理
-    $(document).on("input", ".input_remark_room, .input_remark", function () {
-        checkAndAddRemarkRow();
-    });
     //ハウスさん表の名前が入力された時の処理
     $(document).on("input", ".input_name", function () {
         checkAndAddRow();
@@ -257,39 +253,10 @@ $(document).ready(function () {
         updateResultTableColumns();
     });
     //
-    $(document).on("input", ".input_name, .input_no, .input_bath", function () {
-        updateResultTableColumns();
-    });
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco", function () {
-        updateResultTableColumns();
-        updateAssignedRoomRows();
-    });
-
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, #single_time, #twin_time, #bath_time", function () {
-        updateResultTableColumns();
-        updateAssignedRoomRows();
-        updateEndTimeRow();
-    });
 
     $(document).on("input", ".input_no, .input_name, .input_room", function () {
         syncHiddenHouseFields();
     });
-    $(document).on("input", ".room_change_original, .room_change_destination", function () {
-        checkAndAddRoomChangeRow();
-    });
-    $(document).on("input", ".outin_room", function () {
-        checkAndAddOutInRow();
-    });
-    $(document).on("input", ".must_clean_room, .must_clean_reason", function () {
-        checkAndAddMustCleanRow();
-    });
-
-    //連絡事項欄
-    $(document).on("input", ".input_contact_number, .input_contact", function () {
-        checkAndAddContactRow();
-    });
-    
-
 
     updateHouseCount();
     updateHouseFloorAssignments();
@@ -1160,13 +1127,37 @@ $(document).ready(function () {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-const form = document.getElementById('main_form');
-const nameInput = document.getElementById('name');
+    const form = document.getElementById('main_form');
+    const nameInput = document.getElementById('name');
 
-form.addEventListener('submit', function (event) {
-    if (nameInput.value.trim() === '') {
-        event.preventDefault();  // フォーム送信を中止
-        alert('編集者名字を入力してください');
-    }
+    form.addEventListener('submit', function (event) {
+        if (nameInput.value.trim() === '') {
+            event.preventDefault();  // フォーム送信を中止
+            alert('編集者名字を入力してください');
+        }
+    });
+
+    // 制約条件欄の動的追加
+    $(document).on("input", ".input_constraints", function () {
+        let allFilled = true;
+
+        $(".input_constraints").each(function () {
+            if ($(this).val().trim() === "") {
+                allFilled = false;
+            }
+        });
+
+        const $lastInput = $(".input_constraints").last();
+        if (allFilled && $lastInput.val().trim() !== "") {
+            const newInput = $('<input>', {
+                type: "text",
+                name: "constraints",
+                class: "input_constraints",
+                placeholder: "例：1番は7部屋まで etc..."
+            });
+            $(".constraints_area").append(newInput);
+        }
+    });
+
 });
-});
+

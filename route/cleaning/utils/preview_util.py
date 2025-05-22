@@ -24,11 +24,9 @@ def catch_post(request):
             index = key.split("_")[-1]  # 例: 'remark_room_3' → '3'
             room = request.POST.get(f"remark_room_{index}", "").strip()
             comment = request.POST.get(f"remark_{index}", "").strip()
-
             # 両方に何か入力があるときだけ追加
             if room and comment:
                 remarks.append({"room": room, "comment": comment})
-    
     # POST データの key を全部ループ
     contacts = []
     for key in request.POST:
@@ -293,15 +291,22 @@ def add_rc(total_data, room_changes_person):
     return total_data
 
 def split_contact_textarea(contact_text):
-    # 改行で分割（\r\n や \r も一応考慮）
+    def split_by_length(s, max_len=20):
+        return [s[i:i+max_len] for i in range(0, len(s), max_len)]
+
+    # 改行コードの統一
     lines = contact_text.replace('\r\n', '\n').replace('\r', '\n').split('\n')
 
-    # contact_1～contact_4までを取り、残りは5番目に詰める
-    contact_1 = lines[0] if len(lines) > 0 else ''
-    contact_2 = lines[1] if len(lines) > 1 else ''
-    contact_3 = lines[2] if len(lines) > 2 else ''
-    contact_4 = '\n'.join(lines[3:]) if len(lines) > 3 else ''
+    # 各行を20文字ごとに分割し、flattenする
+    processed_lines = []
+    for line in lines:
+        processed_lines.extend(split_by_length(line.strip(), 20))
 
+    # contact_1～contact_4までを取り、残りはcontact_4にまとめて格納
+    contact_1 = processed_lines[0] if len(processed_lines) > 0 else ''
+    contact_2 = processed_lines[1] if len(processed_lines) > 1 else ''
+    contact_3 = processed_lines[2] if len(processed_lines) > 2 else ''
+    contact_4 = '\n'.join(processed_lines[3:]) if len(processed_lines) > 3 else ''
     return contact_1, contact_2, contact_3, contact_4
     
 def calc_room_type_count(rooms):
@@ -342,3 +347,10 @@ def calc_DD_list(house_data):
                 for x in assignments
             ]
     return result
+
+def calc_cover_remarks(remarks_name_list, remarks):
+    remarks_name_list_rooms = {room for room, _, _ in remarks_name_list}
+    diff = [item for item in remarks if item['room'] not in remarks_name_list_rooms]
+    for i in diff:
+        remarks_name_list.append((i['room'], i['comment'], '　　　　'))
+    return remarks_name_list

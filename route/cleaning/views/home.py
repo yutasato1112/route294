@@ -19,12 +19,14 @@ class homeView(TemplateView):
         #遷移前取得
         referer = request.META.get('HTTP_REFERER')  
         from_report = False  
+        form_ai = False
         if referer:
             # URLのパス部分だけ取り出す
             path = urlparse(referer).path
             if path.endswith('/report/') or path == '/report':
                 from_report = True
-                
+            if path.endswith('/ai_assist/') or path == '/ai_assist':
+                from_ai = True
 
         #初回アクセス時
         #csv読み込み

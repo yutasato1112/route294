@@ -2,7 +2,235 @@
 {% load static %}
 {% block content %}
 <title>AI Assist</title>
-<h1>Comming soon...</h1>
+<h1>Created by Artificial Intelligence</h1>
+<h3>Comming soon...</h3>
+<link rel="stylesheet" href="{% static 'css/ai_assist.css' %}">
+<script src="{% static 'js/ai_assist.js' %}"></script>
+<div class="main">
+<form action="/ai_assist/" method="post" enctype="multipart/form-data" id="main_form">
+        {% csrf_token %}
+        <div class="first_line">
+            <input formaction="{% url 'home' %}" type="submit" class="btn btn-secondary" value="戻る" formmethod="get">
+            <!--作業者名-->
+            <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" value={{editor_name}}>
+            <!--日付-->
+            <input class="input_date" type="date" name="date" id="date" required  value="{{ today|date:'Y-m-d' }}">
+            <div class="input_time_per_room_type">
+                <!--部屋タイプ別清掃時間-->
+                <p class="p_title">目標時間/min</p>
+                <p class="p_topics">S　:　</p>
+                <input class="input_time" type="number" name="single_time" id="single_time" required value="{{single_time}}">
+                <p class="p_topics"> T　:　</p>
+                <input class="input_time" type="number" name="twin_time" id="twin_time" required value="{{twin_time}}">
+                <p class="p_topics"> 大浴場　:　</p>
+                <input class="input_time" type="number" name="bath_time" id="bath_time" required value="{{bath_time}}">
+            </div>
 
+            <!--プレビュー表示ボタン-->
+            <input type="submit" value="Create" class="btn btn-primary submit" >
+        </div>
+        <div class="constraints_area">
+            <p class="constraints_title">制約条件</p>
+            <input type="text" name="constraints" id="constraints" class="input_constraints" placeholder="例：1番は7部屋まで etc...">
+            <input type="text" name="constraints" id="constraints" class="input_constraints" placeholder="例：1番は7部屋まで etc...">
+            <input type="text" name="constraints" id="constraints" class="input_constraints" placeholder="例：1番は7部屋まで etc...">
+        </div>
+        <div class="second_line">
+            <div class="second_left">
+                <!--部屋別清掃指示入力-->
+                <div class="room_table_area">
+                    <table class="table table-striped">
+                        <tbody>
+                            {% for floor in combined_rooms %}
+                            <tr>
+                                {% for roomdata in floor %}
+                                <td data-room="{{ roomdata.room }}">
+                                    {{ roomdata.room }}
+                                    <input type="text" name="room_{{ roomdata.room }}" id="room_{{ roomdata.room }}" class="input_room" value="{{ roomdata.status }}">
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table> 
+                    <div class="room_table_bottom">
+                        <p class="attention_note">※清掃不要の0のみを入力</p>
+                    </div>
+                </div>
+                <div class="third_line">
+                    <!--大浴場清掃-->
+                    <div class="bath_area">
+                        <p>大浴場清掃：</p>
+                        <input type="number" name="bath" id="bath" class="input_bath"  value={{bath_persons.0}}>
+                        <input type="number" name="bath" id="bath" class="input_bath"  value={{bath_persons.1}}>
+                        <input type="number" name="bath" id="bath" class="input_bath"  value={{bath_persons.2}} >
+                        <input type="number" name="bath" id="bath" class="input_bath"  value={{bath_persons.3}}>
+                    </div>
+                    <!--フロア別一括操作-->
+                    <div class="floor_area">
+                        <p>フロア別一括操作：</p>
+                        <input type="number" name="floor" id="delete_floor" class="input_delete_floor">
+                        <p>　階を　</p>
+                        <button type="button" class="btn btn-danger " id="delete_floor_btn">削除</button>
+                    </div>
+                </div>
+            </div>
+            <div class="second_center">
+                <!--ハウスさん情報-->
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>名前</th>
+                            <th>数</th>
+                            <th class="floor_th">階</th>
+                            <th>キー</th>
+                            <th>D.D.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="house_table_body">
+                        {% for person in house_person %}
+                            <tr class="tr_house">
+                                <td class="td_no">
+                                    <input type="number" name="no_{{forloop.counter}}" id="no_{{forloop.counter}}" class="input_no" value="{{person.0}}" min="1" >
+                                </td>
+                                <td class="td_name">
+                                    <input type="text" name="name_{{forloop.counter}}" id="name_{{forloop.counter}}" class="input_name"  {% if forloop.first %} required {% endif %} value="{{ person.1 }}">
+                                </td>
+                                <td>
+                                    <p class="count_cell" id="count_{{forloop.counter}}">0</p>
+                                </td>
+                                <td>
+                                    <p class="floor_cell" id="floor_{{forloop.counter}}"></p>
+                                </td>
+                                <td>
+                                    <input type="text" name="key_{{forloop.counter}}" id="key_{{forloop.counter}}" class="key_cell" value="{{ person.2 }}">
+                                </td>
+                                <td>
+                                    <input type="text" name="dd_{{forloop.counter}}" id="dd_{{forloop.counter}}" class="dd_cell" value="{{ person.3 }}">
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        {% with ''|center:house_len as range %}
+                            {% for _ in range %}
+                            <tr class="tr_house">
+                                {% if method == 'POST' %}
+                                    <td class="td_no">
+                                        <input type="number" name="no_{{forloop.counter|add:add_house_len}}" id="no_{{forloop.counter|add:add_house_len}}" class="input_no" {% if not forloop.last %} value="{{forloop.counter|add:add_house_len}}" {% endif %} min="1">
+                                    </td>
+                                    <td class="td_name">
+                                        <input type="text" name="name_{{forloop.counter|add:add_house_len}}" id="name_{{forloop.counter|add:add_house_len}}" class="input_name" >
+                                    </td>
+                                    <td>
+                                        <p class="count_cell" id="count_{{forloop.counter|add:add_house_len}}">0</p>
+                                    </td>
+                                    <td>
+                                        <p class="floor_cell" id="floor_{{forloop.counter|add:add_house_len}}"></p>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="key_{{forloop.counter|add:add_house_len}}" id="key_{{forloop.counter|add:add_house_len}}" class="key_cell" value="">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="dd_{{forloop.counter|add:add_house_len}}" id="dd_{{forloop.counter|add:add_house_len}}" class="dd_cell" value="">
+                                    </td>
+                                {% else %}
+                                    <td class="td_no">
+                                        <input type="number" name="no_{{forloop.counter}}" id="no_{{forloop.counter}}" class="input_no" {% if not forloop.last %} value="{{forloop.counter}}" {% endif %} min="1">
+                                    </td>
+                                    <td class="td_name">
+                                        <input type="text" name="name_{{forloop.counter}}" id="name_{{forloop.counter}}" class="input_name" >
+                                    </td>
+                                    <td>
+                                        <p class="count_cell" id="count_{{forloop.counter}}">0</p>
+                                    </td>
+                                    <td>
+                                        <p class="floor_cell" id="floor_{{forloop.counter}}"></p>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="key_{{forloop.counter}}" id="key_{{forloop.counter}}" class="key_cell" value="">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="dd_{{forloop.counter}}" id="dd_{{forloop.counter}}" class="dd_cell" value="">
+                                    </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="second_right">
+                <!--エコ・アメ・デュべ-->
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>エコ部屋</th>
+                            <th>アメ</th>
+                            <th>デュべ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clean_method_body">
+                        {% for row in room_char_list %}
+                        <tr class="tr_clean_method">
+                            <td class="td_eco">
+                                <input value="{{row.0.eco.0}}" type="text" name="eco_room" id="eco_room" class="input_eco">
+                                <input value="{{row.0.eco.1}}" type="text" name="eco_room" id="eco_room" class="input_eco">
+                                <input value="{{row.0.eco.2}}" type="text" name="eco_room" id="eco_room" class="input_eco">
+                            </td>
+                            <td>
+                                <input value="{{row.1.ame}}" type="text" name="amenity" id="amenity" class="input_amenity">
+                            </td>
+                            <td class="td_duvet">
+                                <input value="{{row.2.duvet.0}}" type="text" name="duvet" id="duvet" class="input_duvet">
+                                <input value="{{row.2.duvet.1}}" type="text" name="duvet" id="duvet" class="input_duvet">
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% with ''|center:room_char_list_len as range %}
+                            {% for _ in range %}
+                                <tr class="tr_clean_method">
+                                    <td class="td_eco">
+                                        <input type="text" name="eco_room" id="eco_room" class="input_eco">
+                                        <input type="text" name="eco_room" id="eco_room" class="input_eco">
+                                        <input type="text" name="eco_room" id="eco_room" class="input_eco">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="amenity" id="amenity" class="input_amenity">
+                                    </td>
+                                    <td class="td_duvet">
+                                        <input type="text" name="duvet" id="duvet" class="input_duvet">
+                                        <input type="text" name="duvet" id="duvet" class="input_duvet">
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    window.master_key = {{ master_key|safe }};
+    window.single_rooms = {{ single_rooms|safe }};
+    window.twin_rooms = {{ twin_rooms|safe }};
+    window.method = "{{ method|safe }}";
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.getElementById("json_file");
+        const mainForm = document.querySelector("form");
+        
+        const uploadUrl = "{% url 'home' %}";
+
+        fileInput.addEventListener("change", function () {
+            if (fileInput.files.length > 0) {
+                mainForm.setAttribute("action", uploadUrl);
+                mainForm.setAttribute("enctype", "multipart/form-data");
+                mainForm.submit();
+            }
+        });
+    });
+</script>
 
 {% endblock %}
