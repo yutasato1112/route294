@@ -181,6 +181,11 @@ td{
     margin-bottom: 0;
     line-height: 1;
 }
+.sign{
+    padding-bottom: 0;
+    margin-bottom: 0;
+    line-height: 1;
+}
 .floor_title{
     width: 25%;
 }
