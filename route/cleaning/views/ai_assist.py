@@ -8,8 +8,9 @@ from urllib.parse import urlparse
 from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char
 from ..utils.ai_util import get_data, processing_input_rooms,get_post_data
 
-import openai
+from openai import OpenAI
 import os
+import traceback
 # Create your views here.
 
 class aiAssistView(TemplateView):
@@ -173,7 +174,7 @@ class aiAssistView(TemplateView):
         
         #toAPIデータ取りまとめ
         total_data = {
-            'today': today,
+            'today': today.isoformat(),
             'eco_rooms': eco_rooms,
             'ame_rooms': ame_rooms,
             'duvet_rooms': duvet_rooms,
@@ -194,28 +195,28 @@ class aiAssistView(TemplateView):
         with open('static/prompt/openAI.txt', 'r', encoding='utf-8') as f:
             system_prompt = f.read()
         
-        openai.api_key = openai_info['api_key']
+        client = OpenAI(api_key=openai_info['api_key'])
+
+        print(system_prompt)
+        print(total_data)
+
         try:
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model=openai_info['model'],
                 messages=[
-                    {
-                        "role": "system",
-                        "content": system_prompt
-                    },
-                    {
-                        "role": "user",
-                        "content": json.dumps(total_data, ensure_ascii=False)
-                    }
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": json.dumps(total_data, ensure_ascii=False)}
                 ],
-                temperature=0.7,
+                temperature=0.7
             )
             result = response.choices[0].message.content
         except Exception as e:
-            print(f"OpenAI API error: {e}")
-            return JsonResponse({'error': 'OpenAI API error'}, status=500)
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': f'OpenAI API error: {str(e)}'}, status=500)
         
         print(result)
+        
         
         context = {}
         return render(self.request, self.res_template_name, context)
