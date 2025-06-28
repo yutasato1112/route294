@@ -349,22 +349,22 @@ $(document).ready(function () {
             let newRow = `
                 <tr class="tr_house">
                     <td class="td_no">
-                        <input type="number" name="no_${rowCount}" id="no_${rowCount}" class="input_no" ${valueAttr} min="1">
+                        <input type="number" name="no" id="no" class="input_no" value="{{person.0}}" min="1" >
                     </td>
                     <td class="td_name">
-                        <input type="text" name="name_${rowCount}" id="name_${rowCount}" class="input_name">
-                    </td>
-                     <td>
-                        <p class="count_cell" id="count_${rowCount}">0</p>
+                        <input type="text" name="name" id="name" class="input_name" >
                     </td>
                     <td>
-                        <p class="floor_cell" id="floor_${rowCount}"></p>
+                        <input type="number" class="max_cell" id="max">
                     </td>
                     <td>
-                        <input type="text" name="key_${rowCount}" id="key_${rowCount}" class="key_cell" value="">
+                        <input type="text" class="floor_cell" id="least_floor">
                     </td>
                     <td>
-                        <input type="text" name="dd_${rowCount}" id="dd_${rowCount}" class="dd_cell" value="">
+                        <input type="text" name="least_comform" id="least_comfort" class="least_comfort_cell">
+                    </td>
+                    <td>
+                        <input type="text" name="bath" id="bath" class="bath_cell" >
                     </td>
                 </tr>
             `;

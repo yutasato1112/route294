@@ -148,7 +148,7 @@ td.room-muted.selected {
 }
 .second_center{
     margin-top: 1vh;
-    width: 29%;
+    width: 95%;
     background-color: white;
     border: #ccc 1px solid;
     border-radius: 10px;
@@ -339,5 +339,25 @@ input[type="number"]::-webkit-inner-spin-button {
     display: block;
     margin-left: auto;
     margin-right: auto;
+    margin-bottom: 1vh;
+}
+
+
+
+
+
+.td_floor{
+    width: 10vw;
+}
+.floor_cell{
+    width: 8vw;
+}
+.room_per_person{
+    width: 28%;
+    margin: auto;
+    background-color: white;
+    border: #ccc 1px solid;
+    border-radius: 10px;
+    margin-top: 1vh;
     margin-bottom: 1vh;
 }

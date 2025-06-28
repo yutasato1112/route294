@@ -93,7 +93,6 @@ def get_post_data(request):
     ame_rooms = data.getlist('ame_rooms')
     duvet_rooms = data.getlist('duvet_rooms')
     constraints = data.getlist('constraints')
-    print(constraints)
 
     return {
         'editor_name': editor_name,

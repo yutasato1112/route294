@@ -7,10 +7,14 @@ from django.http import JsonResponse
 from urllib.parse import urlparse
 from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char
 from ..utils.ai_util import get_data, processing_input_rooms,get_post_data
+
+import openai
+import os
 # Create your views here.
 
 class aiAssistView(TemplateView):
     template_name = "ai_assist.html"
+    res_template_name = "ai_assist_result.html"
     def get(self, request, *args, **kwargs):
         method = 'GET'
         from_report = False  
@@ -84,8 +88,135 @@ class aiAssistView(TemplateView):
         return render(self.request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        data = get_post_data(request)
+        #日付取得
+        #起動時刻が18時から24時の場合、翌日の日付を表示
+        #それ以外は当日の日付を表示
+        if datetime.datetime.now().hour >= 18:
+            today = datetime.date.today() + datetime.timedelta(days=1)
+        else:
+            today = datetime.date.today()
+            
+        #csv読み込み
+        room_info_data, times_by_time_data, master_key_data = read_csv()
+        
+        #部屋を階別に二次元配列へ加工
+        room_num_table = processing_list(room_info_data)
+        
+        #部屋をタイプ別に一次元配列に加工
+        single_room_list, twin_room_list = dist_room(room_info_data)
+        combined_rooms = []
+        for i in range(len(room_num_table)):
+            floor_data = []
+            for j in range(len(room_num_table[i])):
+                floor_data.append({
+                    'room': room_num_table[i][j],
+                    'status': '',
+                })
+            combined_rooms.append(floor_data)
+
+        #送信データ取得
+        data = request.POST
+        house_no = data.getlist('no')
+        house_name = data.getlist('name')
+        house_max = data.getlist('max')
+        house_least_floor = data.getlist('least_floor')
+        house_is_least_comfort = data.getlist('is_least_comfort')
+        house_is_bath = data.getlist('is_bath')
+        
+        eco_rooms = data.getlist('eco_room')
+        eco_rooms = [x for x in eco_rooms if x]  # 空の値を除外
+        ame_rooms = data.getlist('amenity')
+        ame_rooms = [x for x in ame_rooms if x]  # 空の値を除外
+        duvet_rooms = data.getlist('duvet')
+        duvet_rooms = [x for x in duvet_rooms if x]
+        
+        rooms_rooms_per_person = data.getlist('rooms')
+        person_rooms_per_person = data.getlist('persons')
+        
+        not_clean_required = data.getlist('not_clean_required')
+        not_clean_required = [x for x in not_clean_required if x]  # 空の値を除外
+        
+        free_constraints = data.getlist('free_constraints')
+  
+        #Tが変数ならTrue、それ以外をFalseに変換
+        house_is_least_comfort = [True if x == 'T' else False for x in house_is_least_comfort]
+        house_is_bath = [True if x == 'T' else False for x in house_is_bath]
+        
+        #ハウスデータのうち、最も少ない配列要素数に合わせる
+        min_length = min(len(house_no), len(house_name), len(house_max), len(house_least_floor), 
+                         len(house_is_least_comfort), len(house_is_bath))
+        #ハウスデータまとめ
+        house_data = []
+        house_secret_list = []
+        alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+        for i in range(min_length):
+            no = house_no[i]
+            name = alphabet[i]
+            tmp = [alphabet[i], house_name[i]]
+            house_secret_list.append(tmp)
+            key = {
+                'max': house_max[i],
+                'least_floor': house_least_floor[i],
+                'is_least_comfort': house_is_least_comfort[i],
+                'is_bath': house_is_bath[i],
+            }
+            if no and name:
+                house_data.append([no, name, key])
+        
+        room_per_person = []
+        for i in range(len(rooms_rooms_per_person)):
+            if rooms_rooms_per_person[i] and person_rooms_per_person[i]:
+                room_per_person.append({
+                    'room': rooms_rooms_per_person[i],
+                    'person': person_rooms_per_person[i]
+                })
+        
+        #toAPIデータ取りまとめ
+        total_data = {
+            'today': today,
+            'eco_rooms': eco_rooms,
+            'ame_rooms': ame_rooms,
+            'duvet_rooms': duvet_rooms,
+            'not_clean_required': not_clean_required,
+            'house_data': house_data,
+            'free_constraints': free_constraints,
+            'room_per_person': room_per_person,
+        }
+        
+        #OpenAI APIを呼び出す
+        if os.path.exists(os.path.join('static/openai.json')):
+            with open(os.path.join('static/openai.json')) as openai_file:
+                openai_info = json.load(openai_file)
+        else:
+            print('openai.json could not be found.')
+            quit()
+        
+        with open('static/prompt/openAI.txt', 'r', encoding='utf-8') as f:
+            system_prompt = f.read()
+        
+        openai.api_key = openai_info['api_key']
+        try:
+            response = openai.ChatCompletion.create(
+                model=openai_info['model'],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": system_prompt
+                    },
+                    {
+                        "role": "user",
+                        "content": json.dumps(total_data, ensure_ascii=False)
+                    }
+                ],
+                temperature=0.7,
+            )
+            result = response.choices[0].message.content
+        except Exception as e:
+            print(f"OpenAI API error: {e}")
+            return JsonResponse({'error': 'OpenAI API error'}, status=500)
+        
+        print(result)
         
         context = {}
-        return render(self.request, self.template_name, context)
+        return render(self.request, self.res_template_name, context)
     
