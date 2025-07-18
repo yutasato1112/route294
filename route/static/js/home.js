@@ -237,7 +237,7 @@ $(document).ready(function () {
         }
     });
     //エコ・アメ・デュべ表のエコ・デュべが入力された時の処理
-    $(document).on("input", ".input_eco, .input_duvet", function () {
+    $(document).on("input", ".input_amenity,.input_eco, .input_duvet", function () {
         highlightRooms();
     });
     //エコ・アメ・デュべ表のエコ・アメ・デュべが入力された時の処理
@@ -288,7 +288,7 @@ $(document).ready(function () {
     $(document).on("input", ".input_contact_number, .input_contact", function () {
         checkAndAddContactRow();
     });
-    
+
 
 
     updateHouseCount();
@@ -476,10 +476,12 @@ $(document).ready(function () {
             }
         });
 
-        if(method === "GET"){ {
-            updateHouseKeys();
-            updateDdCells();
-        }}
+        if (method === "GET") {
+            {
+                updateHouseKeys();
+                updateDdCells();
+            }
+        }
     }
 
     //ハウスさん表でNone表示の時の処理
@@ -539,7 +541,9 @@ $(document).ready(function () {
     function highlightRooms() {
         $('[data-room]').css('background-color', '');
 
+        let ameRooms = new Set();
         let ecoRooms = new Set();
+
         $('.input_eco').each(function () {
             let roomNumber = $(this).val().trim();
             if (roomNumber !== '') {
@@ -552,6 +556,14 @@ $(document).ready(function () {
             let roomNumber = $(this).val().trim();
             if (roomNumber !== '' && !ecoRooms.has(roomNumber)) {
                 $('[data-room="' + roomNumber + '"]').css('background-color', 'lightblue');
+            }
+        });
+
+        $('.input_amenity').each(function () {
+            const roomNumber = $(this).val().trim();
+            if (roomNumber !== '') {
+                ameRooms.add(roomNumber);
+                $('[data-room="' + roomNumber + '"]').css('background-color', 'rgb(208, 244, 134)');
             }
         });
     }
@@ -673,11 +685,11 @@ $(document).ready(function () {
     function updateResultTableColumns() {
         const headerRow = $("#result_table_header");
         const bathRow = $("#bath_row");
-    
+
         // 初期化
         headerRow.empty().append("<th></th>");
         bathRow.empty().append("<td><strong>大浴場清掃</strong></td>");
-    
+
         const bathAssignedNos = [];
         $(".input_bath").each(function () {
             const val = $(this).val().trim();
@@ -685,7 +697,7 @@ $(document).ready(function () {
                 bathAssignedNos.push(val);
             }
         });
-    
+
         const assignedNos = new Set();
         $(".input_room").each(function () {
             const val = $(this).val().trim();
@@ -693,7 +705,7 @@ $(document).ready(function () {
                 assignedNos.add(val);
             }
         });
-    
+
         // No → Name 辞書作成
         const noToName = {};
         $(".tr_house").each(function () {
@@ -701,30 +713,30 @@ $(document).ready(function () {
             const name = $(this).find(".input_name").val().trim();
             if (no) noToName[no] = name || "None";
         });
-    
+
         const sortedNos = [...assignedNos].sort((a, b) => parseInt(a) - parseInt(b));
-    
+
         sortedNos.forEach(no => {
             const name = noToName[no] || "None";
             headerRow.append(`<th>${name}</th>`);
             bathRow.append(bathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
         });
     }
-    
+
 
     //清掃指示表で担当部屋・エコ部屋を管理
     function updateAssignedRoomRows() {
         $(".room_cell_row").remove();
-    
+
         const assignedNos = new Set();
         $(".input_room").each(function () {
             const val = $(this).val().trim();
             if (val !== "" && val !== "0") assignedNos.add(val);
         });
-    
+
         // 🔽 Noを昇順に並べ替え
         const nos = [...assignedNos].sort((a, b) => parseInt(a) - parseInt(b));
-    
+
         const roomAssignments = [];
         $(".input_room").each(function () {
             const room = $(this).closest("td").data("room");
@@ -733,16 +745,16 @@ $(document).ready(function () {
                 roomAssignments.push({ room: String(room), no });
             }
         });
-    
+
         const ecoRooms = new Set();
         $(".input_eco").each(function () {
             const val = $(this).val().trim();
             if (val !== "") ecoRooms.add(val);
         });
-    
+
         const roomMap = {};
         nos.forEach(no => roomMap[no] = { normal: [], eco: [] });
-    
+
         roomAssignments.forEach(({ room, no }) => {
             if (!roomMap[no]) return;
             if (ecoRooms.has(room)) {
@@ -751,14 +763,14 @@ $(document).ready(function () {
                 roomMap[no].normal.push(room);
             }
         });
-    
+
         Object.values(roomMap).forEach(roomLists => {
             roomLists.normal.sort((a, b) => parseInt(a) - parseInt(b));
             roomLists.eco.sort((a, b) => parseInt(a) - parseInt(b));
         });
-    
+
         const $body = $("#result_table_body");
-    
+
         // 通常部屋
         const maxNormal = Math.max(...Object.values(roomMap).map(r => r.normal.length), 0);
         if (maxNormal > 0) {
@@ -768,7 +780,7 @@ $(document).ready(function () {
                 labelRow.append(`<td>${val}</td>`);
             });
             $body.append(labelRow);
-    
+
             for (let i = 1; i < maxNormal; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                 nos.forEach(no => {
@@ -778,7 +790,7 @@ $(document).ready(function () {
                 $body.append(row);
             }
         }
-    
+
         // エコ部屋
         const maxEco = Math.max(...Object.values(roomMap).map(r => r.eco.length), 0);
         if (maxEco > 0) {
@@ -788,7 +800,7 @@ $(document).ready(function () {
                 labelRow.append(val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>");
             });
             $body.append(labelRow);
-    
+
             for (let i = 1; i < maxEco; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                 nos.forEach(no => {
@@ -799,7 +811,7 @@ $(document).ready(function () {
             }
         }
     }
-    
+
     //清掃指示表で終了予定時刻を管理
     //清掃指示表で終了予定時刻を管理
     function updateEndTimeRow() {
@@ -1007,25 +1019,25 @@ $(document).ready(function () {
     function checkAndAddContactRow() {
         let allNumbersFilled = true;
         let allCommentsFilled = true;
-    
+
         $(".input_contact_number").each(function () {
             if ($(this).val().trim() === "") {
                 allNumbersFilled = false;
             }
         });
-    
+
         $(".input_contact").each(function () {
             if ($(this).val().trim() === "") {
                 allCommentsFilled = false;
             }
         });
-    
+
         let lastNumberEmpty = $(".input_contact_number").last().val().trim() === "";
         let lastCommentEmpty = $(".input_contact").last().val().trim() === "";
-    
+
         if ((allNumbersFilled || allCommentsFilled) && !(lastNumberEmpty && lastCommentEmpty)) {
             let rowCount = $(".input_contact").length + 1;
-    
+
             let newRow = `
                 <tr>
                     <td>
@@ -1036,101 +1048,102 @@ $(document).ready(function () {
                     </td>
                 </tr>
             `;
-    
+
             $("#contact_table_body").append(newRow);
         }
     }
-    
+
+
 
     // --- 1) 各清掃者ごとにフロア毎の清掃数を集計 ---
     function buildFloorHouseT() {
-    // houseNos はテーブル上の清掃者 No のリスト（1,2,…）
-    const houseRows = $(".tr_house");
-    const houseNos = houseRows.map((i, tr) => $(tr).find(".input_no").val().trim()).get();
-    const numCleaners = houseNos.length;
-    
-    // floors 2〜10 のフロア数＝9
-    const numFloors = 9;
-    // floorHouseT[i][j] = 清掃者 j が (i+2)F で掃除した部屋数
-    const floorHouseT = Array.from({length: numFloors}, () => Array(numCleaners).fill(0));
-    
-    // room_assignments: room → houseNo
-    const roomAssignments = {};
-    $(".input_room").each(function() {
-        const room = $(this).closest("td").data("room");
-        const no = $(this).val().trim();
-        if (room && no !== "" && no !== "0") roomAssignments[room] = no;
-    });
-    
-    // 各 room を見て、floorHouseT に加算
-    Object.entries(roomAssignments).forEach(([room, no]) => {
-        const floor = Math.floor(parseInt(room, 10) / 100);
-        if (floor >= 2 && floor <= 10) {
-        const i = floor - 2;           // 2F→idx0 … 10F→idx8
-        const j = houseNos.indexOf(no);
-        if (j !== -1) floorHouseT[i][j] += 1;
-        }
-    });
-    return floorHouseT;
+        // houseNos はテーブル上の清掃者 No のリスト（1,2,…）
+        const houseRows = $(".tr_house");
+        const houseNos = houseRows.map((i, tr) => $(tr).find(".input_no").val().trim()).get();
+        const numCleaners = houseNos.length;
+
+        // floors 2〜10 のフロア数＝9
+        const numFloors = 9;
+        // floorHouseT[i][j] = 清掃者 j が (i+2)F で掃除した部屋数
+        const floorHouseT = Array.from({ length: numFloors }, () => Array(numCleaners).fill(0));
+
+        // room_assignments: room → houseNo
+        const roomAssignments = {};
+        $(".input_room").each(function () {
+            const room = $(this).closest("td").data("room");
+            const no = $(this).val().trim();
+            if (room && no !== "" && no !== "0") roomAssignments[room] = no;
+        });
+
+        // 各 room を見て、floorHouseT に加算
+        Object.entries(roomAssignments).forEach(([room, no]) => {
+            const floor = Math.floor(parseInt(room, 10) / 100);
+            if (floor >= 2 && floor <= 10) {
+                const i = floor - 2;           // 2F→idx0 … 10F→idx8
+                const j = houseNos.indexOf(no);
+                if (j !== -1) floorHouseT[i][j] += 1;
+            }
+        });
+        return floorHouseT;
     }
 
     // --- 2) Python ロジックを JS 化して担当フロアを決定 ---
     function assignDdByAlgorithm(floorHouseT) {
-    const numFloors   = floorHouseT.length;       // 9
-    const numCleaners = floorHouseT[0].length;    // houseRows.length
+        const numFloors = floorHouseT.length;       // 9
+        const numCleaners = floorHouseT[0].length;    // houseRows.length
 
-    // 各フロアの「1 部屋以上清掃した人」一覧
-    const floorCands = floorHouseT.map(row =>
-        row.map((cnt,j) => cnt > 0 ? j : -1).filter(j => j >= 0)
-    );
+        // 各フロアの「1 部屋以上清掃した人」一覧
+        const floorCands = floorHouseT.map(row =>
+            row.map((cnt, j) => cnt > 0 ? j : -1).filter(j => j >= 0)
+        );
 
-    // 割当対象フロアのみを「候補人数の少ない順」にソート
-    const floorsOrder = [];
-    floorCands.forEach((cands,i) => {
-        if (cands.length > 0) floorsOrder.push(i);
-    });
-    floorsOrder.sort((a,b) =>
-        floorCands[a].length - floorCands[b].length
-    );
-
-    // assignments[j] = 担当フロアリスト（数が 1 つか空）
-    const assignments = Array.from({length: numCleaners}, () => []);
-    const used = new Set();  // 既に1フロア割当を受けた清掃者
-
-    floorsOrder.forEach(i => {
-        // 未割当の候補
-        let avail = floorCands[i].filter(j => !used.has(j));
-        if (avail.length === 0) {
-        // いなければ全候補
-        avail = floorCands[i].slice();
-        }
-        // 努力目標として「最多掃除者」を優先
-        let best = avail[0];
-        let maxCnt = floorHouseT[i][best];
-        avail.forEach(j => {
-        if (floorHouseT[i][j] > maxCnt) {
-            best = j; maxCnt = floorHouseT[i][j];
-        }
+        // 割当対象フロアのみを「候補人数の少ない順」にソート
+        const floorsOrder = [];
+        floorCands.forEach((cands, i) => {
+            if (cands.length > 0) floorsOrder.push(i);
         });
-        assignments[best].push(i + 2);
-        // 1 フロアめなら used に追加
-        if (assignments[best].length === 1) used.add(best);
-    });
+        floorsOrder.sort((a, b) =>
+            floorCands[a].length - floorCands[b].length
+        );
 
-    // None（担当なし）は空配列をそのままに
-    return assignments.map(a => a.length ? a : null);
+        // assignments[j] = 担当フロアリスト（数が 1 つか空）
+        const assignments = Array.from({ length: numCleaners }, () => []);
+        const used = new Set();  // 既に1フロア割当を受けた清掃者
+
+        floorsOrder.forEach(i => {
+            // 未割当の候補
+            let avail = floorCands[i].filter(j => !used.has(j));
+            if (avail.length === 0) {
+                // いなければ全候補
+                avail = floorCands[i].slice();
+            }
+            // 努力目標として「最多掃除者」を優先
+            let best = avail[0];
+            let maxCnt = floorHouseT[i][best];
+            avail.forEach(j => {
+                if (floorHouseT[i][j] > maxCnt) {
+                    best = j; maxCnt = floorHouseT[i][j];
+                }
+            });
+            assignments[best].push(i + 2);
+            // 1 フロアめなら used に追加
+            if (assignments[best].length === 1) used.add(best);
+        });
+
+        // None（担当なし）は空配列をそのままに
+        return assignments.map(a => a.length ? a : null);
     }
 
     // --- 3) .dd_cell に反映する関数 ---
     function updateDdCells() {
-    const floorHouseT = buildFloorHouseT();
-    const ddAssigns  = assignDdByAlgorithm(floorHouseT);
-    // houseRows と対応して書き込む
-    $(".tr_house").each((idx, tr) => {
-        const $dd = $(tr).find(".dd_cell");
-        const assigned = ddAssigns[idx];
-        $dd.val(assigned ? assigned.join(",") : "");
-    });
+        const floorHouseT = buildFloorHouseT();
+        const ddAssigns = assignDdByAlgorithm(floorHouseT);
+        // houseRows と対応して書き込む
+        $(".tr_house").each((idx, tr) => {
+            const $dd = $(tr).find(".dd_cell");
+            const assigned = ddAssigns[idx];
+            $dd.val(assigned ? assigned.join(",") : "");
+        });
     }
 
 
@@ -1160,13 +1173,27 @@ $(document).ready(function () {
 });
 
 document.addEventListener('DOMContentLoaded', function () {
-const form = document.getElementById('main_form');
-const nameInput = document.getElementById('name');
-
-form.addEventListener('submit', function (event) {
-    if (nameInput.value.trim() === '') {
-        event.preventDefault();  // フォーム送信を中止
-        alert('編集者名字を入力してください');
+    function highlightRedRooms() {
+        $('[data-room]').each(function () {
+            const $cell = $(this);
+            const roomNumber = $cell.data("room").toString();
+            const lastTwoDigits = roomNumber.slice(-2); // 末尾2桁を抽出
+            if (["14", "16", "17"].includes(lastTwoDigits)) {
+                $cell.addClass("red-room");
+            } else {
+                $cell.removeClass("red-room");
+            }
+        });
     }
-});
+    highlightRedRooms();
+
+    const form = document.getElementById('main_form');
+    const nameInput = document.getElementById('name');
+
+    form.addEventListener('submit', function (event) {
+        if (nameInput.value.trim() === '') {
+            event.preventDefault();  // フォーム送信を中止
+            alert('編集者名字を入力してください');
+        }
+    });
 });

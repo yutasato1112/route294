@@ -391,3 +391,9 @@ input[type="number"]::-webkit-inner-spin-button {
 .person_num{
     width: 5%;
 }
+.red-room {
+    color: rgb(143, 2, 2);
+}
+.amenity-ame {
+    background-color: rgb(208, 244, 134) !important;
+}

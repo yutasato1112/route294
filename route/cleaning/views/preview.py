@@ -17,6 +17,15 @@ class previewView(TemplateView):
         #データ受け取り
         date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts = catch_post(request)
         
+        
+        #ameがTrueの時にecoもTrueにする
+        ame_rooms.remove('')
+        eco_rooms.remove('')
+        for i in ame_rooms:
+            if i not in eco_rooms:
+                eco_rooms.append(i)
+        
+        
         #表紙情報受け取り
         room_changes, outins, must_cleans, others = get_cover(request)
         
@@ -25,7 +34,7 @@ class previewView(TemplateView):
         pages = 0
         for i in range(len(house_data)):
             pages +=1
-            if house_data[i][1] != '清掃不要' and house_data[i][1] != '残し部屋':
+            if house_data[i][1] != '清掃不要' and house_data[i][1] != '清掃不要1' and house_data[i][1] != '清掃不要2' and house_data[i][1] != '残し部屋':
                 person_count += 1
         
         #部屋数のカウント
