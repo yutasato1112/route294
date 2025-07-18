@@ -220,6 +220,12 @@ $(document).ready(function () {
         updateCounts(); // 入力変更時
     });
 
+    //連泊部屋数のカウント更新
+    updateMultipleNightCount();
+    $(document).on('input', '.input_multiple_night_room', function () {
+        updateMultipleNightCount(); // 入力変更時
+    });
+
     //ハウスさん表の番号が入力された際の処理
     $(document).on("input", ".input_no, .input_name", function () {
         checkAndAddRow();
@@ -377,6 +383,18 @@ $(document).ready(function () {
         $('#duvet-count').text(`(${duvetCount})`);
     }
 
+    //連泊部屋数
+    function updateMultipleNightCount() {
+        let count = 0;
+
+        $('.input_multiple_night_room').each(function () {
+            if ($(this).val().trim() !== '') {
+                count++;
+            }
+        });
+
+        $('#multiple-count').text(`(${count})`);
+    }
 
     //ハウスさん表の行追加
     function checkAndAddRow() {
@@ -433,33 +451,118 @@ $(document).ready(function () {
 
     //マスターキーの更新
     function updateHouseKeys() {
-        usedKeys = [];
+        const usedKeysByFloor = {};
+        const keyPriority = ["A", "B", "C"];
+        const rowDataList = [];
 
+        // === 1. 初期割り当て（絶対に A → B → C の順） ===
         $(".tr_house").each(function () {
             const $row = $(this);
             const floorsText = $row.find(".floor_cell").text().trim();
-            if (!floorsText || floorsText === "") {
+
+            if (!floorsText) {
                 $row.find(".key_cell").val("");
+                rowDataList.push({ $row, floors: [], keys: [] });
                 return;
             }
 
-            const floors = floorsText.split(',');
-            let assignedKeys = [];
+            const floors = floorsText.split(',').map(f => f.trim());
+            const keys = [];
 
             floors.forEach(floor => {
-                const floorKeys = masterKeyList.filter(([f, k]) => f === floor && !usedKeys.includes(k));
-                if (floorKeys.length > 0) {
-                    assignedKeys.push(floorKeys[0][1]);
-                    usedKeys.push(floorKeys[0][1]);
-                } else {
-                    assignedKeys.push(`${floor}N`);
+                if (!usedKeysByFloor[floor]) usedKeysByFloor[floor] = new Set();
+                let key = null;
+                for (const k of keyPriority) {
+                    if (!usedKeysByFloor[floor].has(k)) {
+                        key = k;
+                        usedKeysByFloor[floor].add(k);
+                        break;
+                    }
                 }
+                keys.push(`${floor}${key || "N"}`);
             });
 
-            $row.find(".key_cell").val(assignedKeys.join(","));
+            rowDataList.push({ $row, floors, keys });
+        });
+
+        // === 2. キー交換による同一清掃者内のキー重複の解消 ===
+        const keyMap = {}; // floor → key → rowIndex
+        rowDataList.forEach((data, rowIndex) => {
+            data.keys.forEach(k => {
+                const match = k.match(/^(\d+)([ABC])$/);
+                if (!match) return;
+                const [_, floor, key] = match;
+                if (!keyMap[floor]) keyMap[floor] = {};
+                keyMap[floor][key] = rowIndex;
+            });
+        });
+
+        // 各清掃者について、同じキーが複数割当されていれば交換候補を探す
+        for (let i = 0; i < rowDataList.length; i++) {
+            const data = rowDataList[i];
+            const keyCounts = {}; // A: 2, B: 1 など
+
+            data.keys.forEach(k => {
+                const key = k.slice(-1);
+                keyCounts[key] = (keyCounts[key] || 0) + 1;
+            });
+
+            for (const [key, count] of Object.entries(keyCounts)) {
+                if (count <= 1) continue; // 重複していないキーは無視
+
+                // 重複キーがあるので、交換候補を探す
+                for (let j = 0; j < rowDataList.length; j++) {
+                    if (i === j) continue;
+
+                    const other = rowDataList[j];
+
+                    // i と j の間で交換できるか（同じ floor を担当しているか）
+                    for (let fi = 0; fi < data.keys.length; fi++) {
+                        const floorI = data.keys[fi].slice(0, -1);
+                        const keyI = data.keys[fi].slice(-1);
+
+                        for (let fj = 0; fj < other.keys.length; fj++) {
+                            const floorJ = other.keys[fj].slice(0, -1);
+                            const keyJ = other.keys[fj].slice(-1);
+
+                            // 同じ階でキーが違うなら、交換を試みる
+                            if (floorI === floorJ && keyI !== keyJ) {
+                                // 交換して、両者にとって重複が減るか？
+                                const keysI = data.keys.map(x => x.slice(-1));
+                                const keysJ = other.keys.map(x => x.slice(-1));
+
+                                // 仮に交換してみる
+                                const tempI = [...keysI];
+                                const tempJ = [...keysJ];
+                                tempI[fi] = keyJ;
+                                tempJ[fj] = keyI;
+
+                                // 重複カウント再評価
+                                const isDupI = new Set(tempI).size < tempI.length;
+                                const isDupJ = new Set(tempJ).size < tempJ.length;
+
+                                if (!isDupI && !isDupJ) {
+                                    // 実際に交換
+                                    const keyStrI = `${floorI}${keyI}`;
+                                    const keyStrJ = `${floorJ}${keyJ}`;
+                                    data.keys[fi] = keyStrJ;
+                                    other.keys[fj] = keyStrI;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // === 3. 表に反映 ===
+        rowDataList.forEach(({ $row, keys }) => {
+            $row.find(".key_cell").val(keys.join(","));
         });
     }
 
+
+    
     //担当階を更新
     function updateHouseFloorAssignments() {
         const roomAssignments = {};
@@ -1219,6 +1322,31 @@ document.addEventListener('DOMContentLoaded', function () {
         if (nameInput.value.trim() === '') {
             event.preventDefault();  // フォーム送信を中止
             alert('編集者名字を入力してください');
+        }
+
+        // 名前の値を全て取得
+        const names = $('.input_name').map(function () {
+            return $(this).val().trim();
+        }).get();
+
+        // 重複チェック用セット
+        const seen = new Set();
+        const duplicates = names.filter(function (name) {
+            if (name === '') return false;
+            if (seen.has(name)) return true;
+            seen.add(name);
+            return false;
+        });
+
+        // 重複がある場合は警告
+        if (duplicates.length > 0) {
+            const message = `同じ名前が複数入力されています（例: ${duplicates[0]}）。\nこのまま続行しますか？`;
+            const proceed = window.confirm(message);
+
+            if (!proceed) {
+                event.preventDefault(); // プレビュー動作を中止
+                return false;
+            }
         }
     });
 });

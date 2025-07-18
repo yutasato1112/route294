@@ -129,7 +129,7 @@ def weekly_cleaning(date):
     else:
         return 'Invalid date'
     
-def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms):
+def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms=None):
     #ルームナンバーのリストを作成
     room_nums = []
     for key, value in room_inputs.items():
@@ -195,6 +195,12 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
             floor.append(int(room_num[0]))
         else:
             floor.append(int(room_num[:2]))
+            
+        #連泊部屋の処理
+        if multiple_rooms and room_num in multiple_rooms:
+            multiple = True
+        else:
+            multiple = False
         
         room_info = {
             'room_num': room_num,
@@ -202,6 +208,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
             'duvet': duvet,
             'remark': remark_comment,
             'room_type': room_type,
+            'multiple': multiple
         }
         manage_rooms.append(room_info)
     floor_sorted = sorted(set(int(r) for r in floor))
@@ -362,3 +369,8 @@ def special_clean(request):
     is_chemical_clean = request.POST.get('chemical_clean', 'off') == 'on'
     is_public = request.POST.get('public', 'off') == 'on'
     return is_drain_water, is_highskite, is_chlorine, is_chemical_clean, is_public
+
+def multiple_night(request):
+    rooms = request.POST.getlist("multiple_night_room")
+    rooms = [room.strip() for room in rooms if room.strip() != ""]
+    return rooms

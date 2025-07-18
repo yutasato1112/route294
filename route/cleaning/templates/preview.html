@@ -193,7 +193,11 @@
                             <div>({{room.room_type}})</div>
                         </div>
                     </td>
+                    {% if room.multiple == True %}
+                    <td class="content_mark main_table_content">●</td>
+                    {% else %}
                     <td class="main_table_content"><!--連泊(空欄)--></td>
+                    {% endif %}
                     <td class="main_table_content"><!--C/O(空白)--></td>
                     {% if room.eco == True %}
                     <td class="content_mark main_table_content">★</td>

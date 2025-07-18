@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
-from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean
+from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean, multiple_night
 
 # Create your views here.
 
@@ -16,6 +16,11 @@ class previewView(TemplateView):
     def post(self, request, *args, **kwargs):
         #データ受け取り
         date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts = catch_post(request)
+        
+        try:
+            multiple_rooms = multiple_night(request)
+        except Exception as e:
+            multiple_rooms = []
         
         #特殊大浴場清掃
         is_drain_water,is_highskite,is_chlorine,is_chemical_clean, is_public = special_clean(request)
@@ -51,11 +56,10 @@ class previewView(TemplateView):
         #DDリストの作成
         rooms = []
         for i in range(pages):
-            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms)
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms, multiple_rooms)
             rooms.append(room)
         DD_list = calc_DD_list(house_data)
-            
-            
+   
         total_data = []
         #パーソンごとにデータを整理
         key_name_list = []
@@ -66,7 +70,7 @@ class previewView(TemplateView):
             key = house_data[i][2]
             bath = is_bath(bath_person, i+1)
             weekly = weekly_cleaning(date)
-            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms)
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms)
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
             date_jp = changeDate(date)
@@ -86,7 +90,6 @@ class previewView(TemplateView):
             
             #部屋タイプ別カウント
             room_type_count_str = calc_room_type_count(room)
-            
             
             persons_cleaning_data = {
                 'name':name,
@@ -153,5 +156,6 @@ class previewView(TemplateView):
             'is_chlorine': is_chlorine,
             'is_chemical_clean': is_chemical_clean,
             'is_public': is_public,
+            'multiple_rooms': multiple_rooms,
         }
         return render(self.request, self.template_name, context)

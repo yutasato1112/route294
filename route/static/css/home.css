@@ -65,6 +65,17 @@ th{
     height: 6vh;
 }
 
+.multiple_night_area{
+    justify-content: center;
+    align-items: center;
+    border: #ccc 1px solid;
+    border-radius: 10px;
+    background-color: white;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    margin-bottom: 5vh;
+}
 .special_clearn_area{
     border: #ccc 1px solid;
     border-radius: 10px;
@@ -417,4 +428,15 @@ input[type="number"]::-webkit-inner-spin-button {
     font-weight: normal;
     user-select: none;
     gap: 0.4em;
+}
+
+.room_row{
+    display: flex;
+    justify-content: center;
+}
+.room_row >input{
+    width: 5vw;  
+    margin-left: 0.2vw;
+    margin-right: 0.2vw;
+    margin-bottom: 0.2vw;
 }

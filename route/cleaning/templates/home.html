@@ -458,6 +458,23 @@
             </div>
         </div>
 
+        <div class="multiple_night_area">
+            <p class="result_title">連泊部屋<span id="multiple-count" class="count-label">(0)</span></p>
+            {% with ''|center:10 as range %}
+            {% for _ in range %}
+            <div class="room_row">
+                {% with ''|center:10 as range %}
+                {% for _ in range %}
+                <input type="text" name="multiple_night_room" id="multiple_night_room_{{forloop.counter}}" class="input_multiple_night_room">
+                {% endfor %}
+                {% endwith %}
+            </div>
+            {% endfor %}
+            {% endwith %}
+            
+        </div>
+
+
         <input type="hidden" name="master_key" id="master_key" value="{{ master_key }}">
         <input type="hidden" name="single_rooms" id="single_rooms" value="{{ single_rooms }}">
         <input type="hidden" name="twin_rooms" id="twin_rooms" value="{{ twin_rooms }}">
