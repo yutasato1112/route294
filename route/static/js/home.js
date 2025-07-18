@@ -214,6 +214,12 @@ $(document).ready(function () {
         }
     });
 
+    //エコ・アメ・デュべのカウント更新
+    updateCounts(); 
+    $(document).on('input', '.input_eco, .input_amenity, .input_duvet', function () {
+        updateCounts(); // 入力変更時
+    });
+
     //ハウスさん表の番号が入力された際の処理
     $(document).on("input", ".input_no, .input_name", function () {
         checkAndAddRow();
@@ -351,6 +357,25 @@ $(document).ready(function () {
     setupNavigation(".input_eco", ".td_eco");
     setupNavigation(".input_amenity", "td:nth-child(2)");
     setupNavigation(".input_duvet", ".td_duvet");
+
+    //エコ・アメ・デュべのカウント更新
+    function updateCounts() {
+        const ecoCount = $('.input_eco').filter(function () {
+            return $(this).val().trim() !== '';
+        }).length;
+
+        const amenityCount = $('.input_amenity').filter(function () {
+            return $(this).val().trim() !== '';
+        }).length;
+
+        const duvetCount = $('.input_duvet').filter(function () {
+            return $(this).val().trim() !== '';
+        }).length;
+
+        $('#eco-count').text(`(${ecoCount})`);
+        $('#amenity-count').text(`(${amenityCount})`);
+        $('#duvet-count').text(`(${duvetCount})`);
+    }
 
 
     //ハウスさん表の行追加

@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 import json
-from ..utils.preview_util import catch_post, get_cover
+from ..utils.preview_util import catch_post, get_cover, special_clean
 import datetime
 import os
 
@@ -15,7 +15,8 @@ def download_json(request):
         for i in original_add_bath:
             if i != '':
                 add_bath.append(i)
-                
+        is_drain_water, is_highskite, is_chlorine, is_chemical_clean, is_public = special_clean(request)      
+
         timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
         filename = f"worklog_{timestamp}.json"
         data = {
@@ -37,6 +38,11 @@ def download_json(request):
             'others':others,
             'add_bath':add_bath,
             'contacts':contacts,
+            'is_drain_water': is_drain_water,
+            'is_highskite': is_highskite,
+            'is_chlorine': is_chlorine,
+            'is_chemical_clean': is_chemical_clean,
+            'is_public': is_public,
         }
         
 

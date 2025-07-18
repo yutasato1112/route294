@@ -21,7 +21,7 @@
         <p class="total_rooms">　{{total_cleaning_room}}　</p>
         <p>部屋</p>
     </div>
-    <p class="cover_semi_title">大浴場担当者</p>
+    <p class="cover_semi_title">大浴場担当者 {% if is_drain_water %}+ 湯抜き{% endif %} {% if is_highskite %}+ ハイスキット{% endif %}  {% if is_chlorine %}+ 高濃度塩素消毒{% endif %}  {% if is_chemical_clean %}+ 循環配管薬品洗浄{% endif %}  {% if is_public %}+ パブリック{% endif %}</p>
     <div class="bath_persons">
         {% for person in bath_person %}
         <p>{{person}}</p>

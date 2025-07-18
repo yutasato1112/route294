@@ -354,3 +354,11 @@ def calc_cover_remarks(remarks_name_list, remarks):
     for i in diff:
         remarks_name_list.append((i['room'], i['comment'], '　　　　'))
     return remarks_name_list
+
+def special_clean(request):
+    is_drain_water = request.POST.get('drain_water', 'off') == 'on'
+    is_highskite = request.POST.get('highskit', 'off') == 'on'
+    is_chlorine = request.POST.get('chlorine', 'off') == 'on'
+    is_chemical_clean = request.POST.get('chemical_clean', 'off') == 'on'
+    is_public = request.POST.get('public', 'off') == 'on'
+    return is_drain_water, is_highskite, is_chlorine, is_chemical_clean, is_public

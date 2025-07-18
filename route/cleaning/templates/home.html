@@ -96,6 +96,28 @@
                     <input type="text" name="bath_only" id="bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{add_bath.0}} {% endif %}>
                     <input type="text" name="bath_only" id="bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{add_bath.1}} {% endif %}>
                 </div>
+                <div class="special_clearn_area">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="drain_water" id="drain_water" class="input_drain_water" value="on" {% if is_drain_water %} checked {% endif %}>    
+                        湯抜き
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="highskit" id="highskit" class="input_highskit" value="on" {% if is_highskite %} checked {% endif %}>
+                        ハイスキット
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="chlorine" id="chlorine" class="input_chlorine" value="on" {% if is_chlorine %} checked {% endif %}>
+                        高濃度塩素消毒
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="chemical_clean" id="chemical_clean" class="input_chemical_clean" value="on" {% if is_chemical_clean %} checked {% endif %}>
+                        循環配管薬品洗浄
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="public" id="public" class="input_public" value="on" {% if is_public %} checked {% endif %}>
+                        パブリック
+                    </label>
+                </div>
             </div>
             <div class="second_center">
                 <!--ハウスさん情報-->
@@ -186,9 +208,9 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>エコ部屋</th>
-                            <th>アメ</th>
-                            <th>デュべ</th>
+                            <th>エコ部屋<span id="eco-count" class="count-label">(0)</span></th>
+                            <th>アメ<span id="amenity-count" class="count-label">(0)</span></th>
+                            <th>デュべ<span id="duvet-count" class="count-label">(0)</span></th>
                         </tr>
                     </thead>
                     <tbody id="clean_method_body">

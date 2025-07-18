@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
-from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks
+from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean
 
 # Create your views here.
 
@@ -17,6 +17,8 @@ class previewView(TemplateView):
         #データ受け取り
         date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts = catch_post(request)
         
+        #特殊大浴場清掃
+        is_drain_water,is_highskite,is_chlorine,is_chemical_clean, is_public = special_clean(request)
         
         #ameがTrueの時にecoもTrueにする
         ame_rooms.remove('')
@@ -68,7 +70,6 @@ class previewView(TemplateView):
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
             date_jp = changeDate(date)
-        
             #連絡事項の分割
             contact = ''
             for item in contacts:
@@ -147,5 +148,10 @@ class previewView(TemplateView):
             'must_cleans':must_cleans,
             'others':others,
             'cover_remarks':cover_remarks,
+            'is_drain_water': is_drain_water,
+            'is_highskite': is_highskite,
+            'is_chlorine': is_chlorine,
+            'is_chemical_clean': is_chemical_clean,
+            'is_public': is_public,
         }
         return render(self.request, self.template_name, context)

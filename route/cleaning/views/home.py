@@ -116,6 +116,11 @@ class homeView(TemplateView):
         must_cleans = data['must_cleans']
         others = data['others']
         contacts = data['contacts']
+        is_drain_water = data.get('is_drain_water', False)
+        is_highskite = data.get('is_highskite', False)
+        is_chlorine = data.get('is_chlorine', False)
+        is_chemical_clean = data.get('is_chemical_clean', False)
+        is_public = data.get('is_public', False)
         
         
         #備考の欄数
@@ -180,5 +185,10 @@ class homeView(TemplateView):
             'add_contacts_len':len(contacts),
             'contacts_len':len(contacts)+3,
             'from_report': False,
+            'is_drain_water': is_drain_water,
+            'is_highskite': is_highskite,
+            'is_chlorine': is_chlorine,
+            'is_chemical_clean': is_chemical_clean,
+            'is_public': is_public,
         }
         return render(self.request, self.template_name, context)

@@ -65,6 +65,18 @@ th{
     height: 6vh;
 }
 
+.special_clearn_area{
+    border: #ccc 1px solid;
+    border-radius: 10px;
+    background-color: white;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    gap: 2rem; 
+    flex-wrap: wrap; 
+}
 .room_table_area {
     border: #ccc 1px solid;
     border-radius: 10px;
@@ -396,4 +408,13 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 .amenity-ame {
     background-color: rgb(208, 244, 134) !important;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: normal;
+    user-select: none;
+    gap: 0.4em;
 }
