@@ -691,7 +691,7 @@ $(document).ready(function () {
             const roomNumber = $(this).val().trim();
             if (roomNumber !== '') {
                 ameRooms.add(roomNumber);
-                $('[data-room="' + roomNumber + '"]').css('background-color', 'rgb(208, 244, 134)');
+                $('[data-room="' + roomNumber + '"]').css('background-color', 'rgb(255, 203, 135)');
             }
         });
     }
@@ -905,15 +905,19 @@ $(document).ready(function () {
             const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>担当部屋</strong></td>");
             nos.forEach(no => {
                 const val = roomMap[no].normal[0] || "";
-                labelRow.append(`<td>${val}</td>`);
+                console.log(typeof val);
+                const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : ''; 
+                labelRow.append(`<td ${redStyle}>${val}</td>`);
+
             });
             $body.append(labelRow);
 
             for (let i = 1; i < maxNormal; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                 nos.forEach(no => {
-                    const val = roomMap[no].normal[i] || "";
-                    row.append(`<td>${val}</td>`);
+                    const val = roomMap[no].normal[i] || "";const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : '';
+                    row.append(`<td ${redStyle}>${val}</td>`);
+
                 });
                 $body.append(row);
             }
@@ -925,7 +929,10 @@ $(document).ready(function () {
             const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>エコ部屋</strong></td>");
             nos.forEach(no => {
                 const val = roomMap[no].eco[0] || "";
-                labelRow.append(val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>");
+                const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : '';
+                labelRow.append(val ? `<td style="background-color: yellow;" ${redStyle}>${val}</td>` : "<td></td>");
+
+
             });
             $body.append(labelRow);
 
@@ -933,7 +940,8 @@ $(document).ready(function () {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                 nos.forEach(no => {
                     const val = roomMap[no].eco[i] || "";
-                    row.append(val ? `<td style="background-color: yellow;">${val}</td>` : "<td></td>");
+                    const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : '';
+                    row.append(val ? `<td style="background-color: yellow;" ${redStyle}>${val}</td>` : "<td></td>");
                 });
                 $body.append(row);
             }

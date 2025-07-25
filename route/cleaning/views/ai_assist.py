@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char
 from ..utils.ai_util import get_data, processing_input_rooms,get_post_data
 
-from openai import OpenAI
+#from openai import OpenAI
 import os
 import traceback
 # Create your views here.
@@ -185,37 +185,37 @@ class aiAssistView(TemplateView):
         }
         
         #OpenAI APIを呼び出す
-        if os.path.exists(os.path.join('static/openai.json')):
-            with open(os.path.join('static/openai.json')) as openai_file:
-                openai_info = json.load(openai_file)
-        else:
-            print('openai.json could not be found.')
-            quit()
+        # if os.path.exists(os.path.join('static/openai.json')):
+        #     with open(os.path.join('static/openai.json')) as openai_file:
+        #         openai_info = json.load(openai_file)
+        # else:
+        #     print('openai.json could not be found.')
+        #     quit()
         
-        with open('static/prompt/openAI.txt', 'r', encoding='utf-8') as f:
-            system_prompt = f.read()
+        # with open('static/prompt/openAI.txt', 'r', encoding='utf-8') as f:
+        #     system_prompt = f.read()
         
-        client = OpenAI(api_key=openai_info['api_key'])
+        # client = OpenAI(api_key=openai_info['api_key'])
 
-        print(system_prompt)
-        print(total_data)
+        # print(system_prompt)
+        # print(total_data)
 
-        try:
-            response = client.chat.completions.create(
-                model=openai_info['model'],
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": json.dumps(total_data, ensure_ascii=False)}
-                ],
-                temperature=0.7
-            )
-            result = response.choices[0].message.content
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return JsonResponse({'error': f'OpenAI API error: {str(e)}'}, status=500)
+        # try:
+        #     response = client.chat.completions.create(
+        #         model=openai_info['model'],
+        #         messages=[
+        #             {"role": "system", "content": system_prompt},
+        #             {"role": "user", "content": json.dumps(total_data, ensure_ascii=False)}
+        #         ],
+        #         temperature=0.7
+        #     )
+        #     result = response.choices[0].message.content
+        # except Exception as e:
+        #     import traceback
+        #     traceback.print_exc()
+        #     return JsonResponse({'error': f'OpenAI API error: {str(e)}'}, status=500)
         
-        print(result)
+        # print(result)
         
         
         context = {}

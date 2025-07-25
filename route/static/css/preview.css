@@ -383,7 +383,9 @@ td{
     width: 90%;
     margin: auto;
 }
-
+.mark_color{
+    color: red;
+}
 
 @media print {
     @page {
