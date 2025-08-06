@@ -875,9 +875,16 @@ $(document).ready(function () {
         });
 
         const ecoRooms = new Set();
+        const amenityRooms = new Set();
+
         $(".input_eco").each(function () {
             const val = $(this).val().trim();
             if (val !== "") ecoRooms.add(val);
+        });
+
+        $(".input_amenity").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") amenityRooms.add(val);
         });
 
         const roomMap = {};
@@ -886,7 +893,9 @@ $(document).ready(function () {
         roomAssignments.forEach(({ room, no }) => {
             if (!roomMap[no]) return;
             if (ecoRooms.has(room)) {
-                roomMap[no].eco.push(room);
+                roomMap[no].eco.push({ room, type: 'eco' });
+            } else if (amenityRooms.has(room)) {
+                roomMap[no].eco.push({ room, type: 'amenity' });
             } else {
                 roomMap[no].normal.push(room);
             }
@@ -928,24 +937,33 @@ $(document).ready(function () {
         if (maxEco > 0) {
             const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>エコ部屋</strong></td>");
             nos.forEach(no => {
-                const val = roomMap[no].eco[0] || "";
-                const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : '';
-                labelRow.append(val ? `<td style="background-color: yellow;" ${redStyle}>${val}</td>` : "<td></td>");
-
-
+                const obj = roomMap[no].eco[0];
+                if (obj) {
+                    const bgColor = obj.type === 'eco' ? 'yellow' : 'rgb(255, 203, 135)';
+                    const redStyle = /(?:14|16|17)$/.test(obj.room) ? 'color: red;' : '';
+                    labelRow.append(`<td style="background-color: ${bgColor}; ${redStyle}">${obj.room}</td>`);
+                } else {
+                    labelRow.append("<td></td>");
+                }
             });
             $body.append(labelRow);
 
             for (let i = 1; i < maxEco; i++) {
                 const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                 nos.forEach(no => {
-                    const val = roomMap[no].eco[i] || "";
-                    const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : '';
-                    row.append(val ? `<td style="background-color: yellow;" ${redStyle}>${val}</td>` : "<td></td>");
+                    const obj = roomMap[no].eco[i];
+                    if (obj) {
+                        const bgColor = obj.type === 'eco' ? 'yellow' : 'rgb(255, 203, 135)';
+                        const redStyle = /(?:14|16|17)$/.test(obj.room) ? 'color: red;' : '';
+                        row.append(`<td style="background-color: ${bgColor}; ${redStyle}">${obj.room}</td>`);
+                    } else {
+                        row.append("<td></td>");
+                    }
                 });
                 $body.append(row);
             }
         }
+
     }
 
     //清掃指示表で終了予定時刻を管理
