@@ -967,7 +967,6 @@ $(document).ready(function () {
     }
 
     //清掃指示表で終了予定時刻を管理
-    //清掃指示表で終了予定時刻を管理
     function updateEndTimeRow() {
         $("#end_time_row").remove();
 
@@ -997,6 +996,12 @@ $(document).ready(function () {
 
         const ecoRooms = new Set();
         $(".input_eco").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") {
+                ecoRooms.add(val);
+            }
+        });
+        $(".input_amenity").each(function () {
             const val = $(this).val().trim();
             if (val !== "") {
                 ecoRooms.add(val);
