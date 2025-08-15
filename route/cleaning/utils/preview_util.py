@@ -271,12 +271,20 @@ def search_remarks_name_list(key_name_list, rooms):
 def select_person_from_room_change(room_changes, key_name_list, rooms):
     result = []
     for i in room_changes:
+        clean_original_flag = False
+        clean_destination_flag = False
         for j in range(len(rooms)):
             for k in rooms[j]:
                 if i['original'] in k['room_num']:
                     original_name = key_name_list[j][1]
+                    clean_original_flag = True
                 if i['destination'] in k['room_num']:
                     destination_name = key_name_list[j][1]
+                    clean_destination_flag = True
+            if clean_original_flag == False:
+                original_name = '未販売部屋'
+            if clean_destination_flag == False:
+                destination_name = '未販売部屋'
         tmp = {'original':i['original'], 'original_name':original_name, 'destination':i['destination'], 'destination_name':destination_name}
         result.append(tmp)
     return result
