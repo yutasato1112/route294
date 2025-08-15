@@ -25,6 +25,7 @@ from cleaning.views import report as report_view
 from cleaning.views import ai_assist as ai_assist_view
 from cleaning.views import release as release_view
 from cleaning.views import tech as tech_view
+from cleaning.views import administrator as admin_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,6 +36,7 @@ urlpatterns = [
     path('ai_assist/', ai_assist_view.aiAssistView.as_view(), name='ai_assist'),
     path('release/', release_view.releaseView.as_view(), name='release'),
     path('technology/', tech_view.techView.as_view(), name='tech'),
+    path('administrator/', admin_view.administratorView.as_view(), name='administrator')
 ]
 
 urlpatterns += static(
