@@ -168,7 +168,10 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         else:
             for remark in remarks:
                 if room_num in remark['room']:
-                    remark_comment = remark['comment']
+                    if len(remark_comment) != 0:
+                        remark_comment = remark_comment + '　' + remark['comment']
+                    else:
+                        remark_comment = remark['comment']
                     if eco == True and ame == True:
                         if 'エコ外' not in remark_comment:
                             remark_comment = 'エコ外　' + remark_comment
@@ -200,7 +203,10 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         if multiple_rooms and room_num in multiple_rooms:
             multiple = True
         else:
-            multiple = False
+            if room_num in eco_rooms or room_num in ame_rooms or room_num in duvet_rooms:
+                multiple = True
+            else:
+                multiple = False
         
         room_info = {
             'room_num': room_num,
