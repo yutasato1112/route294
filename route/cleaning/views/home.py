@@ -121,7 +121,7 @@ class homeView(TemplateView):
         is_chlorine = data.get('is_chlorine', False)
         is_chemical_clean = data.get('is_chemical_clean', False)
         is_public = data.get('is_public', False)
-        
+        multiple_rooms = data.get('multiple_rooms', [])
         
         #備考の欄数
         if len(remarks) < 3:
@@ -190,5 +190,6 @@ class homeView(TemplateView):
             'is_chlorine': is_chlorine,
             'is_chemical_clean': is_chemical_clean,
             'is_public': is_public,
+            'multiple_rooms': multiple_rooms,
         }
         return render(self.request, self.template_name, context)
