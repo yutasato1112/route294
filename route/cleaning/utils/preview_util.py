@@ -129,7 +129,7 @@ def weekly_cleaning(date):
     else:
         return 'Invalid date'
     
-def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms=None):
+def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms=None, outins=None):
     #ルームナンバーのリストを作成
     room_nums = []
     for key, value in room_inputs.items():
@@ -207,6 +207,10 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
                 multiple = True
             else:
                 multiple = False
+                
+        #アウトイン部屋の連泊処理
+        if outins and room_num in outins:
+            multiple = True
         
         room_info = {
             'room_num': room_num,
