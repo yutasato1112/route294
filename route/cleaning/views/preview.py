@@ -15,7 +15,7 @@ class previewView(TemplateView):
     
     def post(self, request, *args, **kwargs):
         #データ受け取り
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots = catch_post(request)
         
         #連泊入力の受け取り
         try:
@@ -57,7 +57,7 @@ class previewView(TemplateView):
         #DDリストの作成
         rooms = []
         for i in range(pages):
-            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms, multiple_rooms)
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms, multiple_rooms,outins, spots)
             rooms.append(room)
         DD_list = calc_DD_list(house_data)
    
@@ -71,7 +71,7 @@ class previewView(TemplateView):
             key = house_data[i][2]
             bath = is_bath(bath_person, i+1)
             weekly = weekly_cleaning(date)
-            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins)
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins,spots)
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
             date_jp = changeDate(date)

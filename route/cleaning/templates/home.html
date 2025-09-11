@@ -458,6 +458,43 @@
             </div>
         </div>
 
+        <div class="last_bottom_line">
+            <!--スポット清掃-->
+            <table  class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="spot_room_num">部屋番号</th>
+                        <th>スポット清掃内容</th>
+                    </tr>
+                </thead>
+                <tbody id="spot_table_body">
+                    {% for spot in spots %}
+                    <tr>
+                        <td>
+                            <input type="text" name="spot_number_{{forloop.counter}}" id="spot_number_{{forloop.counter}}" class="input_spot_number" value="{{ spot.room_num }}">
+                        </td>
+                        <td>
+                            <input type="text" name="spot_{{forloop.counter}}" id="spot_{{forloop.counter}}" class="input_spot">{{ spot.content}}</textarea> 
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% with ''|center:spots_len as range %}
+                        {% for _ in range %}
+                        <tr>
+                            <td>
+                                <input type="text" name="spot_number_{{forloop.counter|add:add_spots_len}}" id="spot_number_{{forloop.counter|add:add_contacts_len}}" class="input_spot_number">
+                            </td>
+                            <td>
+                                <input type="text" name="spot_{{forloop.counter|add:add_spots_len}}" id="spot_{{forloop.counter|add:add_spots_len}}" class="input_spot"></textarea>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endwith %}
+
+                </tbody>
+            </table>
+        </div>
+
         <div class="multiple_night_area">
             <p class="result_title">連泊部屋<span id="multiple-count" class="count-label">(0)</span></p>
             {% with ''|center:10 as range %}

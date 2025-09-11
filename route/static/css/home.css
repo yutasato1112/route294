@@ -224,7 +224,6 @@ th{
     font-weight: normal !important;
 }
 
-
 .td_no{
     width: 15%;
 }
@@ -411,6 +410,31 @@ input[type="number"]::-webkit-inner-spin-button {
 .input_contact_number{
     width: 90%;
 }
+.input_contact_number{
+    width: 90%;
+}
+
+/*スポット清掃*/
+.last_bottom_line{
+    align-items: center;
+    margin-top: 1vh;
+    border: #ccc 1px solid;
+    border-radius: 10px;
+    background-color: white;
+}
+.spot_room_num{
+    width: 8%;
+}
+.input_spot_number{
+    width: 3vw;
+}
+.input_spot{
+    width: 98%;
+    margin: auto;
+    display: block;
+}
+
+
 .person_num{
     width: 5%;
 }

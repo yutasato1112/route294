@@ -47,6 +47,17 @@ def catch_post(request):
 
         if any(x != '' for x in (name, key, dd)):
             house_data.append([no,name, key, dd])
+            
+    spots = []
+    # POST データの key を全部ループ
+    for key in request.POST:
+        if key.startswith("spot_number_"):
+            index = key.split("_")[-1]  # 例: 'remark_room_3' → '3'
+            room = request.POST.get(f"spot_number_{index}", "").strip()
+            content = request.POST.get(f"spot_{index}", "").strip()
+            # 両方に何か入力があるときだけ追加
+            if room and content:
+                spots.append({"room": room, "content": content})
         
     eco_rooms = request.POST.getlist("eco_room")
     ame_rooms = request.POST.getlist("amenity")           
@@ -54,7 +65,7 @@ def catch_post(request):
     
     room_info_data, times_by_time_data, master_key_data = read_csv()
     single_rooms, twin_rooms = dist_room(room_info_data)
-    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts
+    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots
 
 def get_cover(request):
     post = request.POST
@@ -129,7 +140,7 @@ def weekly_cleaning(date):
     else:
         return 'Invalid date'
     
-def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms=None, outins=None):
+def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms, outins, spots):
     #ルームナンバーのリストを作成
     room_nums = []
     for key, value in room_inputs.items():
@@ -185,7 +196,20 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
                     elif eco == True:
                         if 'エコ' not in remark_comment:
                             remark_comment = 'エコ　' + remark_comment
-
+        
+        #スポットのリストを作成
+        spot_comment = ''
+        if len(spots) != 0:
+            for spot in spots:
+                if room_num in spot['room']:
+                    if len(remark_comment) != 0:
+                        remark_comment = remark_comment + '　' + spot['content']
+                        spot_comment = spot['content']
+                    else:
+                        remark_comment = spot['content']
+                        spot_comment = spot['content']
+        
+        
         #部屋タイプ
         room_type = 'E'
         if room_num in single_rooms:
@@ -218,7 +242,8 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
             'duvet': duvet,
             'remark': remark_comment,
             'room_type': room_type,
-            'multiple': multiple
+            'multiple': multiple,
+            'spot_content': spot_comment 
         }
         manage_rooms.append(room_info)
     floor_sorted = sorted(set(int(r) for r in floor))
@@ -273,9 +298,15 @@ def search_remarks_name_list(key_name_list, rooms):
         for room in person_rooms:
             remark = room.get("remark", "").strip()
             room_num = room.get("room_num", "")
+            spot_comment = room.get("spot_content", "").strip()
             if remark:  # 備考がある場合のみ
-                if remark !="エコ" and remark != "エコ外":
-                    remarks_list.append((room_num, remark.replace("エコ外", "").replace("エコ", "").strip(), name))
+                result_remarks = remark
+                if "エコ" in remark or "エコ外" in remark:
+                    result_remarks = result_remarks.replace("エコ外", "").replace("エコ", "").strip()
+                if spot_comment in result_remarks:
+                    result_remarks = result_remarks.replace(spot_comment, "").strip()
+                if result_remarks is not None and result_remarks.strip():
+                    remarks_list.append((room_num, result_remarks, name))
     return remarks_list
 
 def select_person_from_room_change(room_changes, key_name_list, rooms):

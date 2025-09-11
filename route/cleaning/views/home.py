@@ -77,6 +77,8 @@ class homeView(TemplateView):
             'add_contacts_len':0,
             'contacts_len':3,
             'from_report': from_report,
+            'add_spots_len':0,
+            'spots_len':3,
         }
         return render(self.request, self.template_name, context)
     

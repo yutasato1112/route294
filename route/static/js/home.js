@@ -260,6 +260,10 @@ $(document).ready(function () {
     $(document).on("input", ".input_remark_room, .input_remark", function () {
         checkAndAddRemarkRow();
     });
+    //スポット清掃表の部屋番号・スポット清掃内容が入力された時の処理
+    $(document).on("input", ".input_spot_number, .input_spot", function () {
+        checkAndAddSpotRow();
+    });
     //ハウスさん表の名前が入力された時の処理
     $(document).on("input", ".input_name", function () {
         checkAndAddRow();
@@ -806,6 +810,44 @@ $(document).ready(function () {
             `;
 
             $("#remark_table_body").append(newRow);
+        }
+    }
+
+    //スポット清掃表の行追加
+    function checkAndAddSpotRow() {
+        let allRoomsFilled = true;
+        let allSpotsFilled = true;
+
+        $(".input_spot_number").each(function () {
+            if ($(this).val().trim() === "") {
+                allRoomsFilled = false;
+            }
+        });
+
+        $(".input_spot").each(function () {
+            if ($(this).val().trim() === "") {
+                allSpotsFilled = false;
+            }
+        });
+
+        let lastRow = $(".input_spot_number").last().val().trim() === "" &&
+            $(".input_spot").last().val().trim() === "";
+
+        if ((allRoomsFilled || allRemarksFilled) && !lastRow) {
+            let rowCount = $(".input_spot").length + 1;
+
+            let newRow = `
+                <tr>
+                    <td>
+                        <input type="text" name="spot_number_${rowCount}" id="spot_number_${rowCount}" class="input_spot_number">
+                    </td>
+                    <td>
+                        <input type="text" name="spot_${rowCount}" id="spot_${rowCount}" class="input_spot"></textarea>
+                    </td>
+                </tr>
+            `;
+
+            $("#spot_table_body").append(newRow);
         }
     }
 
