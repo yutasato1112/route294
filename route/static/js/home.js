@@ -680,12 +680,12 @@ $(document).ready(function () {
             }
         });
 
-        $('.input_duvet').each(function () {
-            let roomNumber = $(this).val().trim();
-            if (roomNumber !== '' && !ecoRooms.has(roomNumber)) {
-                $('[data-room="' + roomNumber + '"]').css('background-color', 'lightblue');
-            }
-        });
+        // $('.input_duvet').each(function () {
+        //     let roomNumber = $(this).val().trim();
+        //     if (roomNumber !== '' && !ecoRooms.has(roomNumber)) {
+        //         $('[data-room="' + roomNumber + '"]').css('background-color', 'lightblue');
+        //     }
+        // });
 
         $('.input_amenity').each(function () {
             const roomNumber = $(this).val().trim();
