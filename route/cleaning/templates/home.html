@@ -471,10 +471,10 @@
                     {% for spot in spots %}
                     <tr>
                         <td>
-                            <input type="text" name="spot_number_{{forloop.counter}}" id="spot_number_{{forloop.counter}}" class="input_spot_number" value="{{ spot.room_num }}">
+                            <input type="text" name="spot_number_{{forloop.counter}}" id="spot_number_{{forloop.counter}}" class="input_spot_number" value="{{ spot.room }}">
                         </td>
                         <td>
-                            <input type="text" name="spot_{{forloop.counter}}" id="spot_{{forloop.counter}}" class="input_spot">{{ spot.content}}</textarea> 
+                            <input type="text" name="spot_{{forloop.counter}}" id="spot_{{forloop.counter}}" class="input_spot" value="{{ spot.content }}">
                         </td>
                     </tr>
                     {% endfor %}
@@ -485,7 +485,7 @@
                                 <input type="text" name="spot_number_{{forloop.counter|add:add_spots_len}}" id="spot_number_{{forloop.counter|add:add_contacts_len}}" class="input_spot_number">
                             </td>
                             <td>
-                                <input type="text" name="spot_{{forloop.counter|add:add_spots_len}}" id="spot_{{forloop.counter|add:add_spots_len}}" class="input_spot"></textarea>
+                                <input type="text" name="spot_{{forloop.counter|add:add_spots_len}}" id="spot_{{forloop.counter|add:add_spots_len}}" class="input_spot">
                             </td>
                         </tr>
                         {% endfor %}

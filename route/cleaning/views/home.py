@@ -124,12 +124,20 @@ class homeView(TemplateView):
         is_chemical_clean = data.get('is_chemical_clean', False)
         is_public = data.get('is_public', False)
         multiple_rooms = data.get('multiple_rooms', [])
+        spots = data.get('spots', [])
         
         #備考の欄数
         if len(remarks) < 3:
             remarks_len = 3-len(remarks)
         else:
             remarks_len=1
+        
+        #スポット清掃の行数
+        if len(spots) < 3:
+            spots_len = 3-len(spots)
+        else:
+            spots_len=1 
+        
         
         #部屋の清掃担当リストを加工
         combined_rooms = room_person(room_num_table, room_inputs)
@@ -193,5 +201,8 @@ class homeView(TemplateView):
             'is_chemical_clean': is_chemical_clean,
             'is_public': is_public,
             'multiple_rooms': multiple_rooms,
+            'add_spots_len':len(spots),
+            'spots_len':spots_len,
+            'spots': spots,
         }
         return render(self.request, self.template_name, context)

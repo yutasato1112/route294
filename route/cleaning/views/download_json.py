@@ -8,7 +8,7 @@ import os
 
 def download_json(request):
     if request.method == 'POST':
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots = catch_post(request)
         room_changes, outins, must_cleans, others = get_cover(request)
         original_add_bath = request.POST.getlist('bath_only')
         add_bath = []
@@ -48,7 +48,8 @@ def download_json(request):
             'is_chlorine': is_chlorine,
             'is_chemical_clean': is_chemical_clean,
             'is_public': is_public,
-            'multiple_rooms': multiple_rooms
+            'multiple_rooms': multiple_rooms,
+            'spots': spots
         }
         
 
