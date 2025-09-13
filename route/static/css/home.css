@@ -328,7 +328,6 @@ input[type="number"]::-webkit-inner-spin-button {
     background-color: white;
     border: 1px solid #ccc;
     border-radius: 10px;
-    margin-bottom: 2vh;
     padding: 0.5vh;
     box-sizing: border-box;
     overflow: hidden;
@@ -416,11 +415,11 @@ input[type="number"]::-webkit-inner-spin-button {
 
 /*スポット清掃*/
 .last_bottom_line{
-    align-items: center;
-    margin-top: 1vh;
-    border: #ccc 1px solid;
     border-radius: 10px;
+    border: 1px solid #ccc;
     background-color: white;
+    margin-top: 1vh;
+    margin-bottom: 1vh;
 }
 .spot_room_num{
     width: 8%;
