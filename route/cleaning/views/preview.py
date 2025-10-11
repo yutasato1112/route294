@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
-from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean, multiple_night
+from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean, multiple_night, language
 
 # Create your views here.
 
@@ -16,7 +16,7 @@ class previewView(TemplateView):
     def post(self, request, *args, **kwargs):
         #データ受け取り
         date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots = catch_post(request)
-        
+
         #連泊入力の受け取り
         try:
             multiple_rooms = multiple_night(request)
@@ -57,7 +57,7 @@ class previewView(TemplateView):
         #DDリストの作成
         rooms = []
         for i in range(pages):
-            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms, multiple_rooms,outins, spots)
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms, multiple_rooms,outins, spots, 'ja')
             rooms.append(room)
         DD_list = calc_DD_list(house_data)
    
@@ -66,21 +66,30 @@ class previewView(TemplateView):
         key_name_list = []
         rooms = []
         for i in range(pages):
+            eng = house_data[i][4]
+            if eng == True:
+                lang = 'en'
+            else:
+                lang = 'ja'
+                
             name = house_data[i][1]
             key_name_list.append([house_data[i][0],name])
             key = house_data[i][2]
             bath = is_bath(bath_person, i+1)
             weekly = weekly_cleaning(date)
-            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins,spots)
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins,spots, lang)
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
-            date_jp = changeDate(date)
+            date_jp = changeDate(date,lang)
+            
             #連絡事項の分割
             contact = ''
             for item in contacts:
                 if item['person_number'] == str(i+1):
                     contact = item['contact']
                     break
+            if lang == 'en':
+                contact = language(None,lang,contact)
             if contact != '':
                 contact_1, contact_2, contact_3, contact_4 = split_contact_textarea(contact)
             else:
@@ -97,7 +106,7 @@ class previewView(TemplateView):
                 'rooms':room,
                 'bath':bath,
                 'key':key,
-                'weekly':weekly,
+                'weekly':language(weekly,lang,None),
                 'end_time':time_of_end,
                 'date':date_jp,
                 'floor':floor,
@@ -114,6 +123,37 @@ class previewView(TemplateView):
                 'contact_4':contact_4,
                 'room_type_count_str':room_type_count_str,
                 'DD_list':DD_list[i],
+                'charge':language('charge',lang,None),
+                'title':language('title',lang,None),
+                'consecutive_nights':language('consecutive_nights',lang,None),
+                'eco':language('eco',lang,None),
+                'duvet':language('duvet',lang,None),
+                'remark':language('remark',lang,None),
+                'cleaned':language('cleaned',lang,None),
+                'inspection':language('inspection',lang,None),
+                'public_bath_cleaning':language('public_bath_cleaning',lang,None),
+                'public_bath_cleaning_please':language('public_bath_cleaning_please',lang,None),
+                'master_key_number':language('master_key_number',lang,None),
+                'target_completion_time_for_cleaning':language('target_completion_time_for_cleaning',lang,None),
+                'cleaning_completion_time':language('cleaning_completion_time',lang,None),
+                'spot_cleaning':language('spot_cleaning',lang,None),
+                'meating':language('meating',lang,None),
+                'author':language('author',lang,None),
+                'early_shift':language('early_shift',lang,None),
+                'inspection_charge':language('inspection_charge',lang,None),
+                'sign':language('sign',lang,None),
+                'notice':language('notice',lang,None),
+                'special_cleaning':language('special_cleaning',lang,None),
+                'line_first':language('line_first',lang,None),
+                'airconditioner_filter_cleaning':language('airconditioner_filter_cleaning',lang,None),
+                'units':language('units',lang,None),
+                'line_second':language('line_second',lang,None),
+                'line_third':language('line_third',lang,None),
+                'room_number':language('room_number',lang,None),
+                'forget':language('forget',lang,None),
+                'hotel_name':language('hotel_name',lang,None),
+                'declaration':language('declaration',lang,None),
+                'signature':language('signature',lang,None)
             }
             total_data.append(persons_cleaning_data)
         #大浴場清掃担当者の名前リスト化

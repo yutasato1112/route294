@@ -130,6 +130,7 @@
                             <th class="floor_th">階</th>
                             <th>キー</th>
                             <th>D.D.</th>
+                            <th>Eng</th>
                         </tr>
                     </thead>
                     <tbody id="house_table_body">
@@ -152,6 +153,9 @@
                                 </td>
                                 <td>
                                     <input type="text" name="dd_{{forloop.counter}}" id="dd_{{forloop.counter}}" class="dd_cell" value="{{ person.3 }}">
+                                </td>
+                                <td>
+                                    <input type="checkbox" name="eng_{{forloop.counter}}" id="eng_{{forloop.counter}}" class="eng_cell" value="on" {% if person.4 %} checked {% endif %}>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -177,6 +181,9 @@
                                     <td>
                                         <input type="text" name="dd_{{forloop.counter|add:add_house_len}}" id="dd_{{forloop.counter|add:add_house_len}}" class="dd_cell" value="">
                                     </td>
+                                    <td>
+                                        <input type="checkbox" name="eng_{{forloop.counter|add:add_house_len}}" id="eng_{{forloop.counter|add:add_house_len}}" class="eng_cell" value="on">
+                                    </td>
                                 {% else %}
                                     <td class="td_no">
                                         <input type="number" name="no_{{forloop.counter}}" id="no_{{forloop.counter}}" class="input_no" {% if not forloop.last %} value="{{forloop.counter}}" {% endif %} min="1">
@@ -193,8 +200,11 @@
                                     <td>
                                         <input type="text" name="key_{{forloop.counter}}" id="key_{{forloop.counter}}" class="key_cell" value="">
                                     </td>
-                                    <td>
+                                    <td class="td_dd">
                                         <input type="text" name="dd_{{forloop.counter}}" id="dd_{{forloop.counter}}" class="dd_cell" value="">
+                                    </td>
+                                    <td class="td_eng">
+                                        <input type="checkbox" name="eng_{{forloop.counter}}" id="eng_{{forloop.counter}}" class="eng_cell" value="on">
                                     </td>
                                 {% endif %}
                             </tr>

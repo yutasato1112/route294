@@ -1,6 +1,13 @@
 import datetime
 import itertools
 from ..utils.home_util import read_csv, dist_room
+import requests
+from googletrans import Translator
+import argostranslate.package
+import argostranslate.translate
+from typing import Optional
+from deep_translator import GoogleTranslator
+from google.cloud import translate_v2 as gct  
 
 def catch_post(request):
     date = request.POST.get('date')
@@ -44,9 +51,14 @@ def catch_post(request):
         name = request.POST.get(f'name_{i}', '').strip()
         key = request.POST.get(f'key_{i}', '').strip()
         dd = request.POST.get(f'dd_{i}', '').strip()
+        eng = request.POST.get(f'eng_{i}')
+        if eng == 'on':
+            eng = True
+        else:
+            eng = False
 
         if any(x != '' for x in (name, key, dd)):
-            house_data.append([no,name, key, dd])
+            house_data.append([no,name, key, dd,eng])
             
     spots = []
     # POST データの key を全部ループ
@@ -123,24 +135,9 @@ def weekly_cleaning(date):
     #日付から曜日を取得
     date = datetime.datetime.strptime(date, '%Y-%m-%d')
     week = date.strftime('%A')
-    if week == 'Monday':
-        return '冷蔵庫上のほこり取り・机下面の清掃お願いします'
-    elif week == 'Tuesday':
-        return '内階段清掃お願いします'
-    elif week == 'Wednesday':
-        return 'ズボンプレッサー清掃お願いします'
-    elif week == 'Thursday':
-        return 'バスユニットのアメニティの皿清掃お願いします'
-    elif week == 'Friday':
-        return '加湿器フィルター清掃お願いします'
-    elif week == 'Saturday':
-        return '客室壁側面・天井付近クモの巣ほこり取りお願いします'
-    elif week == 'Sunday': 
-        return 'ドアのふち拭き上げお願いします'
-    else:
-        return 'Invalid date'
+    return week
     
-def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms, outins, spots):
+def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms, outins, spots, lang):
     #ルームナンバーのリストを作成
     room_nums = []
     for key, value in room_inputs.items():
@@ -168,46 +165,87 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         if room_num in duvet_rooms:
             duvet = True
         #remarksのリストを作成
-        if len(remarks) == 0:
-            if eco == True and ame == True:
-                if 'エコ外' not in remark_comment:
-                    remark_comment = 'エコ外　' + remark_comment
-            elif eco == True:
-                if 'エコ' not in remark_comment:
-                    remark_comment = 'エコ　' + remark_comment
+        if lang == 'en':
+            if len(remarks) == 0:
+                if eco == True and ame == True:
+                    if 'Eco-Outside' not in remark_comment:
+                        remark_comment = 'Eco-Outside　' + remark_comment
+                elif eco == True:
+                    if 'Eco' not in remark_comment:
+                        remark_comment = 'Eco　' + remark_comment
 
-        else:
-            for remark in remarks:
-                if room_num in remark['room']:
-                    if len(remark_comment) != 0:
-                        remark_comment = remark_comment + '　' + remark['comment']
+            else:
+                for remark in remarks:
+                    if room_num in remark['room']:
+                        remark_tran = language(None, lang , remark['comment'])
+                        if len(remark_comment) != 0:
+                            remark_comment = remark_comment + '　' + remark_tran
+                        else:
+                            remark_comment = remark_tran
+                        if eco == True and ame == True:
+                            if 'Eco-Outside' not in remark_comment:
+                                remark_comment = 'Eco-Outside　' + remark_comment
+                        elif eco == True:
+                            if 'Eco' not in remark_comment:
+                                remark_comment = 'Eco　' + remark_comment
                     else:
-                        remark_comment = remark['comment']
-                    if eco == True and ame == True:
-                        if 'エコ外' not in remark_comment:
-                            remark_comment = 'エコ外　' + remark_comment
-                    elif eco == True:
-                        if 'エコ' not in remark_comment:
-                            remark_comment = 'エコ　' + remark_comment
-                else:
-                    if eco == True and ame == True:
-                        if 'エコ外' not in remark_comment:
-                            remark_comment = 'エコ外　' + remark_comment
-                    elif eco == True:
-                        if 'エコ' not in remark_comment:
-                            remark_comment = 'エコ　' + remark_comment
+                        if eco == True and ame == True:
+                            if 'Eco-Outside' not in remark_comment:
+                                remark_comment = 'Eco-Outside　' + remark_comment
+                        elif eco == True:
+                            if 'Eco' not in remark_comment:
+                                remark_comment = 'Eco　' + remark_comment
         
+        else:
+            if len(remarks) == 0:
+                if eco == True and ame == True:
+                    if 'エコ外' not in remark_comment:
+                        remark_comment = 'エコ外　' + remark_comment
+                elif eco == True:
+                    if 'エコ' not in remark_comment:
+                        remark_comment = 'エコ　' + remark_comment
+
+            else:
+                for remark in remarks:
+                    if room_num in remark['room']:
+                        if len(remark_comment) != 0:
+                            remark_comment = remark_comment + '　' + remark['comment']
+                        else:
+                            remark_comment = remark['comment']
+                        if eco == True and ame == True:
+                            if 'エコ外' not in remark_comment:
+                                remark_comment = 'エコ外　' + remark_comment
+                        elif eco == True:
+                            if 'エコ' not in remark_comment:
+                                remark_comment = 'エコ　' + remark_comment
+                    else:
+                        if eco == True and ame == True:
+                            if 'エコ外' not in remark_comment:
+                                remark_comment = 'エコ外　' + remark_comment
+                        elif eco == True:
+                            if 'エコ' not in remark_comment:
+                                remark_comment = 'エコ　' + remark_comment
+            
         #スポットのリストを作成
         spot_comment = ''
         if len(spots) != 0:
             for spot in spots:
-                if room_num in spot['room']:
-                    if len(remark_comment) != 0:
-                        remark_comment = remark_comment + '　' + spot['content']
-                        spot_comment = spot['content']
-                    else:
-                        remark_comment = spot['content']
-                        spot_comment = spot['content']
+                if lang == 'en':
+                    if room_num in spot['room']:
+                        if len(remark_comment) != 0:
+                            remark_comment = remark_comment + '　' + language(None,lang, spot['content'])
+                            spot_comment = language(None,lang, spot['content'])
+                        else:
+                            remark_comment = language(None,lang, spot['content'])
+                            spot_comment = language(None,lang, spot['content'])
+                else:
+                    if room_num in spot['room']:
+                        if len(remark_comment) != 0:
+                            remark_comment = remark_comment + '　' + spot['content']
+                            spot_comment = spot['content']
+                        else:
+                            remark_comment = spot['content']
+                            spot_comment = spot['content']
         
         
         #部屋タイプ
@@ -274,12 +312,17 @@ def calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, t
     
     return formatted
 
-def changeDate(date_str):
+def changeDate(date_str,lang):
     # 日本語曜日に変換するためのリスト
     date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
     weekday_map = ['月', '火', '水', '木', '金', '土', '日']
-    weekday_jp = weekday_map[date_obj.weekday()]
-    date_jp = str(date_obj.month) + '月' + str(date_obj.day) + '日 ('+ weekday_jp + ')'
+    weekday_map_eng = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    if lang == 'ja':
+        weekday_jp = weekday_map[date_obj.weekday()]
+        date_jp = str(date_obj.month) + '月' + str(date_obj.day) + '日 ('+ weekday_jp + ')'
+    else:
+        weekday_en = weekday_map_eng[date_obj.weekday()]
+        date_jp = date_obj.strftime(f"%b {date_obj.day}, %Y ({weekday_en})")
     return date_jp
 
 def search_bath_person(bath_person, key_name_list):
@@ -301,8 +344,8 @@ def search_remarks_name_list(key_name_list, rooms):
             spot_comment = room.get("spot_content", "").strip()
             if remark:  # 備考がある場合のみ
                 result_remarks = remark
-                if "エコ" in remark or "エコ外" in remark:
-                    result_remarks = result_remarks.replace("エコ外", "").replace("エコ", "").strip()
+                if "エコ" in remark or "エコ外" in remark or "Eco" in remark or "Eco-Outside" in remark:
+                    result_remarks = result_remarks.replace("エコ外", "").replace("エコ", "").replace("Eco-Outside", "").replace("Eco", "").strip()
                 if spot_comment in result_remarks:
                     result_remarks = result_remarks.replace(spot_comment, "").strip()
                 if result_remarks is not None and result_remarks.strip():
@@ -423,3 +466,156 @@ def multiple_night(request):
     rooms = request.POST.getlist("multiple_night_room")
     rooms = [room.strip() for room in rooms if room.strip() != ""]
     return rooms
+
+def algos_trancelate(text):
+    from_code = "ja"
+    to_code = "en"
+    available_packages = argostranslate.package.get_available_packages()
+    package_to_install = next(
+        filter(
+            lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
+        )
+    )
+    argostranslate.package.install_from_path(package_to_install.download())
+
+    translatedText = argostranslate.translate.translate(text, from_code, to_code)
+    return translatedText
+
+def google_translate_ja_to_en(text: Optional[str]) -> str:
+    if not text:
+        return ""
+    try:
+        # 重要: 4.0.0-rc1 を使用し、service_urls を指定
+        from googletrans import Translator  # type: ignore
+        translator = Translator(
+            service_urls=[
+                "translate.google.co.jp", 
+                "translate.google.com",
+            ]
+        )
+        result = translator.translate(text, src="ja", dest="en")
+        if isinstance(result.text, str) and result.text.strip():
+            return result.text
+    except Exception:
+        pass
+
+    try:
+        return GoogleTranslator(source="ja", target="en").translate(text)
+    except Exception:
+        pass
+
+    try:
+        client = gct.Client()
+        res = client.translate(text, source_language="ja", target_language="en")
+        tr = res.get("translatedText")
+        if isinstance(tr, str):
+            return tr
+    except Exception:
+        pass
+    return text
+
+def google_trancelate(text: Optional[str]) -> str:
+    return google_translate_ja_to_en(text)
+
+def translate(text):
+    #インターネット接続を確認
+    try:
+        # タイムアウト3秒でGoogle翻訳サイトにアクセスしてみる
+        response = requests.get("https://translate.google.com/", timeout=3)
+        if response.status_code == 200:
+            res = google_trancelate(text)
+        else:
+            res = algos_trancelate(text)
+    except requests.RequestException:
+        # 接続エラーやタイムアウト時はこちらへ
+        res = algos_trancelate(text)
+    return res
+
+def language(str_id, lang_id, text):
+    language_dict = {
+        'ja': {
+            'charge':'担当',
+            'title':'さん',
+            'consecutive_nights':'連泊',
+            'eco':'エコ',
+            'duvet':'デュベ',
+            'remark':'備考',
+            'cleaned':'清掃済',
+            'inspection':'インスペ',
+            'public_bath_cleaning':'大浴場清掃',
+            'public_bath_cleaning_please':'大浴場清掃よろしくお願いいたします。',
+            'master_key_number':'マスターキー番号',
+            'target_completion_time_for_cleaning':'清掃終了目標時間',
+            'cleaning_completion_time':'清掃終了時間',
+            'spot_cleaning':'スポット清掃',
+            'meating':'ミーティング',
+            'author':'作成者',
+            'early_shift':'早番',
+            'inspection_charge':'インスペクション',
+            'sign':'印',
+            'notice':'連絡事項',
+            'special_cleaning':'特別清掃(該当に◯)',
+            'line_first':'　棚卸　　草取り',
+            'airconditioner_filter_cleaning':'エアコンフィルター清掃',
+            'units':'台',
+            'line_second':'新人研修　　改装関連',
+            'line_third':'　　ミーティング参加',
+            'room_number':'部屋番号',
+            'forget':'忘れ物',
+            'hotel_name':'ルートイン水海道駅前',
+            'declaration':'上記日程を終了致しました。',
+            'signature':'(清掃担当者)署名　　　　　　　　　　',
+            'Monday':'冷蔵庫上のほこり取り・机下面の清掃お願いします',
+            'Tuesday':'内階段清掃お願いします',
+            'Wednesday':'ズボンプレッサー清掃お願いします',
+            'Thursday':'バスユニットのアメニティの皿清掃お願いします',
+            'Friday':'加湿器フィルター清掃お願いします',
+            'Saturday':'客室壁側面・天井付近クモの巣ほこり取りお願いします',
+            'Sunday':'ドアのふち拭き上げお願いします'
+        },
+        'en': {
+            'charge':'Charge',
+            'title':'',
+            'consecutive_nights':'Consecutive Nights',
+            'eco':'Eco',
+            'duvet':'Duvet',
+            'remark':'Remark',
+            'cleaned':'Cleaned',
+            'inspection':'Inspection',
+            'public_bath_cleaning':'Public Bath Cleaning',
+            'public_bath_cleaning_please':'Please clean the public bath.',
+            'master_key_number':'Master Key Number',
+            'target_completion_time_for_cleaning':'Target Completion Time for Cleaning',
+            'cleaning_completion_time':'Cleaning Completion Time',
+            'spot_cleaning':'Spot Cleaning',
+            'meating':'Meeting',
+            'author':'Author',
+            'early_shift':'Early Shift',
+            'inspection_charge':'Inspection Charge',
+            'sign':'Stamp',
+            'notice':'Notice',
+            'special_cleaning':'Special Cleaning (Circle if applicable)',
+            'line_first':'Inventory　　Weeding',
+            'airconditioner_filter_cleaning':'Air Conditioner Filter Cleaning',
+            'units':'Units',
+            'line_second':'New Employee Training　　Renovation Related',
+            'line_third':'　　　Meeting Participation',
+            'room_number':'Number',
+            'forget':'Forgotten Items',
+            'hotel_name':'RouteInn Mizkaido',
+            'declaration':'The above schedule has been completed.',
+            'signature':"(Cleaning Staff) Signature　　　　　　　　　　",
+            'Monday':'Please clean the dust above the refrigerator and under the desk.',
+            'Tuesday':'Please clean the indoor stairs.',
+            'Wednesday':'Please clean the trouser press.',
+            'Thursday':'Please clean the amenity dishes in the bath unit.',
+            'Friday':'Please clean the humidifier filter.',
+            'Saturday':'Please clean the cobwebs and dust on the side walls and ceilings of the guest rooms.',
+            'Sunday':'Please wipe the edges of the doors.'
+        }
+    }
+    if str_id != None and lang_id in language_dict:
+        return language_dict[lang_id].get(str_id, str_id)
+    else:
+        res = translate(text)
+        return res

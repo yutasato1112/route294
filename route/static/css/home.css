@@ -208,7 +208,7 @@ th{
     width: 90%;
 }
 .input_name{
-    width: 90%;
+    width: 98%;
 }
 .count_cell{
     font-weight: bold;
@@ -225,10 +225,16 @@ th{
 }
 
 .td_no{
-    width: 15%;
+    width: 12%;
 }
 .td_name{
-    width: 37%;
+    width: 30%;
+}
+.td_dd{
+    width: 15%;
+}
+.td_eng{
+    width: 3%;
 }
 .third_plus_line{
     align-items: center;

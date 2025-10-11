@@ -446,6 +446,9 @@ $(document).ready(function () {
                     <td>
                         <input type="text" name="dd_${rowCount}" id="dd_${rowCount}" class="dd_cell" value="">
                     </td>
+                    <td class="td_eng">
+                        <input type="checkbox" name="eng_${rowCount}" id="eng_${rowCount}" class="eng_cell" value="on">
+                    </td>
                 </tr>
             `;
 

@@ -163,9 +163,9 @@
 {% for person_data in data %}
 <div class="preview_container">
     <div class="title">
-        <p class="cleaner">担当</p>
+        <p class="cleaner">{{ person_data.charge }}</p>
         <p class="name">{{person_data.name}}</p>
-        <p class="mr">さん</p>
+        <p class="mr">{{ person_data.title }}</p>
         <p class="hk">HOUSE KEEPING</p>
         <p class="hk">{{person_data.date}}</p>
     </div>
@@ -174,13 +174,13 @@
             <thead>
                 <th class="small_mark main_table_title"></th>
                 <th class="room_num_title main_table_title">Room No</th>
-                <th class="mark main_table_title">連泊</th>
+                <th class="mark main_table_title">{{ person_data.consecutive_nights }}</th>
                 <th class="mark main_table_title">C/O</th>
-                <th class="mark main_table_title">エコ</th>
-                <th class="mark main_table_title">デュべ</th>
-                <th class="remarks main_table_title">備考</th>
-                <th class="mark main_table_title">清掃済</th>
-                <th class="mark main_table_title">インスペ</th>
+                <th class="mark main_table_title">{{ person_data.eco }}</th>
+                <th class="mark main_table_title">{{ person_data.duvet }}</th>
+                <th class="remarks main_table_title">{{ person_data.remark }}</th>
+                <th class="mark main_table_title">{{ person_data.cleaned }}</th>
+                <th class="mark main_table_title">{{ person_data.inspection }}</th>
                 <th class="mark main_table_title">TV</th>
             </thead>
             <tbody>
@@ -232,9 +232,9 @@
                 {% endfor %}
             </tbody>
             <tr>
-                <td colspan="2" class="second_table_row">大浴場清掃</td>
+                <td colspan="2" class="second_table_row">{{ person_data.public_bath_cleaning }}</td>
                 {% if person_data.bath == True %}
-                <td colspan="8" class="bath_please">大浴場清掃よろしくお願いいたします。</td>
+                <td colspan="8" class="bath_please">{{ person_data.public_bath_cleaning_please }}</td>
                 {% else %}
                 <td colspan="8"></td>
                 {% endif %}
@@ -246,34 +246,34 @@
             <table class="table table-bordered bottom_table">
                 <tbody>
                     <tr>
-                        <td class="bottom_left_left">マスターキー番号</td>
+                        <td class="bottom_left_left">{{ person_data.master_key_number }}</td>
                         <td class="bottom_left_right important">{{person_data.key}}</td>
                     </tr>
                     <tr>
-                        <td class="bottom_left_left">清掃終了目標時刻</td>
+                        <td class="bottom_left_left">{{ person_data.target_completion_time_for_cleaning }}</td>
                         <td class="bottom_left_right important">{{person_data.end_time}}</td>
                     </tr>
                     <tr>
-                        <td class="bottom_left_left">清掃終了時刻</td>
+                        <td class="bottom_left_left">{{ person_data.cleaning_completion_time }}</td>
                         <td class="bottom_left_right">:</td>
                     </tr>
                     <tr>
-                        <td class="bottom_left_left">大浴場清掃</td>
+                        <td class="bottom_left_left">{{ person_data.public_bath_cleaning }}</td>
                         <td class="bottom_left_right">：</td>
                     <tr>
-                        <td class="bottom_left_left">スポット清掃・<br>ミーティング</td>
+                        <td class="bottom_left_left">{{ person_data.spot_cleaning }}・<br>{{ person_data.meating }}</td>
                         <td class="bottom_left_right">：</td>
                 </tbody>
             </table>
             <table class="table table-bordered stamp_table bottom_table">
                 <tbody>
                     <tr>
-                        <td>作成者</td>
+                        <td>{{ person_data.author }}</td>
                         <td class="stamp"><p class="stamp_name">{{editor_name}}</p></td>
-                        <td>早番</td>
-                        <td class="stamp">印</td>
-                        <td>インスペクション</td>
-                        <td class="stamp">印</td>
+                        <td>{{ person_data.early_shift }}</td>
+                        <td class="stamp">{{ person_data.sign }}</td>
+                        <td>{{ person_data.inspection_charge }}</td>
+                        <td class="stamp">{{ person_data.sign }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -281,7 +281,7 @@
         </div>
         <div class="bottom_line_right">
             <!--連絡事項-->
-            <p class="note_title note">[連絡事項]　　{% if person_data.DD_list != None  %}<span class="dd_data">{{ person_data.DD_list }}</span>{% endif %}</p>
+            <p class="note_title note">[{{ person_data.notice }}]　　{% if person_data.DD_list != None  %}<span class="dd_data">{{ person_data.DD_list }}</span>{% endif %}</p>
             <p class="note">{{person_data.contact_1}}</p>
             <p class="note">{{person_data.contact_2}}</p>
             <p class="note">{{person_data.contact_3}}</p>
@@ -290,26 +290,26 @@
             <table class="special_menu bottom_table">
                 <tbody>
                     <tr>
-                        <td class="special_menu_title">特別清掃(該当に◯)</td>
-                        <td>　棚卸　　草取り</td>
+                        <td class="special_menu_title">{{ person_data.special_cleaning }}</td>
+                        <td>{{ person_data.line_first }}</td>
                         <td rowspan="2" class="air_block">
-                            <div>エアコンフィルター清掃</div>
-                            <div class="num_air">台</div>
+                            <div>{{ person_data.airconditioner_filter_cleaning }}</div>
+                            <div class="num_air">{{ person_data.units }}</div>
                         </td>
                     </tr>
                     <tr>
-                        <td>新人研修　　改装関連</td>
-                        <td>　　ミーティング参加</td>
+                        <td>{{ person_data.line_second }}</td>
+                        <td>{{ person_data.line_third }}</td>
                     </tr>
                 </tbody>
             </table>
             <p class="weekly">{{person_data.weekly}}</p>
             <table class="table table-bordered forget_table bottom_table">
                 <thead>
-                    <td class="forget_room_no forget">部屋番号</td>
-                    <td class="forget">忘れ物</td>
-                    <td class="forget_room_no forget">部屋番号</td>
-                    <td class="forget">忘れ物</td>
+                    <td class="forget_room_no forget">{{ person_data.room_number }}</td>
+                    <td class="forget">{{ person_data.forget }}</td>
+                    <td class="forget_room_no forget">{{ person_data.room_number }}</td>
+                    <td class="forget">{{ person_data.forget }}</td>
                 </thead>
                 <tbody>
                     <tr class="forget_col">
@@ -335,9 +335,9 @@
         </div>
     </div>
     <div class="affilication">
-        <p class="aff">ルートイン水海道駅前</p>
-        <p class="aff">上記日程を終了致しました。</p>
-        <p class="sign">(清掃担当者)署名　　　　　　　　　　</p>
+        <p class="aff">{{ person_data.hotel_name }}</p>
+        <p class="aff">{{ person_data.declaration }}</p>
+        <p class="sign">{{ person_data.signature }}</p>
     </div>
 </div>
 {% endfor %}
