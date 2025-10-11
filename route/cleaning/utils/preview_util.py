@@ -3,11 +3,10 @@ import itertools
 from ..utils.home_util import read_csv, dist_room
 import requests
 from googletrans import Translator
-import argostranslate.package
-import argostranslate.translate
 from typing import Optional
 from deep_translator import GoogleTranslator
 from google.cloud import translate_v2 as gct  
+from typing import Optional
 
 def catch_post(request):
     date = request.POST.get('date')
@@ -467,20 +466,6 @@ def multiple_night(request):
     rooms = [room.strip() for room in rooms if room.strip() != ""]
     return rooms
 
-def algos_trancelate(text):
-    from_code = "ja"
-    to_code = "en"
-    available_packages = argostranslate.package.get_available_packages()
-    package_to_install = next(
-        filter(
-            lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
-        )
-    )
-    argostranslate.package.install_from_path(package_to_install.download())
-
-    translatedText = argostranslate.translate.translate(text, from_code, to_code)
-    return translatedText
-
 def google_translate_ja_to_en(text: Optional[str]) -> str:
     if not text:
         return ""
@@ -525,10 +510,10 @@ def translate(text):
         if response.status_code == 200:
             res = google_trancelate(text)
         else:
-            res = algos_trancelate(text)
+            res = text
     except requests.RequestException:
         # 接続エラーやタイムアウト時はこちらへ
-        res = algos_trancelate(text)
+        res = text
     return res
 
 def language(str_id, lang_id, text):
