@@ -81,6 +81,7 @@ class previewView(TemplateView):
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms)
             date_jp = changeDate(date,lang)
+            date_jp_cover = changeDate(date,'ja')
             
             #連絡事項の分割
             contact = ''
@@ -182,7 +183,7 @@ class previewView(TemplateView):
         context = {
             'data':total_data,
             'editor_name': editor_name,
-            'date':date_jp,
+            'date':date_jp_cover,
             'house_person_count' : person_count,
             'total_cleaning_room':total_cleaning_room,
             'bath_person': bath_person_name,
