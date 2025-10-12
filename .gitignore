@@ -4,3 +4,4 @@ __pycache__/
 /route/media
 /route/static/email.json
 /route/static/openai.json
+/route/logs
