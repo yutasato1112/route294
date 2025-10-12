@@ -478,3 +478,12 @@ input[type="number"]::-webkit-inner-spin-button {
 /* .duvet_title{
     background-color: lightblue!important;
 } */
+
+
+.input_multiple_night_room{
+    width: 100%;  
+}
+.multiple_night_area table{
+    width: 80%;
+    margin: auto;
+}

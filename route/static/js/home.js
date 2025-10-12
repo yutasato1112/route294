@@ -1257,8 +1257,6 @@ $(document).ready(function () {
         }
     }
 
-
-
     // --- 1) 各清掃者ごとにフロア毎の清掃数を集計 ---
     function buildFloorHouseT() {
         // houseNos はテーブル上の清掃者 No のリスト（1,2,…）

@@ -56,6 +56,11 @@ class homeView(TemplateView):
         else:
             today = datetime.date.today()
         
+        #連泊部屋入力欄対応
+        padded_rooms = [''] * 100
+        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]      
+        
+        
         context = {
             'method':method,
             'single_time':int(times_by_time_data[0][1]),
@@ -79,6 +84,8 @@ class homeView(TemplateView):
             'from_report': from_report,
             'add_spots_len':0,
             'spots_len':3,
+            'padded_rooms': padded_rooms,
+            'multiple_rows': multiple_rows,
         }
         return render(self.request, self.template_name, context)
     
@@ -159,6 +166,11 @@ class homeView(TemplateView):
         for i in original_add_bath:
             if i != '':
                 add_bath.append(i)
+                
+        #連泊部屋入力欄対応
+        padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
+        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]      
+        
         context = {
             'method':method,
             'single_time':single_time,
@@ -201,6 +213,8 @@ class homeView(TemplateView):
             'is_chemical_clean': is_chemical_clean,
             'is_public': is_public,
             'multiple_rooms': multiple_rooms,
+            'padded_rooms': padded_rooms,
+            'multiple_rows': multiple_rows,
             'add_spots_len':len(spots),
             'spots_len':spots_len,
             'spots': spots,

@@ -219,7 +219,7 @@
                     <thead>
                         <tr>
                             <th class="eco_title">エコ部屋<span id="eco-count" class="count-label">(0)</span></th>
-                            <th class="ame_title">アメ<span id="amenity-count" class="count-label">(0)</span></th>
+                            <th class="ame_title">外アメ<span id="amenity-count" class="count-label">(0)</span></th>
                             <th class="duvet_title">デュべ<span id="duvet-count" class="count-label">(0)</span></th>
                         </tr>
                     </thead>
@@ -506,21 +506,26 @@
         </div>
 
         <div class="multiple_night_area">
-            <p class="result_title">連泊部屋<span id="multiple-count" class="count-label">(0)</span></p>
-            {% with ''|center:10 as range %}
-            {% for _ in range %}
+            <p class="result_title">
+                連泊部屋<span id="multiple-count" class="count-label">({{ multiple_rows|length }})</span>
+            </p>
+
+            {% for row in multiple_rows %}
             <div class="room_row">
-                {% with ''|center:10 as range %}
-                {% for _ in range %}
-                <input type="text" name="multiple_night_room" id="multiple_night_room_{{forloop.counter}}" class="input_multiple_night_room">
+                {% for room in row %}
+                <input type="text"
+                        name="multiple_night_room"
+                        id="multiple_night_room_{{ forloop.parentloop.counter0|add:forloop.counter0 }}"
+                        class="input_multiple_night_room"
+                        value="{{ room }}">
                 {% endfor %}
-                {% endwith %}
             </div>
             {% endfor %}
-            {% endwith %}
-            
-            
         </div>
+
+
+
+
 
 
         <input type="hidden" name="master_key" id="master_key" value="{{ master_key }}">
