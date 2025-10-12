@@ -8,6 +8,15 @@ from urllib.parse import urlparse
 
 from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char
 
+import logging
+from django.http import HttpResponse
+
+logger = logging.getLogger('django')
+
+def index(request):
+    logger.info('call index')
+    return HttpResponse(status=200)
+
 # Create your views here.
 
 class homeView(TemplateView):
