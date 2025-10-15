@@ -22,10 +22,11 @@ from cleaning.views import home as home_view
 from cleaning.views import preview as preview_view
 from cleaning.views import download_json as json_view
 from cleaning.views import report as report_view
-from cleaning.views import ai_assist as ai_assist_view
+from cleaning.views import sidewind as sidewind_view
 from cleaning.views import release as release_view
 from cleaning.views import tech as tech_view
 from cleaning.views import administrator as admin_view
+from cleaning.views import sidewind_front
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,10 +34,11 @@ urlpatterns = [
     path('preview/', preview_view.previewView.as_view(), name='preview'),
     path('download/json/', json_view.download_json, name='download_json'),
     path('report/', report_view.reportView.as_view(), name='report'),
-    path('ai_assist/', ai_assist_view.aiAssistView.as_view(), name='ai_assist'),
+    path('sidewind/', sidewind_view.sidewindView.as_view(), name='sidewind'),
     path('release/', release_view.releaseView.as_view(), name='release'),
     path('technology/', tech_view.techView.as_view(), name='tech'),
-    path('administrator/', admin_view.administratorView.as_view(), name='administrator')
+    path('administrator/', admin_view.administratorView.as_view(), name='administrator'),
+    path('sidewind_front/', sidewind_front.sidewind_front, name='sidewind_front'),
 ]
 
 urlpatterns += static(

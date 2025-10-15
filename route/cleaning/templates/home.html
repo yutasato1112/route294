@@ -39,6 +39,10 @@
                 <!--中途編集ファイル読み込み-->
                 <input type="file" name="json_file" accept=".json" id="json_file">
             </div>
+            <div>
+            <!--SideWindボタン-->
+                <input formaction="{% url 'sidewind' %}" type="submit" value="Auto Assign(TestFlight)" class="btn btn-primary submit sidewind_entire_btn" formtarget="_blank">
+            </div>
         </div>
         <div class="second_line">
             <div class="second_left">

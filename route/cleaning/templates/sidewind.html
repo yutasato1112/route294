@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<title>Auto Assign</title>
+<link rel="stylesheet" href="{% static 'css/sidewind.css' %}">
+<script src="{% static 'js/sidewind.js' %}"></script>
+<div class="main">
+    <form action="" method="post" enctype="multipart/form-data" id="main_form">
+        {% csrf_token %}
+        <div class="first_line">
+            <!--作業者名-->
+            <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if method == 'POST' %} value={{editor_name}} {% endif %} >
+            <!--日付-->
+            <input class="input_date" type="date" name="date" id="date" required  value="{{ today|date:'Y-m-d' }}">
+            <div class="input_time_per_room_type">
+                <!--部屋タイプ別清掃時間-->
+                <p class="p_title">目標時間/min</p>
+                <p class="p_topics">S　:　</p>
+                <input class="input_time" type="number" name="single_time" id="single_time" required value="{{single_time}}">
+                <p class="p_topics"> T　:　</p>
+                <input class="input_time" type="number" name="twin_time" id="twin_time" required value="{{twin_time}}">
+                <p class="p_topics"> 大浴場　:　</p>
+                <input class="input_time" type="number" name="bath_time" id="bath_time" required value="{{bath_time}}">
+            </div>
+            <input formaction="{% url 'sidewind_front' %}" type="submit" value="Done" class="btn btn-primary submit sidewind_entire_btn" >
+        </div>
+         <div class="second_line">
+            <div class="second_left">
+                <!--部屋別清掃指示入力-->
+                <div class="room_table_area">
+                    <table class="table table-striped">
+                        <tbody>
+                            {% for floor in combined_rooms %}
+                            <tr>
+                                {% for roomdata in floor %}
+                                <td data-room="{{ roomdata.room }}">
+                                    {{ roomdata.room }}
+                                    <input type="text" name="room_{{ roomdata.room }}" id="room_{{ roomdata.room }}" class="input_room" value="{{ roomdata.status }}">
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table> 
+                    <div class="room_table_bottom">
+                        <p class="attention_note">※清掃不要の場合は0を入力</p>
+                        <div class="all_clean_rooms">
+                            <p>全体清掃部屋数　</p>
+                            <p class="all_clean_rooms_num"></p>
+                        </div>
+                        <div class="instruction_rooms">
+                            <p>指示清掃部屋数　</p>
+                            <p class="instruction_rooms_num"></p>
+                        </div>
+                        <div class="rooms_judge">
+                            <p>判定　</p>
+                            <p class="judge">NG</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="second_center">
+                <table class="table table-striped quota_table">
+                    <thead>
+                        <tr>
+                            <th class="quota_room_num">部屋数</th>
+                            <th class="quota_person_num">人数</th>
+                            <th class="quota_public_bath">大浴場清掃</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quota_body">
+                        {% with ''|center:quota_len as range %}
+                            {% for _ in range %}
+                                <tr>
+                                    <td>
+                                        <input type="number" name="room_num_{{forloop.counter}}" id="room_num_{{forloop.counter}}" class="quota_input_room_num">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="house_person_{{forloop.counter}}" id="house_person_{{forloop.counter}}" class="quota_input_person_num">
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="public_bath_{{forloop.counter}}" id="public_bath_{{forloop.counter}}" class="quota_input_public_bath">
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="second_right">
+                <!--エコ・アメ・デュべ-->
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th class="eco_title">エコ部屋<span id="eco-count" class="count-label">(0)</span></th>
+                            <th class="ame_title">外アメ<span id="amenity-count" class="count-label">(0)</span></th>
+                            <th class="duvet_title">デュべ<span id="duvet-count" class="count-label">(0)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="clean_method_body">
+                        {% for row in room_char_list %}
+                        <tr class="tr_clean_method">
+                            <td class="td_eco">
+                                <input value="{{row.0.eco.0}}" type="text" name="eco_room" id="eco_room" class="input_eco">
+                                <input value="{{row.0.eco.1}}" type="text" name="eco_room" id="eco_room" class="input_eco">
+                                <input value="{{row.0.eco.2}}" type="text" name="eco_room" id="eco_room" class="input_eco">
+                            </td>
+                            <td>
+                                <input value="{{row.1.ame}}" type="text" name="amenity" id="amenity" class="input_amenity">
+                            </td>
+                            <td class="td_duvet">
+                                <input value="{{row.2.duvet.0}}" type="text" name="duvet" id="duvet" class="input_duvet">
+                                <input value="{{row.2.duvet.1}}" type="text" name="duvet" id="duvet" class="input_duvet">
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% with ''|center:room_char_list_len as range %}
+                            {% for _ in range %}
+                                <tr class="tr_clean_method">
+                                    <td class="td_eco">
+                                        <input type="text" name="eco_room" id="eco_room" class="input_eco">
+                                        <input type="text" name="eco_room" id="eco_room" class="input_eco">
+                                        <input type="text" name="eco_room" id="eco_room" class="input_eco">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="amenity" id="amenity" class="input_amenity">
+                                    </td>
+                                    <td class="td_duvet">
+                                        <input type="text" name="duvet" id="duvet" class="input_duvet">
+                                        <input type="text" name="duvet" id="duvet" class="input_duvet">
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<script>
+    window.master_key = {{ master_key|safe }};
+    window.single_rooms = {{ single_rooms|safe }};
+    window.twin_rooms = {{ twin_rooms|safe }};
+    window.method = "{{ method|safe }}";
+</script>
+{% endblock %}
