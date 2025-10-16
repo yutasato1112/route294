@@ -262,11 +262,12 @@ td{
     font-weight: bold;
 }
 .cover_second_line{
+    width: 100%;
     display: flex;
     justify-content: space-between;
     font-size: 24px;
-    padding-left: 30%;
-    padding-right: 30%;
+    padding-left:28%;
+    padding-right: 28%;
     font-weight: bold;
 }
 .house_people{
@@ -367,10 +368,14 @@ td{
     font-size: 12px;
 }
 .cover_remark_content{
+    width: 65%;
     font-size: 12px;
 }
 .cover_room_num_null{
     text-align: end;
+}
+.cover_remark_null{
+    width: 65%;
 }
 .cover_name_null{
     text-align: end;
