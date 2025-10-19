@@ -109,26 +109,11 @@ def sidewind_front(request):
         verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers)
         
         #実行
-        allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, [], housekeepers,single_time, twin_time, eco_time, bath_time,)
+        allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, housekeepers,single_time, twin_time, eco_time, bath_time,)
+
         
-        # 通常割り当て結果をもとに、eco/eco外もハウス数に応じて自動分配
-        all_allocation = allocation.copy()
+        all_allocation = allocation
 
-        # ルール: エコ部屋・エコ外も「近い階層の担当ハウス」に近似割り当て
-        # floor→house分布を構築
-        floor_to_houses = defaultdict(list)
-        for r, hid in allocation.items():
-            floor_to_houses[r // 100].append(hid)
-
-        def infer_house_for_floor(floor):
-            counts = Counter(floor_to_houses[floor])
-            return counts.most_common(1)[0][0] if counts else 1  # fallback
-
-        # eco, eco外を近似割り当て
-        for r in eco_rooms + eco_out_rooms:
-            floor = r // 100
-            inferred_h = infer_house_for_floor(floor)
-            all_allocation[r] = inferred_h
 
         # ============================================================
         #  出力
@@ -138,7 +123,7 @@ def sidewind_front(request):
         print(f"通常清掃部屋: {len(rooms)}室")
         print(f"エコ部屋: {len(eco_rooms)}室 / エコ外: {len(eco_out_rooms)}室")
 
-        print("\n=== 自動割り当て結果（全室・上位表示） ===")
+        #print("\n=== 自動割り当て結果（全室・上位表示） ===")
         for r in sorted(all_allocation.keys()):
             tag = ""
             if r in eco_rooms:
@@ -147,7 +132,7 @@ def sidewind_front(request):
                 tag = "（エコ外）"
             elif r in twin_rooms:
                 tag = "（ツイン）"
-            print(f"部屋 {r:4} → ハウス {all_allocation[r]} {tag}")
+            #print(f"部屋 {r:4} → ハウス {all_allocation[r]} {tag}")
 
         # ---------- ハウス別集計 ----------
         print("\n=== ハウス別担当数 ===")
@@ -207,8 +192,8 @@ def sidewind_front(request):
                 sorted_allocation[r] = 0  # 未割当部屋はハウス0として扱う
 
         # 出力（人間可読 / JSON両対応）
-        print("\n=== 接続用データ配列（全室・未割当=0） ===")
-        print(sorted_allocation)
+        #print("\n=== 接続用データ配列（全室・未割当=0） ===")
+        #print(sorted_allocation)
         
         #セッション
         request.session['sidewind_flag'] = True
@@ -221,6 +206,8 @@ def sidewind_front(request):
         request.session['eco_rooms'] = eco_rooms
         request.session['ame'] = eco_out_rooms
         request.session['duvet'] = duvet_rooms
+        bath_staff = [h['id'] for h in housekeepers if h['has_bath']]
+        request.session['bath_staff'] = bath_staff
                 
         return redirect(reverse('home'))
     return redirect(reverse('sidewind'))

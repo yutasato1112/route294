@@ -38,6 +38,7 @@ class homeView(TemplateView):
                 eco_rooms = request.session['eco_rooms']
                 ame_rooms = request.session['ame']
                 duvet_rooms = request.session['duvet']
+                bath_persons = request.session['bath_staff']
                 
                 #csv読み込み
                 room_info_data, times_by_time_data, master_key_data = read_csv()
@@ -114,6 +115,7 @@ class homeView(TemplateView):
                     'add_spots_len':0,
                     'spots_len':3,
                     'spots': [],
+                    'bath_persons': bath_persons
                 }
                 return render(self.request, self.template_name, context)
             else:
