@@ -115,7 +115,8 @@ class homeView(TemplateView):
                     'add_spots_len':0,
                     'spots_len':3,
                     'spots': [],
-                    'bath_persons': bath_persons
+                    'bath_persons': bath_persons,
+                    'sidewind_flag':1
                 }
                 return render(self.request, self.template_name, context)
             else:
@@ -191,6 +192,7 @@ class homeView(TemplateView):
                 'spots_len':3,
                 'padded_rooms': padded_rooms,
                 'multiple_rows': multiple_rows,
+                'sidewind_flag':0
             }
             return render(self.request, self.template_name, context)
     
@@ -324,5 +326,6 @@ class homeView(TemplateView):
             'add_spots_len':len(spots),
             'spots_len':spots_len,
             'spots': spots,
+            'sidewind_flag':0
         }
         return render(self.request, self.template_name, context)

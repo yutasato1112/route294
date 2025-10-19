@@ -319,6 +319,10 @@ $(document).ready(function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
         updateEndTimeRow();
+        if (window.sidewind_flag === 1) {
+            updateHouseKeys();
+            updateDdCells();
+        }
     }
 
 

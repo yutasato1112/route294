@@ -543,6 +543,7 @@
     window.single_rooms = {{ single_rooms|safe }};
     window.twin_rooms = {{ twin_rooms|safe }};
     window.method = "{{ method|safe }}";
+    window.sidewind_flag = {{ sidewind_flag|safe }};
     document.addEventListener("DOMContentLoaded", function () {
         const fileInput = document.getElementById("json_file");
         const mainForm = document.querySelector("form");
