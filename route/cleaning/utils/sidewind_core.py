@@ -493,6 +493,7 @@ def assign_eco_rooms_full(
                     h = sorted(cands)[0]
                     base[h] += 1
                     temp_counts[h] += 1
+
                 # 仮割当後のエコ数分布のばらつきを計算
                 new_counts = eco_count.copy()
                 for hid, cnt in base.items():
