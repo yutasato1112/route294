@@ -48,7 +48,7 @@ class homeView(TemplateView):
                 
                 #部屋をタイプ別に一次元配列に加工
                 single_room_list, twin_room_list = dist_room(room_info_data)
-                print(allocation)
+                
                 #部屋のアサイン状況を配列化
                 combined_rooms = []
                 for i in range(len(room_num_table)):

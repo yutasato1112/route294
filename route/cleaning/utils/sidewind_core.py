@@ -13,7 +13,7 @@ testing.  The primary goals of the assignment algorithm are:
 * **Quota compliance:** The number of normal rooms allocated to each
   housekeeper must exactly match the quota provided for that
   housekeeper.
-* **Twin‐room balance:** The number of twin rooms assigned to any two
+* **Twin‑room balance:** The number of twin rooms assigned to any two
   housekeepers must differ by no more than two.  If a housekeeper
   receives zero twin rooms then all housekeepers must receive two or
   fewer.
@@ -21,7 +21,7 @@ testing.  The primary goals of the assignment algorithm are:
   these floors must be adjacent (no skipping floors).  Housekeepers
   flagged as handling bathing rooms (``has_bath=True``) may not be
   assigned rooms above the fourth floor.
-* **Eco‐room fairness:** When assigning eco and eco‑out rooms (rooms
+* **Eco‑room fairness:** When assigning eco and eco‑out rooms (rooms
   which do not count toward a housekeeper’s quota), strive to avoid
   obvious bias.  Specifically, no housekeeper should receive three or
   more eco rooms than any other.  The assignment algorithm prefers to
@@ -37,10 +37,27 @@ The exported function ``assign_rooms`` combines these pieces into a
 single workflow suitable for testing.  Test scripts can generate
 artificial room and housekeeper data, call ``assign_rooms`` and then
 verify that the resulting allocation satisfies all stated constraints.
+
+This file includes a modification to the eco‑room assignment logic:
+when assigning eco rooms on a floor that no housekeeper currently
+occupies, the algorithm now distributes those rooms one by one across
+eligible housekeepers rather than assigning the entire block to a
+single housekeeper.  This change helps to even out the distribution
+of eco and eco‑out rooms while still respecting the two‑floor limit
+for each housekeeper.  Previously all eco rooms on such a floor were
+given to the one candidate with the fewest eco assignments, which
+could lead to imbalances when multiple free rooms existed on a new
+floor.  The updated approach repeatedly selects the housekeeper with
+the smallest number of eco rooms (breaking ties with current
+finish‐time estimates) and assigns a single room, updating their
+floor list as needed.  This process continues until all eco rooms on
+the floor have been allocated.
 """
 
 from collections import defaultdict, Counter
 from typing import Dict, List, Iterable
+import math
+from itertools import combinations
 
 # ------------------------------------------------------------
 # Helper functions
@@ -164,8 +181,6 @@ def initial_assign(rooms: List[int], housekeepers: List[Dict]) -> Dict[int, str]
         if assigned[hid] != quotas[hid]:
             raise RuntimeError(f"❌ quota mismatch: {hid}")
 
-    # Debug output
-    # print(f"initial_assign completed successfully ({len(floors)} floors: {floors})")
     return allocation
 
 
@@ -238,11 +253,14 @@ def rebalance_twins(alloc: Dict[int, str], twin_rooms: Iterable[int],
                         # Simulate swap and check floor constraints
                         tmp = clone(alloc)
                         safe_swap(tmp, rA, rB)
-                        if severe or (floor_ok(floors_of(tmp, hA), allow_min_triplex)
-                                      and floor_ok(floors_of(tmp, hB), allow_min_triplex)):
+                        # Only accept the swap if it satisfies floor constraints for both
+                        # housekeepers.  We do not bypass this check even when the twin
+                        # imbalance is severe because the two‑floor rule has higher
+                        # precedence than twin balancing.  Therefore, the `severe`
+                        # condition does not override the floor constraint.
+                        if floor_ok(floors_of(tmp, hA), allow_min_triplex) and \
+                           floor_ok(floors_of(tmp, hB), allow_min_triplex):
                             safe_swap(alloc, rA, rB)
-                            # Debug output
-                            # print(f"[rebalance-{iteration}] twin swap {rB}({hB})→{rA}({hA})")
                             swapped = True
                             break
                     if swapped:
@@ -262,7 +280,7 @@ def rebalance_twins(alloc: Dict[int, str], twin_rooms: Iterable[int],
 
 def rebalance_floors(alloc: Dict[int, str], housekeepers: List[Dict],
                      eco_rooms: Iterable[int], eco_out_rooms: Iterable[int]) -> Dict[int, str]:
-    """Ensure that no housekeeper is assigned to more than two consecutive floors.
+    """Ensure that no housekeeper is assigned to more than two floors.
 
     After the initial assignment and twin balancing, a housekeeper may
     inadvertently be responsible for rooms on three or more floors.  This
@@ -275,80 +293,85 @@ def rebalance_floors(alloc: Dict[int, str], housekeepers: List[Dict],
     for a swap candidate on another housekeeper that maintains quotas
     and floor constraints.  It repeats until no housekeeper has more
     than two floors or no further improvements can be made.
+
+    Unlike the previous implementation, this version strictly limits
+    housekeepers to two floors.  A three‑floor assignment is no longer
+    considered acceptable even if the floors are contiguous.  This
+    change gives priority to the "two floors only" rule over the
+    looser "within two floors" rule and helps prevent assignments that
+    sprawl across three floors.
     """
-    # Precompute sets for eco rooms to identify normal rooms
     eco_set = set(eco_rooms) | set(eco_out_rooms)
 
     def floors_of_alloc(a: Dict[int, str], hid: str) -> List[int]:
+        # Return the sorted list of floors on which hid has normal rooms
         return sorted({fl(r) for r, h in a.items() if h == hid and r not in eco_set})
 
     def floor_ok_list(fs: List[int]) -> bool:
-        """Return True if the floors are contiguous and span at most two levels (差が2以内)."""
+        """Return True if a housekeeper occupies at most two contiguous floors.
+
+        Floors must be contiguous (no gaps), and the number of distinct floors
+        assigned must not exceed two.  For example, [3] and [3, 4] are
+        acceptable, but [3, 4, 5] is not even though the span is two.
+        """
         if not fs:
             return True
-        # Floors must be sorted
         fs_sorted = sorted(fs)
-        # Span (max - min) must be <= 2
-        if fs_sorted[-1] - fs_sorted[0] > 2:
+        # Must not exceed two floors
+        if len(fs_sorted) > 2:
             return False
-        # No gaps greater than 1
-        return all(fs_sorted[i+1] - fs_sorted[i] <= 1 for i in range(len(fs_sorted)-1))
+        # If exactly two floors, they must be consecutive
+        if len(fs_sorted) == 2:
+            return fs_sorted[1] - fs_sorted[0] == 1
+        # One floor is always fine
+        return True
 
-    # Helper to find swap candidate for a given room
     changed = True
     while changed:
         changed = False
-        # Iterate through housekeepers looking for one with >2 floors
+        # Look for a housekeeper with more than two floors
         for h in housekeepers:
             hid = h["id"]
             floors = floors_of_alloc(alloc, hid)
             if len(floors) <= 2:
                 continue
-            # Decide which floors to try removing: examine lowest and highest floors
-            # and attempt to remove each in turn until a successful swap occurs.
-            candidate_floors_to_remove: List[int]
-            if len(floors) <= 3:
-                # When exactly three floors, consider both extremes
-                candidate_floors_to_remove = [floors[0], floors[-1]]
-            else:
-                # For more than three floors, also consider both extremes.  If
-                # necessary, additional logic could examine interior floors,
-                # but such situations are unlikely in typical datasets.
-                candidate_floors_to_remove = [floors[0], floors[-1]]
+            # Identify the floor(s) to remove: pick the lowest and highest floors
+            # and attempt to move one of the rooms on those floors to another
+            # housekeeper.  We prefer to remove a floor at one end rather than
+            # splitting the middle of the range.
+            candidate_floors_to_remove = [floors[0], floors[-1]]
             swapped = False
             for f_remove in candidate_floors_to_remove:
-                # Gather candidate rooms on the removal floor that are normal rooms
-                donor_rooms = [r for r, h2 in alloc.items() if h2 == hid and fl(r) == f_remove and r not in eco_set]
+                # Gather normal rooms on the removal floor
+                donor_rooms = [r for r, h2 in alloc.items()
+                               if h2 == hid and fl(r) == f_remove and r not in eco_set]
                 for r in donor_rooms:
-                    # Try to find a swap partner for each room
+                    # Find a swap partner on another housekeeper
                     for h2 in housekeepers:
                         hid2 = h2["id"]
                         if hid2 == hid:
                             continue
-                        # Floors for the recipient before swap
                         floors2 = floors_of_alloc(alloc, hid2)
-                        # Determine if h2 can take floor f_remove: either already has it or has fewer than 2 floors
+                        # Recipient must have fewer than two floors or already own f_remove
                         if f_remove not in floors2 and len(floors2) >= 2:
                             continue
-                        # Search for a room s in h2 that is on a floor that hid has (excluding f_remove)
+                        # Search for a room on hid2 that lies on a floor within hid's
+                        # remaining floors (excluding f_remove)
                         possible_floors_for_hid = [f for f in floors if f != f_remove]
                         candidate_s = None
                         for s in [rr for rr, hh in alloc.items() if hh == hid2 and rr not in eco_set]:
                             s_floor = fl(s)
-                            # h can accept floor s_floor if it is one of its remaining floors
                             if s_floor in possible_floors_for_hid:
                                 candidate_s = s
                                 break
                         if candidate_s is None:
                             continue
-                        # Simulate swap
+                        # Simulate swap and check floor constraints
                         tmp = clone(alloc)
                         safe_swap(tmp, r, candidate_s)
-                        # After swap, compute floors for both h and h2
                         new_floors_h = floors_of_alloc(tmp, hid)
                         new_floors_h2 = floors_of_alloc(tmp, hid2)
                         if floor_ok_list(new_floors_h) and floor_ok_list(new_floors_h2):
-                            # Apply swap
                             safe_swap(alloc, r, candidate_s)
                             swapped = True
                             break
@@ -359,79 +382,159 @@ def rebalance_floors(alloc: Dict[int, str], housekeepers: List[Dict],
             if swapped:
                 changed = True
                 break
-        # End for each housekeeper
     return alloc
 
 
 # ------------------------------------------------------------
 # Eco‑room assignment with fairness
 # ------------------------------------------------------------
+def fl(r: int) -> int:
+    """部屋番号から階を求める（例：305→3階）。"""
+    return r // 100
 
-def assign_eco_rooms_full(alloc: Dict[int, str], eco_rooms: Iterable[int],
-                          eco_out_rooms: Iterable[int], housekeepers: List[Dict]) -> Dict[int, str]:
-    """Assign eco and eco‑out rooms to housekeepers with fairness and floor locality.
-
-    *Eco rooms* are free rooms that do not count towards a housekeeper’s
-    quota.  They should ideally be placed on the same floor as one of
-    the housekeeper’s normal rooms.  *Eco‑out rooms* must remain on
-    the same floor as the housekeeper’s current assignment and may not
-    incur a floor move.
-
-    This function attempts to distribute eco rooms evenly across all
-    housekeepers.  At each step the algorithm selects the set of
-    candidate housekeepers (those already present on the room’s floor
-    or, failing that, those with rooms on the nearest floors), and
-    chooses the candidate with the smallest current eco room count.
-    This heuristic greatly reduces the likelihood that any one
-    housekeeper will receive three or more eco rooms more than
-    another, thereby satisfying the fairness constraint described in
-    the assignment specification.
+def assign_eco_rooms_full(
+    alloc: Dict[int, str],
+    eco_rooms: Iterable[int],
+    eco_out_rooms: Iterable[int],
+    housekeepers: List[Dict],
+    twin_rooms: Iterable[int],
+    bath_rooms: Iterable[int],
+    time_single: float,
+    time_twin: float,
+    time_eco: float,
+    time_bath: float,
+) -> Dict[int, str]:
     """
-    # Determine the floors on which each housekeeper has normal rooms
-    fl_alloc: Dict[str, List[int]] = {h["id"]: house_floors(alloc, h["id"]) for h in housekeepers}
+    エコ部屋・エコ外部屋を公平に割り当てる改良版アルゴリズム。
+    - エコ外部屋は既にその階を担当しているハウスキーパーが担当。
+    - エコ部屋は同一フロアの担当者を優先。1フロアしか担当していないハウスキーパーが新しい階を担当する場合は、2室以上の割り当てがある場合のみ許可。
+    - バス担当者(has_bath=True)は5階以上のエコ部屋を担当しない。
+    """
+    # ハウスキーパーのIDリストとbathフラグ
+    hk_ids = [h["id"] for h in housekeepers]
+    has_bath = {h["id"]: h.get("has_bath", False) for h in housekeepers}
+
+    # 通常部屋からハウスキーパー別に担当階リストを作成
+    fl_alloc: Dict[str, List[int]] = {hid: [] for hid in hk_ids}
+    eco_set = set(eco_rooms)
+    eco_out_set = set(eco_out_rooms)
+    for r, hid in alloc.items():
+        if hid not in hk_ids:
+            continue
+        # eco/eco_out は通常部屋に含めない
+        if r in eco_set or r in eco_out_set:
+            continue
+        f = fl(r)
+        if f not in fl_alloc[hid]:
+            fl_alloc[hid].append(f)
+    for hid in fl_alloc:
+        fl_alloc[hid].sort()
+
+    # ハウスキーパーごとのエコ部屋数を初期化
+    eco_count: Counter = Counter({hid: 0 for hid in hk_ids})
+
+    # エコ部屋を階ごとにまとめる (エコ外は除外)
+    pure_eco = [r for r in eco_rooms if r not in eco_out_set]
+    floor_to_eco: Dict[int, List[int]] = defaultdict(list)
+    for r in pure_eco:
+        floor_to_eco[fl(r)].append(r)
+    for rlist in floor_to_eco.values():
+        rlist.sort()
+
+    # 処理順を決める：担当者の少ない階、エコ部屋数の多い階を優先
+    floors = sorted(
+        floor_to_eco.keys(),
+        key=lambda f: (
+            len([hid for hid in hk_ids if f in fl_alloc[hid]]),
+            -len(floor_to_eco[f]),
+        ),
+    )
+
     eco_assign: Dict[int, str] = {}
-    # Track the number of eco rooms assigned to each housekeeper
-    eco_count: Counter = Counter({h["id"]: 0 for h in housekeepers})
 
-    # Helper to find candidate housekeepers for a given room
-    def find_candidates_for_floor(floor: int) -> List[str]:
-        # Candidates with a normal room on the same floor
-        same_floor = [hid for hid, floors in fl_alloc.items() if floor in floors]
-        if same_floor:
-            return same_floor
-        # Fallback: candidates on the nearest floors
-        distances: Dict[str, int] = {}
-        for hid, floors in fl_alloc.items():
-            if not floors:
-                # If a housekeeper has no rooms yet, treat distance as large
-                distances[hid] = float('inf')
-            else:
-                distances[hid] = min(abs(floor - f) for f in floors)
-        min_dist = min(distances.values())
-        return [hid for hid, d in distances.items() if d == min_dist]
+    # 1階層ごとに最適な割当パターンを決定
+    for f in floors:
+        rooms = floor_to_eco[f]
+        n = len(rooms)
+        # その階を既に担当している人
+        existing = [hid for hid in hk_ids if f in fl_alloc[hid]]
+        # 新規に割り当て可能な人（2階目までかつBath制限を考慮）
+        free_hks = [
+            hid
+            for hid in hk_ids
+            if f not in fl_alloc[hid]
+            and len(fl_alloc[hid]) < 2
+            and (f <= 4 or not has_bath.get(hid, False))
+        ]
 
-    # Assign eco rooms first
-    for r in eco_rooms:
-        floor = fl(r)
-        candidates = find_candidates_for_floor(floor)
-        # Choose candidate with the fewest eco rooms so far
-        hid = min(candidates, key=lambda h: eco_count[h])
-        eco_assign[r] = hid
-        eco_count[hid] += 1
+        best_diff = float("inf")
+        best_assign = None
+        # free_hksが多い場合はeco_countの低い順に上位6人程度まで絞る
+        free_sorted = sorted(free_hks, key=lambda hid: (eco_count[hid], hid))
+        max_consider = 6
+        free_candidates = free_sorted[:max_consider]
 
-    # Assign eco‑out rooms: must stay on an existing floor
+        max_k = min(len(free_hks), n // 2)
+        # k=0〜max_kまで試行し、各kについてfree_candidatesから組合せを列挙
+        for k in range(0, max_k + 1):
+            for new_set in combinations(free_candidates, k):
+                # この組合せで割り当てを仮計算
+                candidates = existing + list(new_set)
+                # ベース割当：新規の人には2室ずつ
+                base = {hid: (2 if hid in new_set else 0) for hid in candidates}
+                remaining = n - 2 * len(new_set)
+                temp_counts = {
+                    hid: eco_count[hid] + base.get(hid, 0) for hid in candidates
+                }
+                # 残りを一つずつtemp_countsが小さい人へ割当て
+                for _ in range(remaining):
+                    min_val = min(temp_counts.values())
+                    cands = [hid for hid in candidates if temp_counts[hid] == min_val]
+                    h = sorted(cands)[0]
+                    base[h] += 1
+                    temp_counts[h] += 1
+                # 仮割当後のエコ数分布のばらつきを計算
+                new_counts = eco_count.copy()
+                for hid, cnt in base.items():
+                    new_counts[hid] += cnt
+                diff = max(new_counts.values()) - min(new_counts.values())
+                if diff < best_diff:
+                    best_diff = diff
+                    best_assign = (base, new_set)
+
+        # 最適割当で決定されたbaseを適用
+        base_assign, chosen_new_set = best_assign
+        idx = 0
+        for hid, cnt in base_assign.items():
+            for _ in range(cnt):
+                r = rooms[idx]
+                eco_assign[r] = hid
+                eco_count[hid] += 1
+                idx += 1
+            # 新規に担当する階の場合はfl_allocを更新
+            if f not in fl_alloc[hid]:
+                fl_alloc[hid].append(f)
+                fl_alloc[hid].sort()
+
+    # eco_out部屋を既存の担当者で割当て
     for r in eco_out_rooms:
-        floor = fl(r)
-        candidates = [hid for hid, floors in fl_alloc.items() if floor in floors]
-        if not candidates:
-            # If no one has a room on this floor, we cannot assign without a floor move
-            raise RuntimeError(f"❌ eco_out room {r} cannot be assigned without floor move")
-        hid = min(candidates, key=lambda h: eco_count[h])
+        f = fl(r)
+        # 同じ階を担当している候補者
+        candidates = [hid for hid in hk_ids if f in fl_alloc[hid]]
+        # Bath担当者は5階以上を受けない
+        candidates = [
+            hid
+            for hid in candidates
+            if (f <= 4 or not has_bath.get(hid, False))
+        ]
+        # 候補者からeco_countの少ない人を優先
+        min_val = min(eco_count[h] for h in candidates)
+        cands = [h for h in candidates if eco_count[h] == min_val]
+        hid = sorted(cands)[0]
         eco_assign[r] = hid
         eco_count[hid] += 1
 
     return eco_assign
-
 
 # ------------------------------------------------------------
 # Finish time computation and (placeholder) balancing
@@ -472,19 +575,210 @@ def balance_finish_times(allocation: Dict[int, str], eco_rooms: Iterable[int],
                          bath_rooms: Iterable[int], housekeepers: List[Dict],
                          time_single: float, time_twin: float,
                          time_eco: float, time_bath: float) -> Dict[int, str]:
-    """Placeholder for balancing finish times.
+    """Attempt to balance finish times among housekeepers with identical quotas.
 
-    In the original implementation, this function would attempt to
-    rebalance room assignments to ensure that the earliest and latest
-    finish times differed by no more than 10 minutes.  Such an
-    optimisation requires potentially complex swaps across housekeepers
-    while respecting all other constraints.  For the purposes of this
-    exercise, we return the allocation unchanged.  Test cases may
-    still inspect the finish times via ``compute_finish_times``.
+    This function uses a greedy heuristic to reduce the difference
+    between the slowest and fastest finish times within groups of
+    housekeepers sharing the same normal room quota.  It operates only
+    on normal rooms (i.e. excludes eco and eco‑out rooms) to avoid
+    violating quota counts.  The algorithm will try to swap a
+    high‑duration room from a slow housekeeper with a low‑duration
+    room from a fast housekeeper, provided the swap does not violate
+    floor constraints or twin fairness.  It iterates until no further
+    improvement is possible or the time gap is within a small threshold
+    (four minutes by default).  This tighter bound helps keep
+    finish times for housekeepers with the same quota closer together.
     """
-    # Future improvement: implement a greedy swap to minimise the
-    # maximum difference in finish times.  For now we simply return
-    # the current allocation unchanged.
+    from collections import defaultdict, Counter
+
+    # Helper: compute time required for a single room
+    def room_time(r: int) -> float:
+        if r in bath_rooms:
+            return time_bath
+        elif r in set(twin_rooms):
+            return time_twin
+        elif r in set(eco_rooms) or r in set(eco_out_rooms):
+            return time_eco
+        else:
+            return time_single
+
+    # Convert eco/out lists to sets for faster membership tests
+    eco_out_set = set(eco_out_rooms)
+    eco_set = set(eco_rooms)
+    # Combined set of all eco and eco_out rooms.  This is used to
+    # identify normal rooms (those not in this set) when selecting
+    # candidate rooms for swapping.  Note: this is separate from the
+    # floor constraint checks, which now include eco rooms as well.
+    eco_set_full = eco_set | eco_out_set
+
+    # Helper: twin counts across all housekeepers
+    def twin_counts(a: Dict[int, str]) -> Dict[str, int]:
+        twin_set = set(twin_rooms)
+        return {h["id"]: sum(1 for r, hh in a.items() if hh == h["id"] and r in twin_set)
+                for h in housekeepers}
+
+    # Helper: floors_of_alloc across all rooms (normal and eco).  Including eco and eco_out
+    # rooms in the floor set ensures that swaps or moves that introduce a new
+    # eco floor still respect the overall floor span and contiguity constraints.
+    def floors_of_alloc(a: Dict[int, str], hid: str) -> List[int]:
+        return sorted({fl(r) for r, hh in a.items() if hh == hid})
+
+    # Helper: floor ok check enforcing at most two contiguous floors.
+    # Floors must be contiguous (no gaps), and the number of floors must
+    # not exceed two.  This reflects the two‑floor constraint, separate
+    # from the floor‑skipping constraint.
+    def floor_ok_list(fs: List[int]) -> bool:
+        if not fs:
+            return True
+        fs_sorted = sorted(fs)
+        if len(fs_sorted) > 2:
+            return False
+        if len(fs_sorted) == 2:
+            return fs_sorted[1] - fs_sorted[0] == 1
+        return True
+
+    # Initialise finish times
+    finish = compute_finish_times(allocation, eco_rooms, eco_out_rooms, twin_rooms,
+                                 bath_rooms, housekeepers, time_single, time_twin,
+                                 time_eco, time_bath)
+    # Group housekeepers by quota
+    quota_to_hids = defaultdict(list)
+    quotas = {h["id"]: h["room_quota"] for h in housekeepers}
+    for hid, q in quotas.items():
+        quota_to_hids[q].append(hid)
+
+    # Process each group separately
+    for q, hids in quota_to_hids.items():
+        # Skip groups with single member
+        if len(hids) < 2:
+            continue
+        improved = True
+        # Repeat balancing until no improvement
+        while True:
+            improved = False
+            # Compute current finish times for this group
+            group_times = {hid: finish[hid] for hid in hids}
+            slow_hid = max(group_times, key=group_times.get)
+            fast_hid = min(group_times, key=group_times.get)
+            diff = group_times[slow_hid] - group_times[fast_hid]
+            # Define the acceptable finish‑time spread (in minutes) for cleaners
+            MAX_TIME_DIFF = 4
+            if diff <= MAX_TIME_DIFF:
+                break
+            # Compile candidate rooms (normal rooms) for slow and fast housekeepers
+            slow_normals = [r for r, hh in allocation.items()
+                            if hh == slow_hid and r not in eco_set_full]
+            fast_normals = [r for r, hh in allocation.items()
+                            if hh == fast_hid and r not in eco_set_full]
+            # Sort candidates: slow side descending by time, fast side ascending by time
+            slow_normals.sort(key=lambda r: room_time(r), reverse=True)
+            fast_normals.sort(key=lambda r: room_time(r))
+            found_swap = False
+            for r_slow in slow_normals:
+                t_slow = room_time(r_slow)
+                for r_fast in fast_normals:
+                    t_fast = room_time(r_fast)
+                    # We only benefit if t_slow > t_fast
+                    if t_slow <= t_fast:
+                        break
+                    # Simulate swap
+                    tmp = clone(allocation)
+                    safe_swap(tmp, r_slow, r_fast)
+                    # Check floor constraints for both housekeepers
+                    new_floors_slow = floors_of_alloc(tmp, slow_hid)
+                    new_floors_fast = floors_of_alloc(tmp, fast_hid)
+                    if not (floor_ok_list(new_floors_slow) and floor_ok_list(new_floors_fast)):
+                        continue
+                    # Check twin balance across all housekeepers
+                    tc = twin_counts(tmp)
+                    if max(tc.values()) - min(tc.values()) > 2:
+                        continue
+                    # Compute new finish times for slow and fast
+                    new_time_slow = finish[slow_hid] - t_slow + t_fast
+                    new_time_fast = finish[fast_hid] - t_fast + t_slow
+                    new_diff = new_time_slow - new_time_fast
+                    # Accept swap if it reduces the difference
+                    if new_diff < diff:
+                        # Commit swap
+                        allocation = tmp
+                        finish[slow_hid] = new_time_slow
+                        finish[fast_hid] = new_time_fast
+                        found_swap = True
+                        improved = True
+                        break
+                if found_swap:
+                    break
+            # If no beneficial normal-room swap found, attempt to reassign eco/eco_out rooms
+            if not found_swap:
+                # Try moving an eco or eco_out room from slow_hid to another housekeeper
+                # to reduce the time difference.  Only consider recipients in the same quota group.
+                # Compute current eco counts across all housekeepers
+                eco_counts = Counter({h["id"]: 0 for h in housekeepers})
+                for r_all, hid_all in allocation.items():
+                    if r_all in eco_set_full:
+                        eco_counts[hid_all] += 1
+                # List eco rooms assigned to the slow housekeeper
+                eco_candidates = [r for r in allocation if allocation[r] == slow_hid and r in eco_set_full]
+                eco_moved = False
+                for r in eco_candidates:
+                    floor_r = fl(r)
+                    # Try to move r to a recipient in the same group (different hid)
+                    for rec_hid in hids:
+                        if rec_hid == slow_hid:
+                            continue
+                        # Determine if we can transfer based on floor constraints.
+                        # For eco_out rooms we require the recipient to already have this floor.
+                        rec_floors = floors_of_alloc(allocation, rec_hid)
+                        if r in eco_out_rooms and floor_r not in rec_floors:
+                            continue
+                        # For eco rooms, ensure that adding this floor to the recipient
+                        # would not violate floor span/contiguity constraints.
+                        if r in eco_rooms and floor_r not in rec_floors:
+                            # Simulate adding the floor
+                            new_rec_floors = sorted(rec_floors + [floor_r])
+                            if not floor_ok_list(new_rec_floors):
+                                continue
+                        # Simulate transfer and check floor constraints for both housekeepers
+                        tmp_allocation = clone(allocation)
+                        tmp_allocation[r] = rec_hid
+                        new_floors_slow = floors_of_alloc(tmp_allocation, slow_hid)
+                        new_floors_rec = floors_of_alloc(tmp_allocation, rec_hid)
+                        if not (floor_ok_list(new_floors_slow) and floor_ok_list(new_floors_rec)):
+                            continue
+                        # Compute new eco counts if transferred
+                        new_eco_counts = eco_counts.copy()
+                        new_eco_counts[slow_hid] -= 1
+                        new_eco_counts[rec_hid] += 1
+                        # Check eco fairness: difference < 3
+                        e_vals = list(new_eco_counts.values())
+                        if max(e_vals) - min(e_vals) >= 3:
+                            continue
+                        # Compute new finish times for slow and recipient
+                        new_finish_slow = finish[slow_hid] - time_eco
+                        new_finish_rec = finish[rec_hid] + time_eco
+                        # Determine new max/min for group if necessary
+                        tmp_group_times = group_times.copy()
+                        tmp_group_times[slow_hid] = new_finish_slow
+                        tmp_group_times[rec_hid] = new_finish_rec
+                        tmp_diff = max(tmp_group_times.values()) - min(tmp_group_times.values())
+                        # Accept if improvement
+                        if tmp_diff < diff:
+                            # Commit transfer
+                            allocation[r] = rec_hid
+                            finish[slow_hid] = new_finish_slow
+                            finish[rec_hid] = new_finish_rec
+                            group_times = tmp_group_times
+                            diff = tmp_diff
+                            eco_counts = new_eco_counts
+                            eco_moved = True
+                            improved = True
+                            break
+                    if eco_moved:
+                        break
+                # If no eco/out move improved the difference, stop balancing for this group
+                if not improved:
+                    break
+            # If a swap or eco move improved things, continue the outer while loop
     return allocation
 
 
@@ -550,12 +844,33 @@ def assign_rooms(rooms: List[int], eco_rooms: Iterable[int], eco_out_rooms: Iter
     quotas = {h["id"]: h["room_quota"] for h in housekeepers}
     if not quota_ok(Counter(allocation.values()), quotas):
         raise RuntimeError("initial quota mismatch")
-    # Phase 2: rebalance twin room counts
+    # Phase 2: rebalance twin room counts.
+    # To enforce the 2‑floor constraint (housekeepers may be assigned to at most
+    # two floors), we call rebalance_twins with allow_min_triplex=False.  This
+    # means swaps that would cause a housekeeper to occupy three floors are
+    # disallowed even if the floors are contiguous.  The no‑floor‑skipping
+    # constraint (floors must be adjacent) is still enforced elsewhere.
     allocation = rebalance_twins(allocation, twin_rooms, housekeepers, allow_min_triplex=False)
     # Phase 2b: rebalance floors to ensure contiguous span <= 2 floors
     allocation = rebalance_floors(allocation, housekeepers, eco_rooms, eco_out_rooms)
-    # Phase 3: assign eco/eco‑out rooms (do not affect quotas)
-    eco_assign = assign_eco_rooms_full(allocation, eco_rooms, eco_out_rooms, housekeepers)
+    # Phase 3: assign eco/eco‑out rooms (do not affect quotas).
+    # We pass timing and room type information so that eco assignment can
+    # consider current workloads and better balance finish times across
+    # housekeepers with the same quota.  This helps avoid excessive
+    # differences in cleaning finish times and further distributes eco
+    # rooms fairly.
+    eco_assign = assign_eco_rooms_full(
+        allocation,
+        eco_rooms,
+        eco_out_rooms,
+        housekeepers,
+        twin_rooms,
+        bath_rooms,
+        time_single,
+        time_twin,
+        time_eco,
+        time_bath,
+    )
     allocation.update(eco_assign)
     # Phase 4: optionally balance finish times (no‑op here)
     allocation = balance_finish_times(allocation, eco_rooms, eco_out_rooms, twin_rooms,

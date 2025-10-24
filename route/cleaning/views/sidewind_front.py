@@ -114,7 +114,6 @@ def sidewind_front(request):
         
         all_allocation = allocation
 
-
         # ============================================================
         #  出力
         # ============================================================
@@ -194,6 +193,10 @@ def sidewind_front(request):
         # 出力（人間可読 / JSON両対応）
         #print("\n=== 接続用データ配列（全室・未割当=0） ===")
         #print(sorted_allocation)
+        
+        print('eco_rooms:', eco_rooms)
+        print('eco_out_rooms:', eco_out_rooms)
+        print('allocation:', sorted_allocation)
         
         #セッション
         request.session['sidewind_flag'] = True
