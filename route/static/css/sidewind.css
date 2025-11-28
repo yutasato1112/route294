@@ -499,10 +499,13 @@ input[type="number"]::-webkit-inner-spin-button {
     width: 100%;
 }
 .quota_input_person_num{
-    width: 8vw;
+    width: 5vw;
 }
 .quota_input_room_num{
-    width: 8vw;
+    width: 5vw;
+}
+.quota_input_twin_room{
+    width: 5vw;
 }
 .quota_input_public_bath{
     width: 5vw;

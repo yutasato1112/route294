@@ -67,6 +67,7 @@
                             <th class="quota_room_num">部屋数</th>
                             <th class="quota_person_num">人数</th>
                             <th class="quota_public_bath">大浴場清掃</th>
+                            <th class="quota_twin_room">T部屋数</th>
                         </tr>
                     </thead>
                     <tbody id="quota_body">
@@ -81,6 +82,9 @@
                                     </td>
                                     <td>
                                         <input type="checkbox" name="public_bath_{{forloop.counter}}" id="public_bath_{{forloop.counter}}" class="quota_input_public_bath">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="twin_room_{{forloop.counter}}" id="twin_room_{{forloop.counter}}" class="quota_input_twin_room" min="0">
                                     </td>
                                 </tr>
                             {% endfor %}

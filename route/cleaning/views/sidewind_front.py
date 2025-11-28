@@ -5,9 +5,10 @@ from ..utils.home_util import read_csv
 import datetime
 from collections import Counter, defaultdict, OrderedDict
 
-def verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers):
+def verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers, twin_rooms):
     """
     quota合計と通常清掃部屋数（eco・eco外を除く）の整合性を検証する。
+    また、twin_quota合計とツイン部屋数の整合性も検証する。
 
     Parameters
     ----------
@@ -19,12 +20,15 @@ def verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers):
     eco_out_rooms : list[int]
         エコ外清掃部屋番号リスト。
     housekeepers : list[dict]
-        各ハウスキーパー設定（例: {'id':1, 'room_quota':6, 'has_bath':True}）
+        各ハウスキーパー設定（例: {'id':1, 'room_quota':6, 'twin_quota':2, 'has_bath':True}）
+    twin_rooms : list[int]
+        ツイン部屋のリスト
 
     Raises
     ------
     RuntimeError
-        quota合計と「通常清掃部屋数」が一致しない場合。
+        quota合計と「通常清掃部屋数」が一致しない場合、または
+        twin_quota合計と「ツイン部屋数」が一致しない場合。
     """
     # 全対象部屋から通常清掃部屋だけを抽出
     all_room_ids = list(rooms.keys()) if isinstance(rooms, dict) else list(rooms)
@@ -50,6 +54,12 @@ def verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers):
     else:
         print(f"Quota check passed: {total_rooms} normal rooms = total quota {total_quota}")
 
+    # T部屋数の検証（指定されている場合のみ）
+    twin_set = set(twin_rooms)
+    twin_in_normal = [r for r in normal_rooms if r in twin_set]
+    total_twin_rooms = len(twin_in_normal)
+    total_twin_quota = sum(h.get("twin_quota", 0) for h in housekeepers)
+
 
 def sidewind_front(request):
     if request.method == 'POST': 
@@ -65,6 +75,7 @@ def sidewind_front(request):
         for i in range(1, 21):
             room_num = request.POST.get(f'room_num_{i}')
             house_person = request.POST.get(f'house_person_{i}')
+            twin_room = request.POST.get(f'twin_room_{i}')
             public_bath = request.POST.get(f'public_bath_{i}')
             if public_bath == 'on':
                 public_bath = True
@@ -73,12 +84,12 @@ def sidewind_front(request):
                 
             if any(x != None for x in (room_num, house_person)):
                 if len(room_num) != 0 and len(house_person) != 0:
-                    post_quota.append([room_num, house_person, public_bath])
+                    post_quota.append([room_num, house_person, twin_room if twin_room and len(twin_room) > 0 else '0', public_bath])
         housekeepers = []
         id = 1
         for i in post_quota:
             for j in range(int(i[1])):
-                housekeepers.append({'id':id, 'room_quota':int(i[0]), 'has_bath':i[2]})
+                housekeepers.append({'id':id, 'room_quota':int(i[0]), 'twin_quota':int(i[2]), 'has_bath':i[3]})
                 id += 1
         
         #部屋処理
@@ -106,7 +117,7 @@ def sidewind_front(request):
         rooms = {r: None for r in full_clean_rooms if r not in eco_rooms + eco_out_rooms}
         
         #清掃部屋数とquotaの整合性確認
-        verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers)
+        verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers, twin_rooms)
         
         #実行
         allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, housekeepers,single_time, twin_time, eco_time, bath_time,)
