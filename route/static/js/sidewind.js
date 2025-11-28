@@ -1369,6 +1369,7 @@ $(document).ready(function () {
         updateAssignedRoomRows();      // 表示テーブル更新
         updateRoomStats();
     });
+    
 });
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -1420,4 +1421,55 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    //表移動
+    function setupNavigation(inputClass, tdClass) {
+        $(document).on("keydown", inputClass, function (e) {
+            const $current = $(this);
+            const $td = $current.closest(tdClass);
+            const $tr = $current.closest("tr");
+            const $inputs = $td.find(inputClass);
+            const index = $inputs.index(this);
+
+            // Enterキー: 次の行の同じ列の同じ位置へ
+            if (e.key === "Enter") {
+                e.preventDefault();
+                const $nextTr = $tr.next("tr");
+                if ($nextTr.length > 0) {
+                    const $nextTd = $nextTr.find(tdClass);
+                    const $nextInputs = $nextTd.find(inputClass);
+                    if ($nextInputs.length > index) {
+                        $nextInputs.eq(index).focus();
+                    }
+                }
+            }
+
+            // Tabキー: 同じ列の中で移動し、最後なら次の行へ
+            if (e.key === "Tab" && !e.shiftKey) {
+                e.preventDefault();
+                if (index < $inputs.length - 1) {
+                    $inputs.eq(index + 1).focus();
+                } else {
+                    const $nextTr = $tr.next("tr");
+                    if ($nextTr.length > 0) {
+                        const $nextTd = $nextTr.find(tdClass);
+                        const $nextInputs = $nextTd.find(inputClass);
+                        if ($nextInputs.length > 0) {
+                            $nextInputs.eq(0).focus();
+                        }
+                    }
+                }
+            }
+        });
+    }
+    $(".input_eco").on("keydown", function(e){
+        setupNavigation(".input_eco", ".td_eco");
+    });
+    $(".input_amenity").on("keydown", function(e){
+        setupNavigation(".input_amenity", "td:nth-child(2)");
+    });
+    $(".input_duvet").on("keydown", function(e){
+        setupNavigation(".input_duvet", ".td_duvet");
+    });
+
 });
