@@ -39,7 +39,7 @@ class homeView(TemplateView):
                 ame_rooms = request.session['ame']
                 duvet_rooms = request.session['duvet']
                 bath_persons = request.session['bath_staff']
-                
+
                 #csv読み込み
                 room_info_data, times_by_time_data, master_key_data = read_csv()
             
@@ -51,6 +51,7 @@ class homeView(TemplateView):
                 
                 #部屋のアサイン状況を配列化
                 combined_rooms = []
+                house_numbers = []
                 for i in range(len(room_num_table)):
                     floor_data = []
                     for j in range(len(room_num_table[i])):
@@ -58,16 +59,16 @@ class homeView(TemplateView):
                             'room': room_num_table[i][j],
                             'status': allocation.get(str(room_num_table[i][j])),
                         })
+                        house_numbers.append(allocation.get(str(room_num_table[i][j])))
                     combined_rooms.append(floor_data)
-
                 
                 #エコ・アメ・デュべ部屋の処理
                 room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms)
                 
                 #連泊部屋入力欄対応
                 padded_rooms = [''] * 100
-                multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]    
-                
+                multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]
+
                 context = {
                     'method':method,
                     'single_time':single_time,
@@ -86,7 +87,7 @@ class homeView(TemplateView):
                     'eco_rooms': eco_rooms,
                     'ame_rooms': ame_rooms,
                     'duvet_rooms': duvet_rooms,
-                    'house_len': 10,
+                    'house_len': len(set(house_numbers)),
                     'add_house_len':0,
                     'room_char_list':room_char_list,
                     'room_char_list_len':10,
