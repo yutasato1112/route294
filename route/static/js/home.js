@@ -294,7 +294,11 @@ $(document).ready(function () {
         checkAndAddRoomChangeRow();
     });
     $(document).on("input", ".outin_room", function () {
-        checkAndAddOutInRow();
+        checkAndAddOutInRow(this);
+    });
+    // 初期値を保存して、既に入力済みのセルで不要に行が追加されるのを防ぐ
+    $(".outin_room").each(function () {
+        $(this).data('prev', $(this).val().trim());
     });
     $(document).on("input", ".must_clean_room, .must_clean_reason", function () {
         checkAndAddMustCleanRow();
@@ -1167,7 +1171,7 @@ $(document).ready(function () {
     }
 
     //アウト/イン表の行追加
-    function checkAndAddOutInRow() {
+    function checkAndAddOutInRow(currentElem) {
         let allRoomsFilled = true;
 
         $(".outin_room").each(function () {
@@ -1176,21 +1180,27 @@ $(document).ready(function () {
             }
         });
 
-        let lastRow = $(".outin_room").last().val().trim() === "";
+        const $current = $(currentElem);
+        const prevVal = $current.data('prev') || "";
+        const currVal = $current.val().trim();
 
-        if ((allRoomsFilled) && !lastRow) {
+        // 全セルが埋まっており、かつこの要素が空→非空に変化した場合のみ追加
+        if (allRoomsFilled && currVal !== "" && prevVal === "") {
             let rowCount = $(".outin_room").length + 1;
 
             let newRow = `
                 <tr>
                     <td>
-                        <input type="text" name="outin" id="outin class="outin_room">
+                        <input type="text" name="outin" id="outin_${rowCount}" class="outin_room">
                     </td>
                 </tr>
             `;
 
             $("#outin_table_body").append(newRow);
         }
+
+        // 次回判定のために現在値を保存
+        $current.data('prev', currVal);
     }
 
     //要清掃表の行追加
