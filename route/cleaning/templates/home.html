@@ -132,8 +132,8 @@
                             <th>名前</th>
                             <th>数</th>
                             <th class="floor_th">階</th>
-                            <th>キー</th>
-                            <th>D.D.</th>
+                            <th id="key_header" style="cursor: pointer;" title="クリックして更新">キー</th>
+                            <th id="dd_header" style="cursor: pointer;" title="クリックして更新">D.D.</th>
                             <th>Eng</th>
                         </tr>
                     </thead>
@@ -544,6 +544,7 @@
     window.twin_rooms = {{ twin_rooms|safe }};
     window.method = "{{ method|safe }}";
     window.sidewind_flag = {{ sidewind_flag|safe }};
+    window.json_loaded_flag = {{ json_loaded_flag|safe }};
     document.addEventListener("DOMContentLoaded", function () {
         const fileInput = document.getElementById("json_file");
         const mainForm = document.querySelector("form");

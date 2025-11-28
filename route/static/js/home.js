@@ -319,11 +319,22 @@ $(document).ready(function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
         updateEndTimeRow();
-        if (window.sidewind_flag === 1) {
+        // JSONファイルから読み込まれていない場合のみ自動更新
+        if (window.json_loaded_flag === 0) {
             updateHouseKeys();
             updateDdCells();
         }
     }
+
+    //タイトル行の「キー」をクリックした時の処理
+    $("#key_header").on("click", function () {
+        updateHouseKeys();
+    });
+
+    //タイトル行の「DD」をクリックした時の処理
+    $("#dd_header").on("click", function () {
+        updateDdCells();
+    });
 
 
     //表移動
