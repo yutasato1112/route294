@@ -2,9 +2,159 @@
 {% load static %}
 {% block content %}
 <title>管理画面</title>
-<h3>Comming soon...</h3>
 <link rel="stylesheet" href="{% static 'css/administrator.css' %}">
 <script src="{% static 'js/administrator.js' %}"></script>
-<div class="main">
+
+<div class="admin-page">
+    <div class="hero-panel">
+        <div class="page-heading">
+            <p class="eyebrow">Administrator</p>
+            <h2>システム管理</h2>
+            <p class="intro">マスタデータ・APIキー・ログの閲覧/更新/削除/作成、セッション管理をまとめています。</p>
+            <div class="summary-pills">
+                <span class="pill">マスタ管理</span>
+                <span class="pill">APIキー</span>
+                <span class="pill">ログ監視</span>
+            </div>
+        </div>
+        <div class="hero-actions">
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-secondary logout-btn">ログアウト</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-grid">
+        <section class="admin-card">
+            <div class="card-header">
+                <h3>マスタデータ（static/csv）</h3>
+                <p class="caption">閲覧・更新・削除・新規作成</p>
+            </div>
+            <div class="table-wrap">
+                <table class="table table-striped admin-table">
+                    <thead>
+                        <tr>
+                            <th>ファイル名</th>
+                            <th>更新日時</th>
+                            <th>サイズ</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% with master_data=master_data %}
+                        {% if master_data %}
+                            {% for item in master_data %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>{{ item.updated_at }}</td>
+                                <td>{{ item.size }} bytes</td>
+                                <td class="table-actions">
+                                    <button type="submit" form="master-edit-{{ forloop.counter }}" class="btn btn-sm btn-outline-primary">更新</button>
+                                    <button type="submit" form="master-delete-{{ forloop.counter }}" class="btn btn-sm btn-outline-danger">削除</button>
+                                </td>
+                            </tr>
+                            <tr class="inline-form">
+                                <td colspan="4">
+                                    <form id="master-edit-{{ forloop.counter }}" method="post" class="inline-edit-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="update_master">
+                                        <input type="hidden" name="master_id" value="{{ item.id }}">
+                                        <input type="text" name="name" value="{{ item.name }}" placeholder="ファイル名">
+                                        <textarea name="body" rows="4" placeholder="内容">{{ item.body }}</textarea>
+                                    </form>
+                                    <form id="master-delete-{{ forloop.counter }}" method="post" class="inline-delete-form">
+                                        {% csrf_token %}
+       	     		        <input type="hidden" name="action" value="delete_master">
+                                        <input type="hidden" name="master_id" value="{{ item.id }}">
+                                    </form>
+                                </td>
+                            </tr>
+                            {% if item.rows_preview %}
+                            <tr class="inline-form">
+                                <td colspan="4">
+                                    <div class="csv-preview">
+                                        <p class="caption">先頭20行プレビュー</p>
+                                        <div class="table-wrap">
+                                            <table class="table table-sm table-striped preview-table">
+                                                <tbody>
+                                                    {% for row in item.rows_preview %}
+                                                    <tr>
+                                                        {% for cell in row %}
+                                                        <td>{{ cell }}</td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="4" class="muted">登録済みマスタデータがありません</td></tr>
+                        {% endif %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-inline-block">
+                <h4>新規作成</h4>
+                <form method="post" class="inline-create-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create_master">
+                    <input type="text" name="name" placeholder="ファイル名（.csv 省略可）" required>
+                    <textarea name="body" rows="3" placeholder="内容"></textarea>
+                    <button type="submit" class="btn btn-primary">追加</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="admin-card">
+            <div class="card-header">
+                <h3>ログ</h3>
+                <p class="caption">閲覧・削除</p>
+            </div>
+            <div class="log-actions">
+                <form method="get" class="log-filter">
+                    <input type="text" name="query" placeholder="キーワード/日付などで検索">
+                    <button type="submit" class="btn btn-outline-primary btn-sm">検索</button>
+                </form>
+                <form method="post" class="log-delete">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_logs">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">ログを全削除</button>
+                </form>
+            </div>
+            <div class="table-wrap">
+                <table class="table table-striped admin-table">
+                    <thead>
+                        <tr>
+                            <th>日時</th>
+                            <th>レベル</th>
+                            <th>メッセージ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% with logs=logs %}
+                        {% if logs %}
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp }}</td>
+                                <td class="mono">{{ log.level }}</td>
+                                <td>{{ log.message }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="3" class="muted">表示できるログがありません</td></tr>
+                        {% endif %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
 </div>
 {% endblock content %}

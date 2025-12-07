@@ -3,44 +3,68 @@
 {% block content %}
 <title>Report</title>
 <link rel="stylesheet" href="{% static 'css/report.css' %}">
-<div class="main">
-    <h1>お問い合わせ</h1>
-    <form method="post" action="{% url 'report' %}">
-        {% csrf_token %}
-        <div class="form_group">
-            <div class="name_area">
-                <label for="name">氏名:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div>
-                <label for="emargency_level">緊急度:</label>
-                <select id="emargency_level" name="emargency_level" required>
-                    <option value="">-選択してください-</option>
-                    <option value="A">A -直ちに開発者の対応が必要-</option>
-                    <option value="B">B -数週間以内の対応が必要-</option>
-                    <option value="C">C -数ヶ月以内の対応が必要-</option>
-                    <option value="D">D -緊急ではない-</option>
-                </select>
-            </div>
-            <div>
-                <label for="genre">ジャンル:</label>
-                <select id="genre" name="genre" required>
-                    <option value="">-選択してください-</option>
-                    <option value="bug">不具合レポート</option>
-                    <option value="data">データ異常</option>
-                    <option value="security">セキュリティインシデント</option>
-                    <option value="feature">機能追加要望</option>
-                    <option value="performance">パフォーマンス改善要望</option>
-                    <option value="usability">ユーザビリティ改善要望</option>
-                    <option value="other">その他</option>
-                </select>
-            </div>
-            <div>
-                <label for="detail">詳細:</label>
-                <textarea id="detail" name="detail" required></textarea>
-            </div>
-            <input type="submit" class="btn btn-primary" value="送信">
+<div class="report-page">
+    <div class="hero-panel">
+        <div class="page-heading">
+            <p class="eyebrow">Support</p>
+            <h2>お問い合わせ・改善要望</h2>
+            <p class="intro">不具合報告、改善要望、データ異常などをdeveloperへ直接届けます。<br>緊急度とジャンルを選び、状況と期待する動作を添えてお知らせください。</p>
+
         </div>
-    </form>
+        <div class="hero-annotation">
+            <p class="badge-text">Support</p>
+            <p class="badge-sub">サポート</p>
+        </div>
+    </div>
+
+    <div class="report-card">
+        <form method="post" action="{% url 'report' %}">
+            {% csrf_token %}
+            <div class="field">
+                <label for="name">氏名</label>
+                <input type="text" id="name" name="name" placeholder="例）山田 太郎" required>
+            </div>
+            <div class="field two-col">
+                <div>
+                    <label for="emargency_level">緊急度</label>
+                    <select id="emargency_level" name="emargency_level" required>
+                        <option value="">-選択してください-</option>
+                        <option value="A">A - 直ちに対応が必要</option>
+                        <option value="B">B - 数週間以内に対応したい</option>
+                        <option value="C">C - 数ヶ月以内に対応したい</option>
+                        <option value="D">D - 時間があるときで可</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="genre">ジャンル</label>
+                    <select id="genre" name="genre" required>
+                        <option value="">-選択してください-</option>
+                        <option value="bug">不具合レポート</option>
+                        <option value="data">データ異常</option>
+                        <option value="security">セキュリティインシデント</option>
+                        <option value="feature">機能追加要望</option>
+                        <option value="performance">パフォーマンス改善</option>
+                        <option value="usability">使い勝手改善</option>
+                        <option value="other">その他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label for="detail">詳細</label>
+                <textarea id="detail" name="detail" placeholder="状況・再現手順・期待する動作・影響範囲など詳しくお知らせください。" required></textarea>
+            </div>
+            <div class="helper">
+                <p class="helper-title">入力例</p>
+                <ul class="helper-list">
+                    <li>「〇〇を押すと△△エラーで保存できない」</li>
+                    <li>「Wincal CSV読み込み後、未使用部屋が反映されない」</li>
+                    <li>「レスポンスが遅い（全体で約◯◯秒）」</li>
+                </ul>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn-primary">送信する</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

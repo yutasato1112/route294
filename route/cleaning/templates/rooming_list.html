@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load static %}
 {% block content %}
-<title>WincalCSV読み込み</title>
+<title>Wincal CSV取り込み</title>
 <link rel="stylesheet" href="{% static 'css/rooming_list.css' %}">
 <script src="{% static 'js/home.js' %}"></script>
 <div class="main rooming-list-page">
     <div class="page-heading">
-        <p class="eyebrow">WincalCSV読み込み</p>
-        <h2>Wincal CSVからルーミングリストを作成</h2>
-        <p class="intro">勤務日/清掃日のCSVをアップロードすると、連泊・未使用部屋をマーキングしたExcelを自動ダウンロードします。</p>
+        <p class="eyebrow">Wincal CSV連携</p>
+        <h2>清掃指示書にWincal CSVを取り込む</h2>
+        <p class="intro">勤務日/清掃日のCSVをアップロードすると、連泊・未使用部屋を清掃指示システムに引き継ぎます。<br>未販売部屋・連泊部屋集計済ルーミングリストも自動ダウンロードされます。</p>
     </div>
 
     <div class="upload-card">
@@ -17,21 +17,21 @@
             <input type="hidden" name="editor_name" value="{{ editor_name }}">
             <div class="upload-grid">
                 <div class="file-field">
-                    <label for="today">勤務日のCSV</label>
-                    <p class="helper">勤務分のWincal出力を選択してください。</p>
+                    <label for="today">勤務日のCSV B(予約日別料金CSVファイル)</label>
+                    <p class="helper">勤務日分のWincal出力を選択してください。</p>
                     <input type="file" class="form-control-file file-input" id="today" name="today" accept=".csv" required>
                 </div>
                 <div class="file-field">
-                    <label for="tomorrow">清掃日のCSV</label>
+                    <label for="tomorrow">清掃日のCSV B(予約日別料金CSVファイル)</label>
                     <p class="helper">清掃日分のWincal出力を選択してください。</p>
                     <input type="file" class="form-control-file file-input" id="tomorrow" name="tomorrow" accept=".csv" required>
                 </div>
             </div>
 
             <ul class="notes">
-                <li>ファイルはそのままアップロードできます（文字コードは自動判定）。</li>
-                <li>処理完了後に加工済みExcelが自動でダウンロードされます。</li>
-                <li>ダウンロード後はホーム画面に戻り、判定結果を引き継ぎます。</li>
+                <li>CSVはそのままアップロードできます（文字コードは自動判定）。</li>
+                <li>処理後はホーム画面へ遷移し、連泊・未使用部屋が反映された状態で清掃指示を続行できます。</li>
+                <li>同時に参照用の加工済みExcelも自動ダウンロードします（必要に応じて利用）。</li>
             </ul>
 
             <div class="upload-actions">

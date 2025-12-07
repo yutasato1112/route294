@@ -39,6 +39,7 @@ urlpatterns = [
     path('release/', release_view.releaseView.as_view(), name='release'),
     path('technology/', tech_view.techView.as_view(), name='tech'),
     path('administrator/', admin_view.administratorView.as_view(), name='administrator'),
+    path('logout/', admin_view.logout_view, name='logout'),
     path('sidewind_front/', sidewind_front.sidewind_front, name='sidewind_front'),
     path('rooming_list/', rooming_list_view.roomingListView.as_view(), name='rooming_list'),
 ]
