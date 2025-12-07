@@ -1,0 +1,140 @@
+/* Layout */
+.main{
+    width: 75%;
+    margin: auto;
+    padding: 5vh 0 6vh;
+}
+
+.rooming-list-page{
+    min-height: calc(100vh - 16vh);
+    display: flex;
+    flex-direction: column;
+}
+
+.page-heading{
+    margin-bottom: 2rem;
+}
+
+.eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #777;
+    text-transform: uppercase;
+    margin-bottom: 0.2rem;
+}
+
+.page-heading h2{
+    font-size: 26px;
+    color: #2d2d2d;
+    margin-bottom: 0.5rem;
+}
+
+.page-heading .intro{
+    font-size: 14px;
+    color: #555;
+    max-width: 750px;
+    margin-bottom: 0;
+}
+
+/* Card */
+.upload-card{
+    background-color: #fff;
+    border: 1px solid #dcdcdc;
+    border-radius: 14px;
+    padding: 2rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03);
+}
+
+.upload-card form{
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.upload-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+}
+
+.file-field{
+    background: #fafafa;
+    border: 1px dashed #d3d3d3;
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+}
+
+.file-field label{
+    display: block;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.4rem;
+}
+
+.file-field .helper{
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 0.6rem 0;
+}
+
+.file-input{
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid #cfcfcf;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 14px;
+}
+
+.file-input:focus{
+    outline: none;
+    border-color: #9ab6f2;
+    box-shadow: 0 0 0 2px rgba(34, 102, 255, 0.2);
+}
+
+.notes{
+    margin: 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.35rem;
+    color: #444;
+    font-size: 13px;
+}
+
+.notes li{
+    line-height: 1.5;
+}
+
+.upload-actions{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.file-hint{
+    font-size: 12px;
+    color: #666;
+}
+
+.upload-btn{
+    padding: 0.75rem 1.6rem;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+@media (max-width: 768px){
+    .main{
+        width: 94%;
+        padding-top: 3vh;
+    }
+
+    .page-heading h2{
+        font-size: 22px;
+    }
+
+    .upload-card{
+        padding: 1.5rem;
+    }
+}

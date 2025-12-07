@@ -120,7 +120,9 @@ def sidewind_front(request):
         verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers, twin_rooms)
         
         #実行
-        allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, housekeepers,single_time, twin_time, eco_time, bath_time,)
+        # bath_roomsは現時点では空リストとして扱う（将来的には大浴場の部屋番号を指定可能）
+        bath_rooms = []
+        allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
 
         
         all_allocation = allocation

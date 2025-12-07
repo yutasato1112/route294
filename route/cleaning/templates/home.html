@@ -41,7 +41,11 @@
             </div>
             <div>
             <!--SideWindボタン-->
-                <input formaction="{% url 'sidewind' %}" type="submit" value="Autopilot(実証実験中)" class="btn btn-primary submit sidewind_entire_btn" formtarget="_blank">
+                <input formaction="{% url 'sidewind' %}" type="submit" id="sidewind_btn" value="Autopilot(実証実験中)" class="btn btn-primary submit sidewind_entire_btn" formtarget="_blank">
+            </div>
+            <div>
+            <!--wincal csvボタン-->
+                <input formaction="{% url 'rooming_list' %}" formmethod="get" type="submit" id="wincal_btn" value="Wincal CSV利用" class="btn btn-primary submit sidewind_entire_btn" formtarget="_blank">
             </div>
         </div>
         <div class="second_line">
@@ -324,7 +328,7 @@
             <table  class="table table-striped">
                 <thead>
                     <tr>
-                        <th class="person_num">番号</th>
+                        <th class="person_num">ハウス番号</th>
                         <th>連絡事項</th>
                     </tr>
                 </thead>

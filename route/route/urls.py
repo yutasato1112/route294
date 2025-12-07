@@ -27,6 +27,7 @@ from cleaning.views import release as release_view
 from cleaning.views import tech as tech_view
 from cleaning.views import administrator as admin_view
 from cleaning.views import sidewind_front
+from cleaning.views import rooming_list as rooming_list_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -39,6 +40,7 @@ urlpatterns = [
     path('technology/', tech_view.techView.as_view(), name='tech'),
     path('administrator/', admin_view.administratorView.as_view(), name='administrator'),
     path('sidewind_front/', sidewind_front.sidewind_front, name='sidewind_front'),
+    path('rooming_list/', rooming_list_view.roomingListView.as_view(), name='rooming_list'),
 ]
 
 urlpatterns += static(

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<title>WincalCSV読み込み</title>
+<link rel="stylesheet" href="{% static 'css/rooming_list.css' %}">
+<script src="{% static 'js/home.js' %}"></script>
+<div class="main rooming-list-page">
+    <div class="page-heading">
+        <p class="eyebrow">WincalCSV読み込み</p>
+        <h2>Wincal CSVからルーミングリストを作成</h2>
+        <p class="intro">勤務日/清掃日のCSVをアップロードすると、連泊・未使用部屋をマーキングしたExcelを自動ダウンロードします。</p>
+    </div>
+
+    <div class="upload-card">
+        <form action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="editor_name" value="{{ editor_name }}">
+            <div class="upload-grid">
+                <div class="file-field">
+                    <label for="today">勤務日のCSV</label>
+                    <p class="helper">勤務分のWincal出力を選択してください。</p>
+                    <input type="file" class="form-control-file file-input" id="today" name="today" accept=".csv" required>
+                </div>
+                <div class="file-field">
+                    <label for="tomorrow">清掃日のCSV</label>
+                    <p class="helper">清掃日分のWincal出力を選択してください。</p>
+                    <input type="file" class="form-control-file file-input" id="tomorrow" name="tomorrow" accept=".csv" required>
+                </div>
+            </div>
+
+            <ul class="notes">
+                <li>ファイルはそのままアップロードできます（文字コードは自動判定）。</li>
+                <li>処理完了後に加工済みExcelが自動でダウンロードされます。</li>
+                <li>ダウンロード後はホーム画面に戻り、判定結果を引き継ぎます。</li>
+            </ul>
+
+            <div class="upload-actions">
+                <span class="file-hint">アップロード可能形式：.csv</span>
+                <button type="submit" class="btn btn-primary upload-btn">CSVを読み込む</button>
+            </div>
+        </form>
+    </div>
+
+    {% if download_url %}
+    <form id="home-post-form" action="{% url 'home' %}" method="post" style="display:none;">
+        {% csrf_token %}
+        <input type="hidden" name="from_rooming_list" value="1">
+        <input type="hidden" name="multiple_room_list" value="{{ multiple_room_list|join:',' }}">
+        <input type="hidden" name="unuse_room_list" value="{{ unuse_room_list|join:',' }}">
+        <input type="hidden" name="editor_name" value="{{ editor_name }}">
+    </form>
+    <script>
+        (function() {
+            const link = document.createElement('a');
+            link.href = "{{ download_url }}";
+            link.download = "rooming_list_modifies.xlsx";
+            document.body.appendChild(link);
+            link.click();
+            const homeForm = document.getElementById('home-post-form');
+            if (homeForm) homeForm.submit();
+        })();
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1418,6 +1418,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const nameInput = document.getElementById('name');
 
     form.addEventListener('submit', function (event) {
+        // どのボタンで送信されたか取得
+        const btn = event.submitter;
+        const skipIds = ["sidewind_btn", "wincal_btn"];  
+
+        // スキップ対象のボタンなら名字チェックを行わない
+        if (btn && skipIds.includes(btn.id)) {
+            return;  
+        }
+
         if (nameInput.value.trim() === '') {
             event.preventDefault();  // フォーム送信を中止
             alert('編集者名字を入力してください');
