@@ -163,7 +163,7 @@ def operating_excel(output_excel_path,multiple_room_list, unuse_room_list, excel
     ws = wb.active
 
     # 背景色（黄色）
-    yellow_fill = PatternFill(start_color="FFFF00", end_color="FFFF00", fill_type="solid")
+    yellow_fill = PatternFill(start_color="FF8C00", end_color="FF8C00", fill_type="solid")
 
     # セル斜線（×）
     thin = Side(border_style="thin", color="000000")

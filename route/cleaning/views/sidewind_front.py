@@ -84,7 +84,7 @@ def sidewind_front(request):
                 
             if any(x != None for x in (room_num, house_person)):
                 if len(room_num) != 0 and len(house_person) != 0:
-                    post_quota.append([room_num, house_person, twin_room if twin_room and len(twin_room) > 0 else '0', public_bath])
+                    post_quota.append([room_num, house_person, twin_room if twin_room and len(twin_room) > 0 else '-1', public_bath])
         housekeepers = []
         id = 1
         for i in post_quota:
@@ -122,6 +122,7 @@ def sidewind_front(request):
         #実行
         # bath_roomsは現時点では空リストとして扱う（将来的には大浴場の部屋番号を指定可能）
         bath_rooms = []
+        print(housekeepers)
         allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
 
         

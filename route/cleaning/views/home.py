@@ -25,7 +25,6 @@ class homeView(TemplateView):
         sidewind_flag = request.session.get('sidewind_flag')
         if sidewind_flag is True:
             request.session['sidewind_flag'] = False
-            
             #データ受け取り
             allocation = request.session['allocation']
             editor_name = request.session['name']
@@ -79,7 +78,6 @@ class homeView(TemplateView):
                 'rooms':room_num_table,
                 'combined_rooms': combined_rooms,
                 'editor_name': editor_name,
-                'bath_persons': [],
                 'remarks': [],
                 'house_person': [],
                 'eco_rooms': eco_rooms,
@@ -175,7 +173,7 @@ class homeView(TemplateView):
             'master_key':master_key_data,
             'single_rooms':single_room_list,
             'twin_rooms':twin_room_list,
-            'house_len':10,
+            'house_len':14,
             'room_char_list_len':10,
             'remarks_len':3,
             'add_remarks_len':0,
@@ -243,7 +241,7 @@ class homeView(TemplateView):
                 'master_key': master_key_data,
                 'single_rooms': single_room_list,
                 'twin_rooms': twin_room_list,
-                'house_len': 10,
+                'house_len': 14,
                 'add_house_len': 0,
                 'room_char_list_len': 10,
                 'remarks_len': 3,

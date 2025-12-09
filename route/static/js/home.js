@@ -318,6 +318,9 @@ $(document).ready(function () {
     highlightRooms();
     updateEndTimeRow();
     updateRoomStats();
+    updateResultTableColumns();
+    updateAssignedRoomRows();
+    
 
     if (window.method === "POST") {
         updateResultTableColumns();
