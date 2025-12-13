@@ -141,12 +141,21 @@ def read_csv_from_wincal(file):
     return data
 
 def find_multiple_room_numbers(today_data, tomorrow_data):
+    def _normalize_name(val):
+        if pd.isna(val):
+            return ''
+        return str(val).strip()
+
     multiple_room_list = []
     for index, today_row in today_data.iterrows():
+        today_room = today_row[10]
+        today_reservation = today_row[0]
+        today_name = _normalize_name(today_row[11])
         for index, tomorrow_row in tomorrow_data.iterrows():
-            if today_row[10] == tomorrow_row[10]:  # 部屋番号が一致するか確認
-                if today_row[0] == tomorrow_row[0]:  # 予約番号の一致も確認
-                    multiple_room_list.append(today_row[10])
+            if today_room == tomorrow_row[10]:  # 部屋番号が一致するか確認
+                if today_reservation == tomorrow_row[0]:  # 予約番号の一致も確認
+                    if today_name == _normalize_name(tomorrow_row[11]):  # 名前の一致も確認
+                        multiple_room_list.append(today_room)
     return multiple_room_list
 
 def find_unuse_room_numbers(today_data,room_number_list):

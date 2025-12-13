@@ -455,11 +455,11 @@ $(document).ready(function () {
 
     //マスターキーの更新
     function updateHouseKeys() {
+        const { availableKeysByFloor, fallbackOrder } = buildMasterKeyConfig();
         const usedKeysByFloor = {};
-        const keyPriority = ["A", "B", "C"];
         const rowDataList = [];
 
-        // === 1. 初期割り当て（絶対に A → B → C の順） ===
+        // === 1. 初期割り当て（CSVで渡されたキー順に） ===
         $(".tr_house").each(function () {
             const $row = $(this);
             const floorsText = $row.find(".floor_cell").text().trim();
@@ -475,40 +475,68 @@ $(document).ready(function () {
 
             floors.forEach(floor => {
                 if (!usedKeysByFloor[floor]) usedKeysByFloor[floor] = new Set();
-                let key = null;
-                for (const k of keyPriority) {
-                    if (!usedKeysByFloor[floor].has(k)) {
-                        key = k;
-                        usedKeysByFloor[floor].add(k);
-                        break;
-                    }
+
+                const keyPriority = availableKeysByFloor[floor] || fallbackOrder;
+                const assignedKey = keyPriority.find(k => !usedKeysByFloor[floor].has(k));
+
+                if (assignedKey) {
+                    usedKeysByFloor[floor].add(assignedKey);
+                    keys.push(`${floor}${assignedKey}`);
+                } else {
+                    keys.push(`${floor}N`);
                 }
-                keys.push(`${floor}${key || "N"}`);
             });
 
             rowDataList.push({ $row, floors, keys });
         });
 
         // === 2. キー交換による同一清掃者内のキー重複の解消 ===
-        const keyMap = {}; // floor → key → rowIndex
-        rowDataList.forEach((data, rowIndex) => {
-            data.keys.forEach(k => {
-                const match = k.match(/^(\d+)([ABC])$/);
-                if (!match) return;
-                const [_, floor, key] = match;
-                if (!keyMap[floor]) keyMap[floor] = {};
-                keyMap[floor][key] = rowIndex;
-            });
+        resolveDuplicateKeys(rowDataList);
+
+        // === 3. 表に反映 ===
+        rowDataList.forEach(({ $row, keys }) => {
+            $row.find(".key_cell").val(keys.join(","));
+        });
+    }
+
+    function buildMasterKeyConfig() {
+        const availableKeysByFloor = {};
+        const globalPriority = [];
+
+        masterKeyList.forEach(item => {
+            const rawValue = Array.isArray(item) ? (item[1] || item[0]) : (item || "");
+            const parsed = parseKeyParts(String(rawValue).trim());
+            if (!parsed) return;
+
+            const { floor, key } = parsed;
+            if (!availableKeysByFloor[floor]) availableKeysByFloor[floor] = [];
+            if (!availableKeysByFloor[floor].includes(key)) {
+                availableKeysByFloor[floor].push(key);
+            }
+            if (!globalPriority.includes(key)) {
+                globalPriority.push(key);
+            }
         });
 
-        // 各清掃者について、同じキーが複数割当されていれば交換候補を探す
+        const fallbackOrder = globalPriority.length ? globalPriority : ["A", "B", "C"];
+        return { availableKeysByFloor, fallbackOrder };
+    }
+
+    function parseKeyParts(keyStr) {
+        const match = String(keyStr || "").trim().match(/^(\d+)([A-Za-z]+)$/);
+        if (!match) return null;
+        return { floor: match[1], key: match[2] };
+    }
+
+    function resolveDuplicateKeys(rowDataList) {
         for (let i = 0; i < rowDataList.length; i++) {
             const data = rowDataList[i];
-            const keyCounts = {}; // A: 2, B: 1 など
+            const keyCounts = {}; // 例: {A: 2, B: 1}
 
             data.keys.forEach(k => {
-                const key = k.slice(-1);
-                keyCounts[key] = (keyCounts[key] || 0) + 1;
+                const parsed = parseKeyParts(k);
+                if (!parsed || parsed.key === "N") return;
+                keyCounts[parsed.key] = (keyCounts[parsed.key] || 0) + 1;
             });
 
             for (const [key, count] of Object.entries(keyCounts)) {
@@ -522,24 +550,24 @@ $(document).ready(function () {
 
                     // i と j の間で交換できるか（同じ floor を担当しているか）
                     for (let fi = 0; fi < data.keys.length; fi++) {
-                        const floorI = data.keys[fi].slice(0, -1);
-                        const keyI = data.keys[fi].slice(-1);
+                        const parsedI = parseKeyParts(data.keys[fi]);
+                        if (!parsedI || parsedI.key === "N") continue;
 
                         for (let fj = 0; fj < other.keys.length; fj++) {
-                            const floorJ = other.keys[fj].slice(0, -1);
-                            const keyJ = other.keys[fj].slice(-1);
+                            const parsedJ = parseKeyParts(other.keys[fj]);
+                            if (!parsedJ || parsedJ.key === "N") continue;
 
                             // 同じ階でキーが違うなら、交換を試みる
-                            if (floorI === floorJ && keyI !== keyJ) {
+                            if (parsedI.floor === parsedJ.floor && parsedI.key !== parsedJ.key) {
                                 // 交換して、両者にとって重複が減るか？
-                                const keysI = data.keys.map(x => x.slice(-1));
-                                const keysJ = other.keys.map(x => x.slice(-1));
+                                const keysI = data.keys.map(x => parseKeyParts(x)?.key).filter(Boolean);
+                                const keysJ = other.keys.map(x => parseKeyParts(x)?.key).filter(Boolean);
 
                                 // 仮に交換してみる
                                 const tempI = [...keysI];
                                 const tempJ = [...keysJ];
-                                tempI[fi] = keyJ;
-                                tempJ[fj] = keyI;
+                                tempI[fi] = parsedJ.key;
+                                tempJ[fj] = parsedI.key;
 
                                 // 重複カウント再評価
                                 const isDupI = new Set(tempI).size < tempI.length;
@@ -547,8 +575,8 @@ $(document).ready(function () {
 
                                 if (!isDupI && !isDupJ) {
                                     // 実際に交換
-                                    const keyStrI = `${floorI}${keyI}`;
-                                    const keyStrJ = `${floorJ}${keyJ}`;
+                                    const keyStrI = `${parsedI.floor}${parsedI.key}`;
+                                    const keyStrJ = `${parsedJ.floor}${parsedJ.key}`;
                                     data.keys[fi] = keyStrJ;
                                     other.keys[fj] = keyStrI;
                                 }
@@ -558,11 +586,6 @@ $(document).ready(function () {
                 }
             }
         }
-
-        // === 3. 表に反映 ===
-        rowDataList.forEach(({ $row, keys }) => {
-            $row.find(".key_cell").val(keys.join(","));
-        });
     }
 
 
