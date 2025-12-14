@@ -60,4 +60,4 @@ class reportView(TemplateView):
             fail_silently=False,
         )
         context = {}
-        return redirect('home')
+        return redirect('/?from_report=1')

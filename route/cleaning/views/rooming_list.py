@@ -18,8 +18,10 @@ class roomingListView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         name = request.GET.get('editor_name')
+        date = request.GET.get('date')
         context = {
             'editor_name': name,
+            'date': date,
         }
         return render(self.request, self.template_name, context)
     
@@ -28,8 +30,10 @@ class roomingListView(TemplateView):
         today_csv = request.FILES.get("today")
         tomorrow_csv = request.FILES.get("tomorrow")
         editor_name = request.POST.get("editor_name")
+        date = request.POST.get("date")
         excel_template_path = os.path.join(settings.BASE_DIR, "static", "excel_template", "rooming_list.xlsx")
         output_excel_path = os.path.join(settings.MEDIA_ROOT, "rooming_list_modifies.xlsx")
+
         
         #csv読み込み
         today_data = read_csv_from_wincal(today_csv)
@@ -44,7 +48,7 @@ class roomingListView(TemplateView):
         unuse_room_list = find_unuse_room_numbers(today_data, room_number_list)
         
         #Excel操作
-        output_path = operating_excel(output_excel_path, multiple_room_list, unuse_room_list, excel_template_path, room_number_list)
+        output_path = operating_excel(output_excel_path, multiple_room_list, unuse_room_list, excel_template_path, room_number_list, date)
         print('Finished Excel operation:', output_path)
 
         download_url = request.build_absolute_uri(
@@ -101,6 +105,7 @@ class roomingListView(TemplateView):
             'multiple_room_list': multiple_room_list,
             'unuse_room_list': unuse_room_list,
             'editor_name': editor_name,
+            'date': date,
         }
         return render(self.request, self.template_name, context)
         
@@ -166,13 +171,13 @@ def find_unuse_room_numbers(today_data,room_number_list):
             unuse_room_list.remove(room_number)
     return unuse_room_list
 
-def operating_excel(output_excel_path,multiple_room_list, unuse_room_list, excel_template_path, room_number_list):
+def operating_excel(output_excel_path,multiple_room_list, unuse_room_list, excel_template_path, room_number_list, date):
     #Excelテンプレート読み込み
     wb = openpyxl.load_workbook(excel_template_path)
     ws = wb.active
 
     # 背景色（黄色）
-    yellow_fill = PatternFill(start_color="FF8C00", end_color="FF8C00", fill_type="solid")
+    yellow_fill = PatternFill(start_color="FF99FF", end_color="FF99FF", fill_type="solid")
 
     # セル斜線（×）
     thin = Side(border_style="thin", color="000000")
@@ -206,6 +211,10 @@ def operating_excel(output_excel_path,multiple_room_list, unuse_room_list, excel
     
     # 集計結果をExcelに書き込み
     write_counts_to_excel(wb, multiple_count, use_room_list, output_excel_path)
+    
+    #日付書き込み
+    if date:
+        ws['AW2'] = date
 
     # 修正済み Excel を保存
     wb.save(output_excel_path)

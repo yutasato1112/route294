@@ -15,6 +15,7 @@
         <form action="" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="editor_name" value="{{ editor_name }}">
+            <input type="hidden" name="date" value="{{ date }}">
             <div class="upload-grid">
                 <div class="file-field">
                     <label for="today">勤務日のCSV2(予約日別料金CSVファイル)</label>
@@ -48,6 +49,7 @@
         <input type="hidden" name="multiple_room_list" value="{{ multiple_room_list|join:',' }}">
         <input type="hidden" name="unuse_room_list" value="{{ unuse_room_list|join:',' }}">
         <input type="hidden" name="editor_name" value="{{ editor_name }}">
+        <input type="hidden" name="date" value="{{ date }}">
     </form>
     <script>
         (function() {

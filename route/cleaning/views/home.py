@@ -119,13 +119,11 @@ class homeView(TemplateView):
             return render(self.request, self.template_name, context)
         
         #遷移前取得
+        from_report = request.GET.get('from_report') == '1'
         referer = request.META.get('HTTP_REFERER')  
-        from_report = False  
-        if referer:
+        if referer and not from_report:
             # URLのパス部分だけ取り出す
             path = urlparse(referer).path
-            if path.endswith('/report/') or path == '/report':
-                from_report = True
             if path.endswith('/ai_assist/') or path == '/ai_assist':
                 from_ai = True
 
