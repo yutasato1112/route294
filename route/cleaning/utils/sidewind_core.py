@@ -1,823 +1,491 @@
 """
-Extended eco‑room allocation logic for hotel housekeepers.
+ホテル清掃指示書 自動振り分けシステム v28
+Twin Quota指定優先版
 
-This module includes the full implementation of the room assignment
-functions as provided by the user, with an improved version of
-``assign_eco_rooms_full``.  The new algorithm strives to distribute
-eco rooms as evenly as possible across housekeepers while obeying
-business rules:
-
-* Eco‑out rooms must remain on the same floor as the housekeeper's
-  existing rooms.
-* Eco rooms should be assigned to housekeepers already on the same
-  floor when possible.  To even out the distribution, a housekeeper
-  with only one floor may acquire a second floor composed solely of
-  eco rooms.  When a housekeeper takes on a new eco‑only floor, they
-  must be assigned at least two eco rooms on that floor.  If there is
-  only a single eco room available on an empty floor, that lone room
-  is assigned to the housekeeper with the fewest eco assignments,
-  without enforcing the two‑room minimum.
-
-The remainder of this file contains helper functions and the
-``assign_rooms`` entry point unchanged from the user's original
-submission, except for the modifications to ``assign_eco_rooms_full``.
+修正点:
+1. twin_quota指定ありのHKを絶対優先
+2. twin_quota=-1（auto）のHKは調整用バッファとして使用
 """
 
-from collections import defaultdict, Counter
-from typing import Dict, List, Iterable
-
-def fl(r: int) -> int:
-    """Return the floor number given a room number."""
-    return r // 100
-
-def clone(d: Dict) -> Dict:
-    """Return a shallow copy of a dictionary."""
-    return dict(d)
-
-def house_rooms(alloc: Dict[int, str], hid: str) -> List[int]:
-    """Return a list of room numbers assigned to a particular housekeeper."""
-    return [r for r, h in alloc.items() if h == hid]
-
-def house_floors(alloc: Dict[int, str], hid: str) -> List[int]:
-    """Return a sorted list of floors on which a housekeeper has rooms."""
-    return sorted({fl(r) for r in house_rooms(alloc, hid)})
-
-def twin_count(alloc: Dict[int, str], twin_set: Iterable[int], hid: str) -> int:
-    """Return the number of twin rooms assigned to a housekeeper."""
-    return sum(1 for r in house_rooms(alloc, hid) if r in twin_set)
-
-def quota_ok(counts: Counter, quotas: Dict[str, int]) -> bool:
-    """Check whether the counts of rooms per housekeeper match their quotas."""
-    return all(counts.get(h, 0) == quotas[h] for h in quotas)
-
-def safe_swap(alloc: Dict[int, str], a: int, b: int) -> None:
-    """Swap two room assignments in place."""
-    ha, hb = alloc[a], alloc[b]
-    alloc[a], alloc[b] = hb, ha
-
-def initial_assign(rooms: List[int], housekeepers: List[Dict]) -> Dict[int, str]:
-    """Assign normal rooms to housekeepers while respecting quotas and
-    basic floor/bath constraints.  See original implementation for
-    details."""
-    allocation: Dict[int, str] = {r: None for r in rooms}
-    quotas: Dict[str, int] = {h["id"]: h["room_quota"] for h in housekeepers}
-    assigned = Counter()
-    bath_flags: Dict[str, bool] = {h["id"]: h.get("has_bath", False) for h in housekeepers}
-    floors = sorted({fl(r) for r in rooms})
-    min_floor = min(floors) if floors else 0
-    low_floors = [f for f in floors if f <= min_floor + 2]
-    order = sorted(floors, reverse=True) + low_floors
-    by_floor: Dict[int, List[int]] = defaultdict(list)
-    for r in sorted(rooms):
-        by_floor[fl(r)].append(r)
-    for h in housekeepers:
-        if not h.get("has_bath", False):
-            continue
-        hid = h["id"]
-        for f in low_floors:
-            while by_floor[f] and assigned[hid] < quotas[hid]:
-                room = by_floor[f].pop(0)
-                allocation[room] = hid
-                assigned[hid] += 1
-            if assigned[hid] >= quotas[hid]:
-                break
-    remain: List[int] = [r for f in order for r in by_floor[f] if allocation[r] is None]
-    idx = 0
-    for h in housekeepers:
-        if h.get("has_bath", False):
-            continue
-        hid = h["id"]
-        need = quotas[hid] - assigned[hid]
-        take = remain[idx:idx + need]
-        for r in take:
-            allocation[r] = hid
-            assigned[hid] += 1
-        idx += need
-    for r, v in allocation.items():
-        if v is None:
-            tgt = min(quotas, key=lambda x: assigned[x])
-            allocation[r] = tgt
-            assigned[tgt] += 1
-    for hid in quotas:
-        if assigned[hid] != quotas[hid]:
-            raise RuntimeError(f"❌ quota mismatch: {hid}")
-    return allocation
-
-def rebalance_twins(alloc: Dict[int, str], twin_rooms: Iterable[int],
-                    housekeepers: List[Dict], allow_min_triplex: bool = True) -> Dict[int, str]:
-    """Perform swaps to reduce the disparity of twin room counts among housekeepers."""
-    twin_set = set(twin_rooms)
-    has_bath = {h["id"]: h.get("has_bath", False) for h in housekeepers}
-    def floors_of(a: Dict[int, str], hid: str) -> List[int]:
-        return sorted({fl(r) for r, h in a.items() if h == hid})
-    def floor_ok(fs: List[int], allow: bool) -> bool:
-        if len(fs) <= 2:
-            return True
-        if allow and len(fs) == 3 and max(fs) - min(fs) <= 2:
-            return True
-        return False
-    def safe_for_bath(hid: str, r: int) -> bool:
-        return (not has_bath.get(hid, False)) or fl(r) <= 4
-    def twin_counts(a: Dict[int, str]) -> Dict[str, int]:
-        return {h["id"]: sum(1 for r, hh in a.items() if hh == h["id"] and r in twin_set)
-                for h in housekeepers}
-    iteration = 0
-    while True:
-        iteration += 1
-        tc = twin_counts(alloc)
-        mx, mn = max(tc.values()), min(tc.values())
-        # A difference of 2 twin rooms is considered unfair; we aim for at most 1.
-        severe = mx - mn >= 2
-        # Stop iterating when the difference in twin counts is at most 1.  If some
-        # housekeepers have zero twin rooms, then all others must have at most one.
-        if (mn > 0 and mx - mn <= 1) or (mn == 0 and mx <= 1):
-            break
-        # Identify donors (have at least two more twin rooms than the minimum)
-        # When some housekeepers have zero twin rooms, anyone with two or more is a donor.
-        donors = [h for h, c in tc.items() if c >= mn + 2 or (mn == 0 and c >= 2)]
-        receivers = [h for h, c in tc.items() if c == mn]
-        swapped = False
-        for hB in donors:
-            twinB = [r for r, h in alloc.items() if h == hB and r in twin_set]
-            for hA in receivers:
-                normalA = [r for r, h in alloc.items() if h == hA and r not in twin_set]
-                base_f = min(floors_of(alloc, hB) or [0])
-                normalA.sort(key=lambda r: abs(fl(r) - base_f))
-                for rB in twinB:
-                    for rA in normalA:
-                        if not (safe_for_bath(hA, rB) and safe_for_bath(hB, rA)):
-                            continue
-                        tmp = clone(alloc)
-                        safe_swap(tmp, rA, rB)
-                        if floor_ok(floors_of(tmp, hA), allow_min_triplex) and \
-                           floor_ok(floors_of(tmp, hB), allow_min_triplex):
-                            safe_swap(alloc, rA, rB)
-                            swapped = True
-                            break
-                    if swapped:
-                        break
-                if swapped:
-                    break
-            if swapped:
-                break
-        if not swapped:
-            break
-    return alloc
-
-def rebalance_floors(alloc: Dict[int, str], housekeepers: List[Dict],
-                     eco_rooms: Iterable[int], eco_out_rooms: Iterable[int]) -> Dict[int, str]:
-    """Ensure that no housekeeper is assigned to more than two floors."""
-    eco_set = set(eco_rooms) | set(eco_out_rooms)
-    def floors_of_alloc(a: Dict[int, str], hid: str) -> List[int]:
-        return sorted({fl(r) for r, h in a.items() if h == hid and r not in eco_set})
-    def floor_ok_list(fs: List[int]) -> bool:
-        if not fs:
-            return True
-        fs_sorted = sorted(fs)
-        if len(fs_sorted) > 2:
-            return False
-        if len(fs_sorted) == 2:
-            return fs_sorted[1] - fs_sorted[0] == 1
-        return True
-    changed = True
-    while changed:
-        changed = False
-        for h in housekeepers:
-            hid = h["id"]
-            floors = floors_of_alloc(alloc, hid)
-            if len(floors) <= 2:
-                continue
-            candidate_floors_to_remove = [floors[0], floors[-1]]
-            swapped = False
-            for f_remove in candidate_floors_to_remove:
-                donor_rooms = [r for r, h2 in alloc.items()
-                               if h2 == hid and fl(r) == f_remove and r not in eco_set]
-                for r in donor_rooms:
-                    for h2 in housekeepers:
-                        hid2 = h2["id"]
-                        if hid2 == hid:
-                            continue
-                        floors2 = floors_of_alloc(alloc, hid2)
-                        if f_remove not in floors2 and len(floors2) >= 2:
-                            continue
-                        possible_floors_for_hid = [f for f in floors if f != f_remove]
-                        candidate_s = None
-                        for s in [rr for rr, hh in alloc.items() if hh == hid2 and rr not in eco_set]:
-                            s_floor = fl(s)
-                            if s_floor in possible_floors_for_hid:
-                                candidate_s = s
-                                break
-                        if candidate_s is None:
-                            continue
-                        tmp = clone(alloc)
-                        safe_swap(tmp, r, candidate_s)
-                        new_floors_h = floors_of_alloc(tmp, hid)
-                        new_floors_h2 = floors_of_alloc(tmp, hid2)
-                        if floor_ok_list(new_floors_h) and floor_ok_list(new_floors_h2):
-                            safe_swap(alloc, r, candidate_s)
-                            swapped = True
-                            break
-                    if swapped:
-                        break
-                if swapped:
-                    break
-            if swapped:
-                changed = True
-                break
-    return alloc
-
-def assign_eco_rooms_full(
-    alloc: Dict[int, str],
-    eco_rooms: Iterable[int],
-    eco_out_rooms: Iterable[int],
-    housekeepers: List[Dict],
-    twin_rooms: Iterable[int],
-    bath_rooms: Iterable[int],
-    time_single: float,
-    time_twin: float,
-    time_eco: float,
-    time_bath: float,
-) -> Dict[int, str]:
-    """
-    Assign eco and eco‑out rooms to housekeepers with fairness and floor locality.
-
-    This implementation distributes eco rooms as evenly as possible while
-    respecting business rules:
-
-    * Eco‑out rooms must stay on their existing floor.
-    * Eco rooms are first assigned to housekeepers already on the floor.
-      To improve fairness, housekeepers with only one floor may take on
-      a second floor consisting solely of eco rooms, provided they
-      receive at least two eco rooms on that floor.  If there is just
-      one eco room on an empty floor, it is assigned to the housekeeper
-      with the fewest eco assignments (ignoring the two‑room minimum).
-    * Bath handlers (``has_bath=True``) may not be assigned to floors
-      above the fourth floor for eco rooms.
-
-    Eco and eco‑out assignments do not affect normal room quotas but do
-    contribute to finish time estimates.  This function updates the
-    allocation in place and returns a mapping from eco/eco‑out room
-    numbers to the assigned housekeeper ID.
-    """
-    # Helper: compute initial set of floors per housekeeper using normal rooms only
-    fl_alloc: Dict[str, List[int]] = {h["id"]: house_floors(alloc, h["id"])[:] for h in housekeepers}
-    # Track assigned eco rooms per housekeeper
-    eco_assign: Dict[int, str] = {}
-    eco_count: Counter = Counter({h["id"]: 0 for h in housekeepers})
-    # Bath flag lookup
-    has_bath = {h["id"]: h.get("has_bath", False) for h in housekeepers}
-    # Finish time estimates prior to eco assignment
-    finish_times: Dict[str, float] = compute_finish_times(
-        alloc,
-        (),
-        (),
-        twin_rooms,
-        bath_rooms,
-        housekeepers,
-        time_single,
-        time_twin,
-        time_eco,
-        time_bath,
-    )
-    # Determine pure eco rooms (exclude eco_out duplicates)
-    eco_set = set(eco_rooms)
-    eco_out_set = set(eco_out_rooms)
-    pure_eco = [r for r in eco_rooms if r not in eco_out_set]
-    # Group pure eco rooms by floor
-    floor_to_eco: Dict[int, List[int]] = defaultdict(list)
-    for r in pure_eco:
-        floor_to_eco[fl(r)].append(r)
-    for rooms in floor_to_eco.values():
-        rooms.sort()
-    # Compute sorting key for floors: process floors with fewest existing
-    # housekeepers first, then by descending number of eco rooms.
-    floor_keys: Dict[int, tuple] = {}
-    for floor, rooms in floor_to_eco.items():
-        # count existing housekeepers on this floor
-        m = len([hid for hid, fls in fl_alloc.items() if floor in fls])
-        floor_keys[floor] = (m, -len(rooms))
-    floors_sorted = sorted(floor_to_eco.keys(), key=lambda f: floor_keys[f])
-
-    def compute_assignment_for_floor(n: int, existing_hks: List[str], candidate_hks: List[str]) -> tuple:
-        """
-        For a given floor with ``n`` eco rooms, choose how many new
-        housekeepers to add (``k``) and determine the number of rooms
-        assigned to each participating housekeeper.  Existing
-        housekeepers stay in the candidate set.  Candidates must have
-        fewer than two floors and, if they handle baths, the floor must
-        be at or below 4.  Among all feasible values of ``k`` from 0
-        through ``min(len(candidate_hks), n//2)``, this helper chooses
-        the one that minimises the difference between the highest and
-        lowest eco counts after assignment.  Ties break by the smaller
-        maximum eco count, then by favouring assignments that place
-        additional rooms on housekeepers with lower finish times.
-        Returns a tuple ``(k, chosen_candidates, count_assign)`` where
-        ``count_assign`` maps participating housekeepers to the number
-        of eco rooms on this floor.
-        """
-        m = len(existing_hks)
-        best_diff = None
-        best_max = None
-        best_res = None
-        # Maximum number of new housekeepers allowed by two‑room minimum
-        max_k = min(len(candidate_hks), n // 2)
-        # Evaluate each possible k
-        for k in range(max_k + 1):
-            total = m + k
-            if total == 0:
-                continue
-            # choose k candidates with lowest eco_count (tie break by finish_time)
-            chosen_candidates = sorted(candidate_hks, key=lambda h: (eco_count[h], finish_times[h]))[:k]
-            # base assignment for existing hks
-            base_existing = n // total
-            # base assignment for new hks (must be at least 2 if k>0)
-            base_new = max(base_existing, 2) if k > 0 else 0
-            assigned = base_existing * m + base_new * k
-            if assigned > n:
-                continue
-            leftover = n - assigned
-            # initial counts per hk
-            count_assign: Dict[str, int] = {}
-            for hid in chosen_candidates:
-                count_assign[hid] = base_new
-            for hid in existing_hks:
-                count_assign[hid] = count_assign.get(hid, 0) + base_existing
-            participants = existing_hks + chosen_candidates
-            existing_set = set(existing_hks)
-            # distribute leftover rooms one by one to minimise growth of eco_count
-            for _ in range(leftover):
-                hk = min(
-                    participants,
-                    key=lambda h: (
-                        eco_count[h] + count_assign.get(h, 0),
-                        finish_times[h] + count_assign.get(h, 0) * time_eco,
-                        1 if h in existing_set else 0,
-                    ),
-                )
-                count_assign[hk] = count_assign.get(hk, 0) + 1
-            # Evaluate the eco_count spread if we commit this assignment
-            new_counts = eco_count.copy()
-            for hid, cnt in count_assign.items():
-                new_counts[hid] += cnt
-            max_cnt = max(new_counts.values())
-            min_cnt = min(new_counts.values())
-            diff = max_cnt - min_cnt
-            if best_diff is None or diff < best_diff or (diff == best_diff and max_cnt < best_max):
-                best_diff = diff
-                best_max = max_cnt
-                best_res = (k, chosen_candidates, count_assign)
-        return best_res
-
-    # Assign pure eco rooms floor by floor
-    for floor in floors_sorted:
-        rooms = floor_to_eco[floor]
-        n = len(rooms)
-        if n == 0:
-            continue
-        # Existing housekeepers on this floor
-        existing = [hid for hid, fls in fl_alloc.items() if floor in fls]
-        # Candidate housekeepers: not on this floor, fewer than two floors,
-        # and (not bath or floor <=4)
-        candidate = [
-            hid
-            for hid, fls in fl_alloc.items()
-            if floor not in fls and len(fls) < 2 and (floor <= 4 or not has_bath.get(hid, False))
-        ]
-        # Compute the best assignment for this floor
-        res = compute_assignment_for_floor(n, existing, candidate)
-        if res:
-            k, chosen_candidates, count_assign = res
-            # Add the floor to any chosen candidate (new) housekeepers
-            for hid in chosen_candidates:
-                if floor not in fl_alloc[hid]:
-                    fl_alloc[hid] = sorted(fl_alloc[hid] + [floor])
-            # Assign rooms sequentially according to count_assign
-            idx = 0
-            participants = existing + chosen_candidates
-            for hid in participants:
-                cnt = count_assign.get(hid, 0)
-                for _ in range(cnt):
-                    if idx >= n:
-                        break
-                    r = rooms[idx]
-                    eco_assign[r] = hid
-                    eco_count[hid] += 1
-                    finish_times[hid] += time_eco
-                    idx += 1
-        else:
-            # Fallback: assign all eco rooms to existing hks (if any) or to
-            # the housekeeper with the lowest eco_count that can take the floor
-            for r in rooms:
-                if existing:
-                    # Choose existing hk with smallest eco_count, tie by finish_time
-                    hid = min(existing, key=lambda h: (eco_count[h], finish_times[h]))
-                else:
-                    # No existing hk: choose any candidate that can add the floor
-                    possible = [h for h in fl_alloc if len(fl_alloc[h]) < 2 and (floor <= 4 or not has_bath.get(h, False))]
-                    if not possible:
-                        possible = list(fl_alloc.keys())
-                    hid = min(possible, key=lambda h: (eco_count[h], finish_times[h]))
-                    if floor not in fl_alloc[hid]:
-                        fl_alloc[hid] = sorted(fl_alloc[hid] + [floor])
-                eco_assign[r] = hid
-                eco_count[hid] += 1
-                finish_times[hid] += time_eco
-    # Finally, assign eco‑out rooms.  These must remain on a floor already
-    # occupied by the housekeeper.  Choose the housekeeper with the
-    # lowest eco_count (tie by finish_time) among those on the same
-    # floor.  Bath restrictions apply here as well.
-    for r in eco_out_rooms:
-        floor_r = fl(r)
-        candidates = [hid for hid, fls in fl_alloc.items() if floor_r in fls]
-        if not candidates:
-            raise RuntimeError(f"❌ eco_out room {r} cannot be assigned without floor move")
-        # Filter by bath constraint
-        filtered = [h for h in candidates if not (has_bath.get(h, False) and floor_r > 4)]
-        if not filtered:
-            filtered = candidates
-        # Choose hk with smallest eco_count, tie by finish_time
-        hid = min(filtered, key=lambda h: (eco_count[h], finish_times[h]))
-        eco_assign[r] = hid
-        eco_count[hid] += 1
-        finish_times[hid] += time_eco
-    return eco_assign
-
-def compute_finish_times(allocation: Dict[int, str], eco_rooms: Iterable[int],
-                         eco_out_rooms: Iterable[int], twin_rooms: Iterable[int],
-                         bath_rooms: Iterable[int], housekeepers: List[Dict],
-                         time_single: float, time_twin: float,
-                         time_eco: float, time_bath: float) -> Dict[str, float]:
-    """Compute estimated finish times for each housekeeper."""
-    twin_set = set(twin_rooms)
-    eco_set = set(eco_rooms)
-    eco_out_set = set(eco_out_rooms)
-    bath_set = set(bath_rooms)
-    finish: Dict[str, float] = {h["id"]: 0.0 for h in housekeepers}
-    for r, hid in allocation.items():
-        if r in bath_set:
-            finish[hid] += time_bath
-        elif r in twin_set:
-            finish[hid] += time_twin
-        elif r in eco_set or r in eco_out_set:
-            finish[hid] += time_eco
-        else:
-            finish[hid] += time_single
-    return finish
-
-def balance_finish_times(allocation: Dict[int, str], eco_rooms: Iterable[int],
-                         eco_out_rooms: Iterable[int], twin_rooms: Iterable[int],
-                         bath_rooms: Iterable[int], housekeepers: List[Dict],
-                         time_single: float, time_twin: float,
-                         time_eco: float, time_bath: float) -> Dict[int, str]:
-    """Attempt to balance finish times among housekeepers with identical quotas."""
-    from collections import defaultdict, Counter
-    def room_time(r: int) -> float:
-        if r in bath_rooms:
-            return time_bath
-        elif r in set(twin_rooms):
-            return time_twin
-        elif r in set(eco_rooms) or r in set(eco_out_rooms):
-            return time_eco
-        else:
-            return time_single
-    eco_out_set = set(eco_out_rooms)
-    eco_set = set(eco_rooms)
-    eco_set_full = eco_set | eco_out_set
-    def twin_counts(a: Dict[int, str]) -> Dict[str, int]:
-        twin_set = set(twin_rooms)
-        return {h["id"]: sum(1 for r, hh in a.items() if hh == h["id"] and r in twin_set)
-                for h in housekeepers}
-    def floors_of_alloc(a: Dict[int, str], hid: str) -> List[int]:
-        return sorted({fl(r) for r, hh in a.items() if hh == hid})
-    def floor_ok_list(fs: List[int]) -> bool:
-        if not fs:
-            return True
-        fs_sorted = sorted(fs)
-        if len(fs_sorted) > 2:
-            return False
-        if len(fs_sorted) == 2:
-            return fs_sorted[1] - fs_sorted[0] == 1
-        return True
-    finish = compute_finish_times(allocation, eco_rooms, eco_out_rooms, twin_rooms,
-                                 bath_rooms, housekeepers, time_single, time_twin,
-                                 time_eco, time_bath)
-    quota_to_hids = defaultdict(list)
-    quotas = {h["id"]: h["room_quota"] for h in housekeepers}
-    for hid, q in quotas.items():
-        quota_to_hids[q].append(hid)
-    for q, hids in quota_to_hids.items():
-        if len(hids) < 2:
-            continue
-        while True:
-            improved = False
-            group_times = {hid: finish[hid] for hid in hids}
-            slow_hid = max(group_times, key=group_times.get)
-            fast_hid = min(group_times, key=group_times.get)
-            diff = group_times[slow_hid] - group_times[fast_hid]
-            MAX_TIME_DIFF = 4
-            if diff <= MAX_TIME_DIFF:
-                break
-            slow_normals = [r for r, hh in allocation.items()
-                            if hh == slow_hid and r not in eco_set_full]
-            fast_normals = [r for r, hh in allocation.items()
-                            if hh == fast_hid and r not in eco_set_full]
-            slow_normals.sort(key=lambda r: room_time(r), reverse=True)
-            fast_normals.sort(key=lambda r: room_time(r))
-            found_swap = False
-            for r_slow in slow_normals:
-                t_slow = room_time(r_slow)
-                for r_fast in fast_normals:
-                    t_fast = room_time(r_fast)
-                    if t_slow <= t_fast:
-                        break
-                    tmp = clone(allocation)
-                    safe_swap(tmp, r_slow, r_fast)
-                    new_floors_slow = floors_of_alloc(tmp, slow_hid)
-                    new_floors_fast = floors_of_alloc(tmp, fast_hid)
-                    if not (floor_ok_list(new_floors_slow) and floor_ok_list(new_floors_fast)):
-                        continue
-                    tc = twin_counts(tmp)
-                    if max(tc.values()) - min(tc.values()) > 2:
-                        continue
-                    new_time_slow = finish[slow_hid] - t_slow + t_fast
-                    new_time_fast = finish[fast_hid] - t_fast + t_slow
-                    new_diff = new_time_slow - new_time_fast
-                    if new_diff < diff:
-                        allocation = tmp
-                        finish[slow_hid] = new_time_slow
-                        finish[fast_hid] = new_time_fast
-                        found_swap = True
-                        improved = True
-                        break
-                if found_swap:
-                    break
-            if not found_swap:
-                eco_counts = Counter({h["id"]: 0 for h in housekeepers})
-                for r_all, hid_all in allocation.items():
-                    if r_all in eco_set_full:
-                        eco_counts[hid_all] += 1
-                eco_candidates = [r for r in allocation if allocation[r] == slow_hid and r in eco_set_full]
-                eco_moved = False
-                for r in eco_candidates:
-                    floor_r = fl(r)
-                    for rec_hid in hids:
-                        if rec_hid == slow_hid:
-                            continue
-                        rec_floors = floors_of_alloc(allocation, rec_hid)
-                        if r in eco_out_rooms and floor_r not in rec_floors:
-                            continue
-                        if r in eco_rooms and floor_r not in rec_floors:
-                            new_rec_floors = sorted(rec_floors + [floor_r])
-                            if not floor_ok_list(new_rec_floors):
-                                continue
-                        tmp_allocation = clone(allocation)
-                        tmp_allocation[r] = rec_hid
-                        new_floors_slow = floors_of_alloc(tmp_allocation, slow_hid)
-                        new_floors_rec = floors_of_alloc(tmp_allocation, rec_hid)
-                        if not (floor_ok_list(new_floors_slow) and floor_ok_list(new_floors_rec)):
-                            continue
-                        new_eco_counts = eco_counts.copy()
-                        new_eco_counts[slow_hid] -= 1
-                        new_eco_counts[rec_hid] += 1
-                        e_vals = list(new_eco_counts.values())
-                        if max(e_vals) - min(e_vals) >= 3:
-                            continue
-                        new_finish_slow = finish[slow_hid] - time_eco
-                        new_finish_rec = finish[rec_hid] + time_eco
-                        tmp_group_times = group_times.copy()
-                        tmp_group_times[slow_hid] = new_finish_slow
-                        tmp_group_times[rec_hid] = new_finish_rec
-                        tmp_diff = max(tmp_group_times.values()) - min(tmp_group_times.values())
-                        if tmp_diff < diff:
-                            allocation[r] = rec_hid
-                            finish[slow_hid] = new_finish_slow
-                            finish[rec_hid] = new_finish_rec
-                            group_times = tmp_group_times
-                            diff = tmp_diff
-                            eco_counts = new_eco_counts
-                            eco_moved = True
-                            improved = True
-                            break
-                    if eco_moved:
-                        break
-                if not improved:
-                    break
-            if improved:
-                continue
-            break
-    return allocation
-
-def assign_rooms(rooms: List[int], eco_rooms: Iterable[int], eco_out_rooms: Iterable[int],
-                 twin_rooms: Iterable[int], *rest) -> Dict[int, str]:
-    """High‑level entry point to perform a complete room assignment."""
-    if len(rest) == 6:
-        bath_rooms, housekeepers, time_single, time_twin, time_eco, time_bath = rest
-    elif len(rest) == 5:
-        housekeepers, time_single, time_twin, time_eco, time_bath = rest
-        bath_rooms = []
-    else:
-        raise TypeError(
-            "assign_rooms expects either 9 or 10 positional arguments: "
-            "(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, "
-            "time_single, time_twin, time_eco, time_bath) or "
-            "(rooms, eco_rooms, eco_out_rooms, twin_rooms, housekeepers, "
-            "time_single, time_twin, time_eco, time_bath)"
-        )
-    normal_rooms = [r for r in rooms if r not in eco_rooms and r not in eco_out_rooms]
-    allocation = initial_assign(normal_rooms, housekeepers)
-    quotas = {h["id"]: h["room_quota"] for h in housekeepers}
-    if not quota_ok(Counter(allocation.values()), quotas):
-        raise RuntimeError("initial quota mismatch")
-    allocation = rebalance_twins(allocation, twin_rooms, housekeepers, allow_min_triplex=False)
-    allocation = rebalance_floors(allocation, housekeepers, eco_rooms, eco_out_rooms)
-    eco_assign = assign_eco_rooms_full(
-        allocation,
-        eco_rooms,
-        eco_out_rooms,
-        housekeepers,
-        twin_rooms,
-        bath_rooms,
-        time_single,
-        time_twin,
-        time_eco,
-        time_bath,
-    )
-    allocation.update(eco_assign)
-    allocation = balance_finish_times(allocation, eco_rooms, eco_out_rooms, twin_rooms,
-                                      bath_rooms, housekeepers, time_single, time_twin,
-                                      time_eco, time_bath)
-    return allocation
-
-
-# --------------------------------------------------------------------------
-# Experimental optimizer
-# --------------------------------------------------------------------------
-
+from collections import defaultdict
+from typing import Dict, List, Set, Any
 import random
 
-def assign_rooms_optimized(
-    rooms: List[int],
-    eco_rooms: Iterable[int],
-    eco_out_rooms: Iterable[int],
-    twin_rooms: Iterable[int],
-    *rest,
-    iterations: int = 5,
-    local_search_iter: int = 50,
-    seed: int | None = None,
-) -> Dict[int, str]:
-    """
-    Attempt multiple randomised assignments and return the best one according to
-    fairness metrics (twin difference, eco difference, finish time spread).
 
-    Parameters
-    ----------
-    rooms, eco_rooms, eco_out_rooms, twin_rooms, *rest: same as assign_rooms
-    iterations : int
-        Number of random assignments to attempt (default 5). More iterations
-        improve the chance of finding a better allocation but increase runtime.
-    local_search_iter : int
-        Number of local twin-balancing swaps to attempt per iteration. This
-        simple hill-climbing step further refines the twin distribution after
-        each random assignment.
-    seed : Optional[int]
-        Seed for the random number generator to obtain reproducible results.
-
-    Returns
-    -------
-    dict[int, str]
-        Assignment from room number to housekeeper ID.
-    """
-    # parse *rest similar to assign_rooms
-    if len(rest) == 6:
-        bath_rooms, housekeepers, time_single, time_twin, time_eco, time_bath = rest
-    elif len(rest) == 5:
-        housekeepers, time_single, time_twin, time_eco, time_bath = rest
-        bath_rooms = []
-    else:
-        raise TypeError(
-            "assign_rooms_optimized expects either 9 or 10 positional arguments: "
-            "(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, "
-            "time_single, time_twin, time_eco, time_bath) or "
-            "(rooms, eco_rooms, eco_out_rooms, twin_rooms, housekeepers, "
-            "time_single, time_twin, time_eco, time_bath)"
-        )
-
-    if seed is not None:
-        random.seed(seed)
-
-    # Precompute eco/time info for scoring
-    eco_set = set(eco_rooms) | set(eco_out_rooms)
-    twin_set = set(twin_rooms)
-
-    def compute_score(allocation: Dict[int, str], hk_list: List[Dict]) -> float:
-        """
-        Compute a weighted score capturing fairness. Lower is better.
-        We weigh twin difference highest, eco difference next, and finish time difference least.
-        """
-        # twin counts
-        from collections import Counter
-        tc = Counter({h["id"]: 0 for h in hk_list})
-        for r, hid in allocation.items():
-            if r in twin_set:
-                tc[hid] += 1
-        max_tc = max(tc.values())
-        min_tc = min(tc.values())
-        twin_diff = max_tc - min_tc
-        # eco counts (pure + eco-out)
-        ec = Counter({h["id"]: 0 for h in hk_list})
-        for r, hid in allocation.items():
-            if r in eco_set:
-                ec[hid] += 1
-        max_ec = max(ec.values())
-        min_ec = min(ec.values())
-        eco_diff = max_ec - min_ec
-        # finish time spread
-        finish = compute_finish_times(
-            allocation, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms,
-            hk_list, time_single, time_twin, time_eco, time_bath
-        )
-        max_fin = max(finish.values())
-        min_fin = min(finish.values())
-        fin_diff = max_fin - min_fin
-        # Weighted sum (twin difference weighted highest)
-        return twin_diff * 100.0 + eco_diff * 10.0 + fin_diff
-
-    best_allocation: Dict[int, str] | None = None
-    best_score = float('inf')
-
-    # Work on a copy of rooms list to avoid modifying original
-    rooms_copy = list(rooms)
-
-    for itr in range(iterations):
-        # Randomise housekeeper order
-        hk_list = [h.copy() for h in housekeepers]
-        random.shuffle(hk_list)
-        # We don't randomise room order here; rooms are grouped by floor via their numbers.
-        # Use existing assign_rooms with randomised hk_list
-        try:
-            alloc = assign_rooms(rooms_copy, eco_rooms, eco_out_rooms, twin_rooms,
-                                 bath_rooms, hk_list, time_single, time_twin,
-                                 time_eco, time_bath)
-        except Exception:
-            # On failure (should not happen), skip this iteration
-            continue
-        # Local twin-balancing (simple hill-climb)
-        # Compute twin counts
-        from collections import defaultdict, Counter
-        for _ in range(local_search_iter):
-            # twin counts per hk
-            tc = Counter({h["id"]: 0 for h in hk_list})
-            for r, hid in alloc.items():
-                if r in twin_set:
-                    tc[hid] += 1
-            max_hid = max(tc, key=tc.get)
-            min_hid = min(tc, key=tc.get)
-            if tc[max_hid] - tc[min_hid] <= 1:
-                break
-            # Find a twin room of max_hid and a normal room of min_hid to swap
-            twin_room = None
-            for r, hid in alloc.items():
-                if hid == max_hid and r in twin_set:
-                    twin_room = r
-                    break
-            normal_room = None
-            for r, hid in alloc.items():
-                if hid == min_hid and r not in twin_set and r not in eco_set:
-                    normal_room = r
-                    break
-            if twin_room is None or normal_room is None:
-                break
-            # simulate swap
-            # ensure swap is valid: floor constraints and bath constraints
-            hidA, hidB = max_hid, min_hid
-            rA, rB = twin_room, normal_room
-            # Only swap if it keeps floor constraints
-            tmp = alloc.copy()
-            tmp[rA], tmp[rB] = hidB, hidA
-            # Check floor constraints
-            def floors_of_h(a, hid):
-                return sorted({fl(x) for x, hh in a.items() if hh == hid and x not in eco_set})
-            ok = True
-            for hid_check in [hidA, hidB]:
-                floors = floors_of_h(tmp, hid_check)
-                if len(floors) > 2:
-                    ok = False
-                    break
-                if len(floors) == 2 and floors[1] - floors[0] != 1:
-                    ok = False
-                    break
-            if not ok:
-                continue
-            # apply swap
-            alloc = tmp
-        # Compute fairness score
-        score = compute_score(alloc, hk_list)
-        if score < best_score:
+def assign_rooms(
+    rooms: Dict[int, Any],
+    eco_rooms: List[int],
+    eco_out_rooms: List[int],
+    twin_rooms: List[int],
+    bath_rooms: List[int],
+    housekeepers: List[Dict],
+    single_time: int,
+    twin_time: int,
+    eco_time: int,
+    bath_time: int
+) -> Dict[int, int]:
+    allocator = _RoomAllocator(
+        list(rooms.keys()),
+        eco_rooms,
+        eco_out_rooms,
+        twin_rooms,
+        housekeepers
+    )
+    
+    best_result = None
+    best_score = float('-inf')
+    
+    for attempt in range(1000):
+        hk_to_rooms = allocator.allocate(strategy=attempt)
+        score, errors = allocator.evaluate_solution(hk_to_rooms)
+        
+        if score > best_score:
             best_score = score
-            best_allocation = alloc
-    # If no allocation found (should not happen), fallback to single run
-    if best_allocation is None:
-        best_allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms,
-                                       bath_rooms, housekeepers, time_single, time_twin,
-                                       time_eco, time_bath)
-    return best_allocation
+            best_result = hk_to_rooms
+        
+        if errors == 0:
+            break
+        
+        allocator.allocation = {h: [] for h in allocator.hk_ids}
+    
+    result = {}
+    for hk_id, room_list in best_result.items():
+        for room in room_list:
+            result[room] = hk_id
+    
+    return result
+
+
+def _fl(room: int) -> int:
+    return room // 100
+
+
+class _RoomAllocator:
+    def __init__(self, rooms, eco_rooms, eco_out_rooms, twin_rooms, housekeepers):
+        self.eco_rooms = set(eco_rooms) | set(eco_out_rooms)
+        self.eco_out_rooms = set(eco_out_rooms)
+        self.twin_rooms = set(twin_rooms)
+        self.normal_rooms = sorted(rooms)
+        
+        self.floor_rooms = defaultdict(list)
+        for r in self.normal_rooms:
+            self.floor_rooms[_fl(r)].append(r)
+        self.floors = sorted(self.floor_rooms.keys())
+        
+        self.hk_ids = [hk['id'] for hk in housekeepers]
+        self.room_quotas = {hk['id']: hk['room_quota'] for hk in housekeepers}
+        self.has_bath = {hk['id']: hk.get('has_bath', False) for hk in housekeepers}
+        
+        # Twin Quota: -1はauto、0以上は指定値
+        self.twin_quota_specified = {}  # 指定されたか
+        self.twin_quotas = {}
+        self._calculate_twin_quotas(housekeepers)
+        
+        self.bath_hks = [h for h in self.hk_ids if self.has_bath[h]]
+        self.normal_hks = [h for h in self.hk_ids if not self.has_bath[h]]
+        
+        self.allocation = {h: [] for h in self.hk_ids}
+    
+    def _calculate_twin_quotas(self, housekeepers):
+        normal_twin_count = len([r for r in self.normal_rooms if r in self.twin_rooms])
+        fixed, auto = 0, []
+        for hk in housekeepers:
+            if hk.get('twin_quota', -1) >= 0:
+                self.twin_quotas[hk['id']] = hk['twin_quota']
+                self.twin_quota_specified[hk['id']] = True
+                fixed += hk['twin_quota']
+            else:
+                self.twin_quota_specified[hk['id']] = False
+                auto.append(hk)
+        
+        remaining = normal_twin_count - fixed
+        if auto and remaining > 0:
+            total = sum(h['room_quota'] for h in auto)
+            for hk in auto:
+                self.twin_quotas[hk['id']] = round(remaining * hk['room_quota'] / total)
+            allocated = sum(self.twin_quotas[h['id']] for h in auto)
+            diff = remaining - allocated
+            sorted_hks = sorted(auto, key=lambda h: h['room_quota'], reverse=True)
+            for i in range(abs(diff)):
+                self.twin_quotas[sorted_hks[i % len(sorted_hks)]['id']] += 1 if diff > 0 else -1
+        elif auto:
+            for hk in auto:
+                self.twin_quotas[hk['id']] = 0
+    
+    def _count_normal(self, hk_id):
+        return len([r for r in self.allocation[hk_id] if r not in self.eco_rooms])
+    
+    def _count_twins(self, hk_id):
+        return sum(1 for r in self.allocation[hk_id] if r in self.twin_rooms and r not in self.eco_rooms)
+    
+    def _get_floors(self, hk_id):
+        return set(_fl(r) for r in self.allocation[hk_id] if r not in self.eco_rooms)
+    
+    def _remaining_quota(self, hk_id):
+        return self.room_quotas[hk_id] - self._count_normal(hk_id)
+    
+    def evaluate_solution(self, hk_to_rooms: Dict[int, List[int]]):
+        score = 0
+        total_errors = 0
+        
+        for hk_id in self.hk_ids:
+            rooms = hk_to_rooms[hk_id]
+            normal = [r for r in rooms if r not in self.eco_rooms]
+            
+            room_diff = abs(len(normal) - self.room_quotas[hk_id])
+            score -= room_diff * 10000
+            total_errors += room_diff
+            
+            floors = set(_fl(r) for r in normal)
+            floor_excess = max(0, len(floors) - 2)
+            score -= floor_excess * 1000
+            total_errors += floor_excess
+            
+            # Twin Quota（指定ありのみカウント）
+            if self.twin_quota_specified[hk_id]:
+                twins = sum(1 for r in normal if r in self.twin_rooms)
+                twin_diff = abs(twins - self.twin_quotas[hk_id])
+                score -= twin_diff * 100
+                total_errors += twin_diff
+        
+        return score, total_errors
+    
+    def allocate(self, strategy: int = 0) -> Dict[int, List[int]]:
+        self.allocation = {h: [] for h in self.hk_ids}
+        used = set()
+        
+        strategy_type = strategy % 20
+        
+        if strategy_type == 0:
+            hk_queue = list(self.bath_hks) + list(self.normal_hks)
+        elif strategy_type == 1:
+            hk_queue = list(self.bath_hks) + sorted(self.normal_hks, key=lambda h: self.twin_quotas[h], reverse=True)
+        elif strategy_type == 2:
+            hk_queue = list(self.bath_hks) + sorted(self.normal_hks, key=lambda h: self.twin_quotas[h])
+        elif strategy_type == 3:
+            hk_queue = list(self.bath_hks) + sorted(self.normal_hks, key=lambda h: self.room_quotas[h], reverse=True)
+        elif strategy_type == 4:
+            hk_queue = list(self.bath_hks) + sorted(self.normal_hks, key=lambda h: self.room_quotas[h])
+        elif strategy_type == 5:
+            hk_queue = list(self.bath_hks) + list(reversed(self.normal_hks))
+        elif strategy_type == 6:
+            hk_queue = list(self.bath_hks) + sorted(self.normal_hks, 
+                key=lambda h: self.twin_quotas[h] / max(1, self.room_quotas[h]), reverse=True)
+        elif strategy_type == 7:
+            hk_queue = list(self.bath_hks) + sorted(self.normal_hks, 
+                key=lambda h: self.twin_quotas[h] / max(1, self.room_quotas[h]))
+        else:
+            normal_shuffled = list(self.normal_hks)
+            random.seed(strategy)
+            random.shuffle(normal_shuffled)
+            hk_queue = list(self.bath_hks) + normal_shuffled
+        
+        reverse_floors = (strategy // 20) % 2 == 1
+        
+        for hk_id in hk_queue:
+            self._allocate_hk(hk_id, used, reverse_floors)
+        
+        self._fallback_allocation_strict(used)
+        
+        # Twin調整（指定ありHKを優先）
+        self._adjust_twin_quotas_priority()
+        
+        self._allocate_eco_rooms()
+        
+        return {h: sorted(self.allocation[h]) for h in self.hk_ids}
+    
+    def _allocate_hk(self, hk_id: int, used: Set[int], reverse_floors: bool = False):
+        quota = self.room_quotas[hk_id]
+        twin_quota = self.twin_quotas[hk_id]
+        is_bath = self.has_bath[hk_id]
+        
+        if is_bath:
+            available_floors = [f for f in self.floors if f <= 4]
+        else:
+            available_floors = list(self.floors)
+        
+        if reverse_floors:
+            available_floors = list(reversed(available_floors))
+        
+        start_floor = None
+        for f in available_floors:
+            avail = [r for r in self.floor_rooms[f] if r not in used]
+            if avail:
+                start_floor = f
+                break
+        
+        if start_floor is None:
+            return
+        
+        assigned = 0
+        twins_assigned = 0
+        hk_floors = []
+        
+        scan_floors = available_floors if not reverse_floors else list(reversed(sorted(available_floors)))
+        
+        for floor in scan_floors:
+            if not reverse_floors and floor < start_floor:
+                continue
+            if reverse_floors and floor > start_floor:
+                continue
+            if assigned >= quota:
+                break
+            if len(hk_floors) >= 2:
+                break
+            
+            if hk_floors and floor not in hk_floors:
+                if abs(floor - hk_floors[0]) > 2:
+                    break
+            
+            available = [r for r in self.floor_rooms[floor] if r not in used]
+            if not available:
+                continue
+            
+            twins_here = sorted([r for r in available if r in self.twin_rooms])
+            singles_here = sorted([r for r in available if r not in self.twin_rooms])
+            
+            twins_needed = max(0, twin_quota - twins_assigned)
+            for room in twins_here[:twins_needed]:
+                if assigned >= quota:
+                    break
+                self.allocation[hk_id].append(room)
+                used.add(room)
+                assigned += 1
+                twins_assigned += 1
+                if floor not in hk_floors:
+                    hk_floors.append(floor)
+            
+            for room in singles_here:
+                if assigned >= quota:
+                    break
+                self.allocation[hk_id].append(room)
+                used.add(room)
+                assigned += 1
+                if floor not in hk_floors:
+                    hk_floors.append(floor)
+            
+            for room in twins_here[twins_needed:]:
+                if room in used:
+                    continue
+                if assigned >= quota:
+                    break
+                self.allocation[hk_id].append(room)
+                used.add(room)
+                assigned += 1
+                twins_assigned += 1
+                if floor not in hk_floors:
+                    hk_floors.append(floor)
+    
+    def _fallback_allocation_strict(self, used: Set[int]):
+        remaining = [r for r in self.normal_rooms if r not in used]
+        
+        for room in sorted(remaining):
+            floor = _fl(room)
+            is_twin = room in self.twin_rooms
+            
+            candidates = [h for h in self.hk_ids if self._remaining_quota(h) > 0]
+            candidates = [h for h in candidates if not (self.has_bath[h] and floor > 4)]
+            
+            if not candidates:
+                continue
+            
+            def score(h):
+                s = 0
+                current = self._get_floors(h)
+                if floor in current:
+                    s += 1000
+                elif len(current) < 2:
+                    if not current:
+                        s += 500
+                    elif abs(floor - min(current)) <= 2 or abs(floor - max(current)) <= 2:
+                        s += 500
+                s += self._remaining_quota(h) * 10
+                if is_twin and self._count_twins(h) < self.twin_quotas[h]:
+                    s += 5
+                elif not is_twin and self._count_twins(h) >= self.twin_quotas[h]:
+                    s += 5
+                return s
+            
+            hk_id = max(candidates, key=score)
+            self.allocation[hk_id].append(room)
+            used.add(room)
+    
+    def _adjust_twin_quotas_priority(self):
+        """Twin調整（指定ありHKを優先的に調整）"""
+        for _ in range(2000):
+            changed = False
+            
+            # 指定ありHKでTwin過剰/不足を探す
+            for hk_id in self.hk_ids:
+                if not self.twin_quota_specified[hk_id]:
+                    continue
+                
+                current = self._count_twins(hk_id)
+                target = self.twin_quotas[hk_id]
+                
+                if current > target:
+                    # Twinが多すぎる → 他のHK（autoも含む）に渡す
+                    my_twins = [r for r in self.allocation[hk_id] 
+                               if r in self.twin_rooms and r not in self.eco_rooms]
+                    for my_twin in my_twins:
+                        if self._count_twins(hk_id) <= target:
+                            break
+                        # スワップ相手を探す（指定ありでTwin不足、またはauto）
+                        for other in self.hk_ids:
+                            if other == hk_id:
+                                continue
+                            # autoのHKは常にスワップ相手になれる
+                            if self.twin_quota_specified[other] and self._count_twins(other) >= self.twin_quotas[other]:
+                                continue
+                            other_singles = [r for r in self.allocation[other] 
+                                           if r not in self.twin_rooms and r not in self.eco_rooms]
+                            for other_single in other_singles:
+                                if self._can_swap(hk_id, other, my_twin, other_single):
+                                    self._do_swap(hk_id, other, my_twin, other_single)
+                                    changed = True
+                                    break
+                            if changed:
+                                break
+                        if changed:
+                            break
+                
+                elif current < target:
+                    # Twinが足りない → 他のHK（autoまたはTwin過剰）から取る
+                    my_singles = [r for r in self.allocation[hk_id] 
+                                 if r not in self.twin_rooms and r not in self.eco_rooms]
+                    for my_single in my_singles:
+                        if self._count_twins(hk_id) >= target:
+                            break
+                        for other in self.hk_ids:
+                            if other == hk_id:
+                                continue
+                            # autoのHKからは取れる、指定ありはTwin過剰の場合のみ
+                            if self.twin_quota_specified[other] and self._count_twins(other) <= self.twin_quotas[other]:
+                                continue
+                            other_twins = [r for r in self.allocation[other] 
+                                          if r in self.twin_rooms and r not in self.eco_rooms]
+                            for other_twin in other_twins:
+                                if self._can_swap(hk_id, other, my_single, other_twin):
+                                    self._do_swap(hk_id, other, my_single, other_twin)
+                                    changed = True
+                                    break
+                            if changed:
+                                break
+                        if changed:
+                            break
+                
+                if changed:
+                    break
+            
+            if not changed:
+                break
+    
+    def _can_swap(self, hk1, hk2, room1, room2):
+        f1, f2 = _fl(room1), _fl(room2)
+        
+        if self.has_bath[hk1] and f2 > 4:
+            return False
+        if self.has_bath[hk2] and f1 > 4:
+            return False
+        
+        floors1_after = set()
+        for r in self.allocation[hk1]:
+            if r != room1 and r not in self.eco_rooms:
+                floors1_after.add(_fl(r))
+        floors1_after.add(f2)
+        
+        if len(floors1_after) > 2:
+            return False
+        if len(floors1_after) == 2:
+            f_list = sorted(floors1_after)
+            if f_list[1] - f_list[0] > 2:
+                return False
+        
+        floors2_after = set()
+        for r in self.allocation[hk2]:
+            if r != room2 and r not in self.eco_rooms:
+                floors2_after.add(_fl(r))
+        floors2_after.add(f1)
+        
+        if len(floors2_after) > 2:
+            return False
+        if len(floors2_after) == 2:
+            f_list = sorted(floors2_after)
+            if f_list[1] - f_list[0] > 2:
+                return False
+        
+        return True
+    
+    def _do_swap(self, hk1, hk2, room1, room2):
+        self.allocation[hk1].remove(room1)
+        self.allocation[hk2].remove(room2)
+        self.allocation[hk1].append(room2)
+        self.allocation[hk2].append(room1)
+    
+    def _allocate_eco_rooms(self):
+        for room in sorted(self.eco_out_rooms):
+            candidates = [h for h in self.hk_ids if _fl(room) in self._get_floors(h)]
+            if candidates:
+                self.allocation[min(candidates, key=lambda h: len(self.allocation[h]))].append(room)
+        
+        eco_only = self.eco_rooms - self.eco_out_rooms
+        for room in sorted(eco_only):
+            candidates = [h for h in self.hk_ids if _fl(room) in self._get_floors(h)]
+            if not candidates:
+                candidates = list(self.hk_ids)
+            if candidates:
+                self.allocation[min(candidates, key=lambda h: len(self.allocation[h]))].append(room)
+
+
+if __name__ == "__main__":
+    from collections import defaultdict
+    
+    # 新テストケース
+    rooms = {204: None, 205: None, 207: None, 208: None, 209: None, 210: None, 215: None, 216: None, 217: None, 305: None, 312: None, 313: None, 314: None, 315: None, 316: None, 404: None, 406: None, 409: None, 410: None, 412: None, 413: None, 415: None, 416: None, 417: None, 502: None, 505: None, 507: None, 508: None, 509: None, 510: None, 513: None, 515: None, 516: None, 517: None, 601: None, 602: None, 603: None, 604: None, 605: None, 606: None, 617: None, 702: None, 711: None, 712: None, 713: None, 714: None, 717: None, 804: None, 805: None, 806: None, 807: None, 808: None, 811: None, 812: None, 813: None, 815: None, 816: None, 817: None, 902: None, 903: None, 906: None, 907: None, 908: None, 912: None, 913: None, 915: None, 1002: None, 1003: None, 1004: None, 1005: None, 1006: None, 1007: None, 1016: None, 1017: None}
+    eco_rooms = [206, 212, 308, 511, 512, 710, 715]
+    eco_out_rooms = [212, 511, 715]
+    twin_rooms = [214, 216, 217, 314, 316, 317, 414, 416, 417, 514, 516, 517, 614, 616, 617, 714, 716, 717, 814, 816, 817, 914, 916, 917, 1014, 1016, 1017]
+    housekeepers = [{'id': 1, 'room_quota': 7, 'twin_quota': -1, 'has_bath': True}, {'id': 2, 'room_quota': 8, 'twin_quota': 2, 'has_bath': True}, {'id': 3, 'room_quota': 8, 'twin_quota': 2, 'has_bath': True}, {'id': 4, 'room_quota': 10, 'twin_quota': -1, 'has_bath': False}, {'id': 5, 'room_quota': 10, 'twin_quota': -1, 'has_bath': False}, {'id': 6, 'room_quota': 10, 'twin_quota': -1, 'has_bath': False}, {'id': 7, 'room_quota': 10, 'twin_quota': -1, 'has_bath': False}, {'id': 8, 'room_quota': 11, 'twin_quota': -1, 'has_bath': False}]
+    
+    all_eco = set(eco_rooms) | set(eco_out_rooms)
+    
+    result = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, [], housekeepers, 24, 28, 5, 50)
+    
+    print("=" * 80)
+    print("v28 新テストケース")
+    print("=" * 80)
+    
+    hk_rooms = defaultdict(list)
+    for room, hk_id in result.items():
+        hk_rooms[hk_id].append(room)
+    
+    errors = []
+    for hk_id in sorted(hk_rooms.keys()):
+        assigned = hk_rooms[hk_id]
+        normal = [r for r in assigned if r not in all_eco]
+        twins = sum(1 for r in normal if r in twin_rooms)
+        floors = sorted(set(r // 100 for r in normal))
+        hk = housekeepers[hk_id - 1]
+        quota = hk['room_quota']
+        twin_quota = hk['twin_quota']
+        bath = "🛁" if hk['has_bath'] else "  "
+        
+        q_ok = "✓" if len(normal) == quota else "✗"
+        t_ok = "✓" if twin_quota < 0 or twins == twin_quota else "✗"
+        f_ok = "✓" if len(floors) <= 2 else "✗"
+        
+        tq_str = str(twin_quota) if twin_quota >= 0 else "auto"
+        
+        if len(floors) > 2:
+            errors.append(f"HK{hk_id}: Floor")
+        if len(normal) != quota:
+            errors.append(f"HK{hk_id}: Room")
+        if twin_quota >= 0 and twins != twin_quota:
+            errors.append(f"HK{hk_id}: Twin({twins}/{twin_quota})")
+        
+        print(f"{bath} HK{hk_id:2d}: {len(normal):2d}/{quota}室{q_ok} Twin:{twins}/{tq_str}{t_ok} Floor:{floors}{f_ok}")
+    
+    if errors:
+        print(f"\n❌ {len(errors)}件: {errors}")
+    else:
+        print("\n✅ 全制約OK")

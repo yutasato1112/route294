@@ -122,7 +122,7 @@ def sidewind_front(request):
         #実行
         # bath_roomsは現時点では空リストとして扱う（将来的には大浴場の部屋番号を指定可能）
         bath_rooms = []
-        print(housekeepers)
+        print(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
         allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
 
         
