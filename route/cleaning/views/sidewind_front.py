@@ -2,6 +2,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from ..utils.sidewind_core import assign_rooms
 from ..utils.home_util import read_csv
+from ..utils.preview_util import multiple_night
 import datetime
 from collections import Counter, defaultdict, OrderedDict
 
@@ -96,6 +97,12 @@ def sidewind_front(request):
         eco_rooms = [int(x) for x in request.POST.getlist('eco_room') if x != '']
         eco_out_rooms = [int(x) for x in request.POST.getlist('amenity') if x != '']
         duvet_rooms = [int(x) for x in request.POST.getlist('duvet') if x != '']
+
+        #連泊入力の受け取り
+        try:
+            multiple_rooms = multiple_night(request)
+        except Exception as e:
+            multiple_rooms = []
         room_info_data, times_by_time_data, master_key_data = read_csv()
         twin_rooms = [int(x[0]) for x in room_info_data if x[1] == 'T']
         room_inputs = {}  # { room_number: value }
@@ -223,6 +230,7 @@ def sidewind_front(request):
         request.session['eco_rooms'] = eco_rooms
         request.session['ame'] = eco_out_rooms
         request.session['duvet'] = duvet_rooms
+        request.session['multiple_rooms'] = multiple_rooms
         bath_staff = [h['id'] for h in housekeepers if h['has_bath']]
         request.session['bath_staff'] = bath_staff
                 

@@ -7,7 +7,6 @@ from django.http import JsonResponse
 from urllib.parse import urlparse
 from ..utils.preview_util import catch_post, multiple_night
 from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char
-#from openai import OpenAI
 import os
 import traceback
 # Create your views here.
@@ -65,7 +64,8 @@ class sidewindView(TemplateView):
             'ame_rooms':ame_rooms,
             'duvet_rooms':duvet_rooms,
             'room_char_list':room_char_list,
-            'quota_len':10
+            'quota_len':10,
+            'multiple_rooms':multiple_rooms,
         }
         return render(self.request, self.template_name, context)
     

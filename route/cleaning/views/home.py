@@ -36,6 +36,7 @@ class homeView(TemplateView):
             ame_rooms = request.session['ame']
             duvet_rooms = request.session['duvet']
             bath_persons = request.session['bath_staff']
+            multiple_rooms = request.session.get('multiple_rooms', [])
 
             #csv読み込み
             room_info_data, times_by_time_data, master_key_data = read_csv()
@@ -61,9 +62,9 @@ class homeView(TemplateView):
             
             #エコ・アメ・デュべ部屋の処理
             room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms)
-            
+
             #連泊部屋入力欄対応
-            padded_rooms = [''] * 100
+            padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
             multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]
 
             context = {
@@ -106,7 +107,7 @@ class homeView(TemplateView):
                 'is_chlorine': False,
                 'is_chemical_clean': False,
                 'is_public': False,
-                'multiple_rooms': [],
+                'multiple_rooms': multiple_rooms,
                 'padded_rooms': padded_rooms,
                 'multiple_rows': multiple_rows,
                 'add_spots_len':0,

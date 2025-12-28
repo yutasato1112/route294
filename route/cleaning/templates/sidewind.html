@@ -7,6 +7,10 @@
 <div class="main">
     <form action="" method="post" enctype="multipart/form-data" id="main_form">
         {% csrf_token %}
+        <!-- 連泊部屋情報をhiddenフィールドで保持 -->
+        {% for room in multiple_rooms %}
+        <input type="hidden" name="multiple_night_room" value="{{ room }}">
+        {% endfor %}
         <div class="first_line">
             <!--作業者名-->
             <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if method == 'POST' %} value={{editor_name}} {% endif %} >
