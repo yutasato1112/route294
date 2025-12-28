@@ -339,15 +339,21 @@ input[type="number"]::-webkit-inner-spin-button {
     overflow: hidden;
 }
 
-/* 横幅設定（現状維持） */
+
 .room_change {
     width: 15%;
 }
 .outin {
-    width: 10%;
+    width: 8%;
+}
+.multiple_night_clean{
+    width: 9%;
 }
 .must_clean {
-    width: 37%;
+    width: 30%;
+}
+.must_clean_room_title{
+    width: 18%;
 }
 .others {
     width: 37%;

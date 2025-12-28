@@ -19,10 +19,10 @@ class previewView(TemplateView):
 
         #連泊入力の受け取り
         try:
-            multiple_rooms = multiple_night(request)
+            multiple_room_list = multiple_night(request, )
         except Exception as e:
-            multiple_rooms = []
-        
+            multiple_room_list = []
+
         #特殊大浴場清掃
         is_drain_water,is_highskite,is_chlorine,is_chemical_clean, is_public = special_clean(request)
         
@@ -35,7 +35,13 @@ class previewView(TemplateView):
         
         
         #表紙情報受け取り
-        room_changes, outins, must_cleans, others = get_cover(request)
+        room_changes, outins, must_cleans, others, multiple_night_cleans = get_cover(request)
+        
+        #連泊新規清掃部屋の連泊部屋除外処理
+        multiple_rooms = []
+        for i in multiple_room_list:
+            if i not in multiple_night_cleans:
+                multiple_rooms.append(i)
         
         #パーソン人数
         person_count = 0

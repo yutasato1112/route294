@@ -2,7 +2,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from ..utils.sidewind_core import assign_rooms
 from ..utils.home_util import read_csv
-from ..utils.preview_util import multiple_night
+from ..utils.preview_util import multiple_night, multiple_night_cleans, get_cover, catch_post
 import datetime
 from collections import Counter, defaultdict, OrderedDict
 
@@ -103,6 +103,32 @@ def sidewind_front(request):
             multiple_rooms = multiple_night(request)
         except Exception as e:
             multiple_rooms = []
+
+        #連泊清掃入力の受け取り
+        try:
+            multiple_night_cleans_list = multiple_night_cleans(request)
+        except Exception as e:
+            multiple_night_cleans_list = []
+
+        #カバー情報の受け取り（ルームチェンジ、アウトイン、要清掃、その他備考）
+        try:
+            room_changes, outins, must_cleans, others, _ = get_cover(request)
+        except Exception as e:
+            room_changes = []
+            outins = []
+            must_cleans = []
+            others = ''
+
+        #その他の情報を取得
+        try:
+            _, _, _, _, _, bath_person, remarks, house_data, _, _, _, _, _, _, contacts, spots = catch_post(request)
+        except Exception as e:
+            bath_person = []
+            remarks = []
+            house_data = []
+            contacts = []
+            spots = []
+
         room_info_data, times_by_time_data, master_key_data = read_csv()
         twin_rooms = [int(x[0]) for x in room_info_data if x[1] == 'T']
         room_inputs = {}  # { room_number: value }
@@ -222,7 +248,7 @@ def sidewind_front(request):
         #セッション
         request.session['sidewind_flag'] = True
         request.session['allocation'] = sorted_allocation
-        request.session['name'] = name
+        request.session['editor_name'] = name
         request.session['date'] = date
         request.session['single_time'] = single_time
         request.session['twin_time'] = twin_time
@@ -231,8 +257,18 @@ def sidewind_front(request):
         request.session['ame'] = eco_out_rooms
         request.session['duvet'] = duvet_rooms
         request.session['multiple_rooms'] = multiple_rooms
+        request.session['multiple_night_cleans'] = multiple_night_cleans_list
+        request.session['room_changes'] = room_changes
+        request.session['outins'] = outins
+        request.session['must_cleans'] = must_cleans
+        request.session['others'] = others
+        request.session['remarks'] = remarks
+        request.session['house_data'] = house_data
+        request.session['contacts'] = contacts
+        request.session['spots'] = spots
         bath_staff = [h['id'] for h in housekeepers if h['has_bath']]
         request.session['bath_staff'] = bath_staff
+        request.session['bath_person'] = bath_person
                 
         return redirect(reverse('home'))
     return redirect(reverse('sidewind'))

@@ -296,6 +296,10 @@ $(document).ready(function () {
     $(document).on("input", ".outin_room", function () {
         checkAndAddOutInRow(this);
     });
+    $(document).on("input", ".multiple_night_clean_room", function () {
+        checkAndAddMultipleNightCleanRow(this);
+        updateOthersWithMultipleNightCleans();
+    });
     // 初期値を保存して、既に入力済みのセルで不要に行が追加されるのを防ぐ
     $(".outin_room").each(function () {
         $(this).data('prev', $(this).val().trim());
@@ -1227,6 +1231,71 @@ $(document).ready(function () {
 
         // 次回判定のために現在値を保存
         $current.data('prev', currVal);
+    }
+    //連泊新規清掃表の行追加
+    function checkAndAddMultipleNightCleanRow(currentElem) {
+        let allRoomsFilled = true;
+
+        $(".multiple_night_clean_room").each(function () {
+            if ($(this).val().trim() === "") {
+                allRoomsFilled = false;
+            }
+        });
+
+        const $current = $(currentElem);
+        const prevVal = $current.data('prev') || "";
+        const currVal = $current.val().trim();
+
+        // 全セルが埋まっており、かつこの要素が空→非空に変化した場合のみ追加
+        if (allRoomsFilled && currVal !== "" && prevVal === "") {
+            let rowCount = $(".multiple_night_clean_room").length + 1;
+
+            let newRow = `
+                <tr>
+                    <td>
+                        <input type="text" name="multiple_night_clean" id="multiple_night_clean_${rowCount}" class="multiple_night_clean_room">
+                    </td>
+                </tr>
+            `;
+
+            $("#multiple_night_clean_table_body").append(newRow);
+        }
+
+        // 次回判定のために現在値を保存
+        $current.data('prev', currVal);
+    }
+
+    //連泊新規清掃の部屋番号をその他備考欄に反映
+    function updateOthersWithMultipleNightCleans() {
+        const roomNumbers = [];
+
+        $(".multiple_night_clean_room").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") {
+                roomNumbers.push(val);
+            }
+        });
+
+        const $othersTextarea = $('textarea[name="others"]');
+        const currentText = $othersTextarea.val();
+
+        // 既存の連泊新規清掃に関する行を削除（#で始まり「新規清掃」で終わる行）
+        const lines = currentText.split('\n');
+        const filteredLines = lines.filter(line => {
+            const trimmed = line.trim();
+            return !(trimmed.startsWith('#') && trimmed.endsWith('新規清掃'));
+        });
+
+        // 新しい連泊新規清掃の行を生成
+        const newCleanLines = roomNumbers.map(room => `#${room} 新規清掃`);
+
+        // 既存のテキスト（連泊新規清掃以外）と新しい連泊新規清掃を結合
+        const combinedLines = [...filteredLines, ...newCleanLines];
+
+        // 空行を除去してから結合
+        const finalText = combinedLines.filter(line => line.trim() !== '').join('\n');
+
+        $othersTextarea.val(finalText);
     }
 
     //要清掃表の行追加

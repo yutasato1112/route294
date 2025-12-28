@@ -15,7 +15,7 @@
         {% csrf_token %}
         <div class="first_line">
             <!--作業者名-->
-            <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if method == 'POST' %} value={{editor_name}} {% endif %} >
+            <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if editor_name %} value="{{editor_name}}" {% endif %} >
             <!--日付-->
             <input class="input_date" type="date" name="date" id="date" required  value="{{ today|date:'Y-m-d' }}">
             <div class="input_time_per_room_type">
@@ -41,7 +41,7 @@
             </div>
             <div>
             <!--SideWindボタン-->
-                <input formaction="{% url 'sidewind' %}" type="submit" id="sidewind_btn" value="Autopilot v2(実証実験中)" class="btn btn-primary submit sidewind_entire_btn" formtarget="_blank">
+                <input formaction="{% url 'sidewind' %}" type="submit" id="sidewind_btn" value="Autopilot v2" class="btn btn-primary submit sidewind_entire_btn" formtarget="_blank">
             </div>
             <div>
             <!--wincal csvボタン-->
@@ -461,6 +461,35 @@
                                 </td>
                                 <td>
                                     <input type="text" name="must_clean_reason" id="must_clean_reason" class="must_clean_reason">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endwith %}
+                    </tbody>
+                </table>
+            </div>
+            <!--連泊新規清掃-->
+            <div class="multiple_night_clean">
+                <p class="result_title">連泊新規清掃</p>
+                <table class="table table-striped table-bordered bottom_table">
+                    <thead>
+                        <tr>
+                            <th>部屋番号</th>
+                        </tr>
+                    </thead>
+                    <tbody id="multiple_night_clean_table_body">
+                        {% for multiple_night_clean in multiple_night_cleans %}
+                        <tr>
+                            <td>
+                                <input type="text" name="multiple_night_cleans" id="multiple_night_cleans" class="multiple_night_clean_room" value="{{ multiple_night_clean }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% with ''|center:multiple_night_cleans_len as range %}
+                            {% for _ in range %}
+                            <tr>
+                                <td>
+                                    <input type="text" name="multiple_night_cleans" id="multiple_night_cleans" class="multiple_night_clean_room">
                                 </td>
                             </tr>
                             {% endfor %}

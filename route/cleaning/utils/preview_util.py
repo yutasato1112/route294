@@ -97,6 +97,14 @@ def get_cover(request):
         if i != "":
             outins.append(i)
 
+
+    # -- 連泊新規清掃部屋 --
+    multiple_night_clean_list = post.getlist("multiple_night_cleans")
+    multiple_night_cleans = [] 
+    for i in multiple_night_clean_list:
+        if i != "":
+            multiple_night_cleans.append(i)
+
     # --- 要清掃 ---
     must_cleans = []
     must_clean_room_tmp = post.getlist("must_clean_room")
@@ -120,7 +128,7 @@ def get_cover(request):
             must_cleans.append({"room":must_clean_room[i],"room_to":must_clean_room_to[i] , "reason":must_clean_reason[i]})
     # --- その他備考 ---
     others = post.get("others", "").strip()
-    return room_changes, outins, must_cleans ,others
+    return room_changes, outins, must_cleans ,others, multiple_night_cleans
     
         
 
@@ -465,6 +473,11 @@ def multiple_night(request):
     rooms = request.POST.getlist("multiple_night_room")
     rooms = [room.strip() for room in rooms if room.strip() != ""]
     return rooms
+
+def multiple_night_cleans(request):
+    cleans = request.POST.getlist("multiple_night_cleans")
+    cleans = [clean.strip() for clean in cleans if clean.strip() != ""]
+    return cleans
 
 def google_translate_ja_to_en(text: Optional[str]) -> str:
     if not text:

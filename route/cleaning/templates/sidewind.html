@@ -11,6 +11,50 @@
         {% for room in multiple_rooms %}
         <input type="hidden" name="multiple_night_room" value="{{ room }}">
         {% endfor %}
+        <!-- 連泊清掃情報をhiddenフィールドで保持 -->
+        {% for clean in multiple_night_cleans %}
+        <input type="hidden" name="multiple_night_cleans" value="{{ clean }}">
+        {% endfor %}
+        <!-- 備考情報をhiddenフィールドで保持 -->
+        {% for remark in remarks %}
+        <input type="hidden" name="remark_room_{{ forloop.counter }}" value="{{ remark.room }}">
+        <input type="hidden" name="remark_{{ forloop.counter }}" value="{{ remark.comment }}">
+        {% endfor %}
+        <!-- ハウスキーパー情報をhiddenフィールドで保持 -->
+        {% for house in house_person %}
+        <input type="hidden" name="no_{{ forloop.counter }}" value="{{ house.0 }}">
+        <input type="hidden" name="name_{{ forloop.counter }}" value="{{ house.1 }}">
+        <input type="hidden" name="key_{{ forloop.counter }}" value="{{ house.2 }}">
+        <input type="hidden" name="dd_{{ forloop.counter }}" value="{{ house.3 }}">
+        {% if house.4 %}<input type="hidden" name="eng_{{ forloop.counter }}" value="on">{% endif %}
+        {% endfor %}
+        <!-- 連絡先情報をhiddenフィールドで保持 -->
+        {% for contact in contacts %}
+        <input type="hidden" name="contact_number_{{ forloop.counter }}" value="{{ contact.person_number }}">
+        <input type="hidden" name="contact_{{ forloop.counter }}" value="{{ contact.contact }}">
+        {% endfor %}
+        <!-- スポット清掃情報をhiddenフィールドで保持 -->
+        {% for spot in spots %}
+        <input type="hidden" name="spot_number_{{ forloop.counter }}" value="{{ spot.room }}">
+        <input type="hidden" name="spot_{{ forloop.counter }}" value="{{ spot.content }}">
+        {% endfor %}
+        <!-- ルームチェンジ情報をhiddenフィールドで保持 -->
+        {% for change in room_changes %}
+        <input type="hidden" name="room_change_original" value="{{ change.original }}">
+        <input type="hidden" name="room_change_destination" value="{{ change.destination }}">
+        {% endfor %}
+        <!-- アウトイン情報をhiddenフィールドで保持 -->
+        {% for outin in outins %}
+        <input type="hidden" name="outin" value="{{ outin }}">
+        {% endfor %}
+        <!-- 要清掃情報をhiddenフィールドで保持 -->
+        {% for must_clean in must_cleans %}
+        <input type="hidden" name="must_clean_room" value="{{ must_clean.room }}">
+        <input type="hidden" name="must_clean_room_to" value="{{ must_clean.room_to }}">
+        <input type="hidden" name="must_clean_reason" value="{{ must_clean.reason }}">
+        {% endfor %}
+        <!-- その他備考をhiddenフィールドで保持 -->
+        <input type="hidden" name="others" value="{{ others }}">
         <div class="first_line">
             <!--作業者名-->
             <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if method == 'POST' %} value={{editor_name}} {% endif %} >

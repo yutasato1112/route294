@@ -27,7 +27,7 @@ class homeView(TemplateView):
             request.session['sidewind_flag'] = False
             #データ受け取り
             allocation = request.session['allocation']
-            editor_name = request.session['name']
+            editor_name = request.session.get('editor_name', request.session.get('name', ''))
             date = datetime.datetime.strptime(request.session['date'], '%Y-%m-%d').date()
             single_time = request.session['single_time']
             twin_time = request.session['twin_time']
@@ -37,6 +37,16 @@ class homeView(TemplateView):
             duvet_rooms = request.session['duvet']
             bath_persons = request.session['bath_staff']
             multiple_rooms = request.session.get('multiple_rooms', [])
+            multiple_night_cleans_list = request.session.get('multiple_night_cleans', [])
+            room_changes = request.session.get('room_changes', [])
+            outins = request.session.get('outins', [])
+            must_cleans = request.session.get('must_cleans', [])
+            others = request.session.get('others', '')
+            remarks = request.session.get('remarks', [])
+            house_person = request.session.get('house_data', [])
+            contacts = request.session.get('contacts', [])
+            spots = request.session.get('spots', [])
+            bath_person = request.session.get('bath_person', [])
 
             #csv読み込み
             room_info_data, times_by_time_data, master_key_data = read_csv()
@@ -67,6 +77,12 @@ class homeView(TemplateView):
             padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
             multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]
 
+            #大浴場追加要員
+            add_bath = []
+            for person in bath_person:
+                if person != '':
+                    add_bath.append(person)
+
             context = {
                 'method':method,
                 'single_time':single_time,
@@ -79,28 +95,29 @@ class homeView(TemplateView):
                 'rooms':room_num_table,
                 'combined_rooms': combined_rooms,
                 'editor_name': editor_name,
-                'remarks': [],
-                'house_person': [],
+                'remarks': remarks,
+                'house_person': house_person,
+                'bath_persons': bath_persons,
                 'eco_rooms': eco_rooms,
                 'ame_rooms': ame_rooms,
                 'duvet_rooms': duvet_rooms,
                 'house_len': len(set(house_numbers)),
-                'add_house_len':0,
+                'add_house_len':len(house_person),
                 'room_char_list':room_char_list,
                 'room_char_list_len':10,
-                'remarks_len':3,
-                'add_remarks_len':3,
-                'room_changes_len':3,
-                'outins_len':3,
-                'must_cleans_len':3,
-                'room_changes':[],
-                'outins':[],
-                'must_cleans':[],
-                'others':'',
-                'add_bath':[],
-                'contacts': [],
-                'add_contacts_len':0,
-                'contacts_len':3,
+                'remarks_len':max(3-len(remarks), 1),
+                'add_remarks_len':len(remarks),
+                'room_changes_len':len(room_changes)+3,
+                'outins_len':len(outins)+3,
+                'must_cleans_len':len(must_cleans)+3,
+                'room_changes':room_changes,
+                'outins':outins,
+                'must_cleans':must_cleans,
+                'others':others,
+                'add_bath':add_bath,
+                'contacts': contacts,
+                'add_contacts_len':len(contacts),
+                'contacts_len':len(contacts)+3,
                 'from_report': False,
                 'is_drain_water': False,
                 'is_highskite': False,
@@ -110,12 +127,13 @@ class homeView(TemplateView):
                 'multiple_rooms': multiple_rooms,
                 'padded_rooms': padded_rooms,
                 'multiple_rows': multiple_rows,
-                'add_spots_len':0,
-                'spots_len':3,
-                'spots': [],
-                'bath_persons': bath_persons,
+                'add_spots_len':len(spots),
+                'spots_len':max(3-len(spots), 1),
+                'spots': spots,
                 'sidewind_flag':1,
-                'json_loaded_flag':0
+                'json_loaded_flag':0,
+                'multiple_night_cleans':multiple_night_cleans_list,
+                'multiple_night_cleans_len':len(multiple_night_cleans_list)+3,
             }
             return render(self.request, self.template_name, context)
         
@@ -189,6 +207,8 @@ class homeView(TemplateView):
             'sidewind_flag':0,
             'json_loaded_flag':0,
             'add_house_len':0,
+            'multiple_night_cleans':[],
+            'multiple_night_cleans_len':3,
         }
         return render(self.request, self.template_name, context)
     
@@ -299,6 +319,10 @@ class homeView(TemplateView):
         outins = data['outins']
         must_cleans = data['must_cleans']
         others = data['others']
+        try:
+            multiple_night_cleans = data['multiple_night_cleans']
+        except KeyError:
+            multiple_night_cleans = []
         contacts = data['contacts']
         is_drain_water = data.get('is_drain_water', False)
         is_highskite = data.get('is_highskite', False)
@@ -396,5 +420,7 @@ class homeView(TemplateView):
             'sidewind_flag':0,
             'json_loaded_flag':1,
             'from_rooming_list': False,
+            'multiple_night_cleans':multiple_night_cleans,
+            'multiple_night_cleans_len':len(multiple_night_cleans)+3,
         }
         return render(self.request, self.template_name, context)

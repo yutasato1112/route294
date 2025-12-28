@@ -5,7 +5,7 @@ import datetime
 import json
 from django.http import JsonResponse
 from urllib.parse import urlparse
-from ..utils.preview_util import catch_post, multiple_night
+from ..utils.preview_util import catch_post, multiple_night, multiple_night_cleans, get_cover
 from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char
 import os
 import traceback
@@ -28,7 +28,22 @@ class sidewindView(TemplateView):
             multiple_rooms = multiple_night(request)
         except Exception as e:
             multiple_rooms = []
-        
+
+        #連泊清掃入力の受け取り
+        try:
+            multiple_night_cleans_list = multiple_night_cleans(request)
+        except Exception as e:
+            multiple_night_cleans_list = []
+
+        #カバー情報の受け取り（ルームチェンジ、アウトイン、要清掃、その他備考）
+        try:
+            room_changes, outins, must_cleans, others, _ = get_cover(request)
+        except Exception as e:
+            room_changes = []
+            outins = []
+            must_cleans = []
+            others = ''
+
         #csv読み込み
         room_info_data, times_by_time_data, master_key_data = read_csv()
         #部屋を階別に二次元配列へ加工
@@ -66,6 +81,15 @@ class sidewindView(TemplateView):
             'room_char_list':room_char_list,
             'quota_len':10,
             'multiple_rooms':multiple_rooms,
+            'multiple_night_cleans':multiple_night_cleans_list,
+            'remarks':remarks,
+            'house_person':house_data,
+            'contacts':contacts,
+            'spots':spots,
+            'room_changes':room_changes,
+            'outins':outins,
+            'must_cleans':must_cleans,
+            'others':others,
         }
         return render(self.request, self.template_name, context)
     
