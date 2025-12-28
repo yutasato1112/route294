@@ -1,12 +1,3 @@
-"""
-ホテル清掃指示書 自動振り分けシステム v28
-Twin Quota指定優先版
-
-修正点:
-1. twin_quota指定ありのHKを絶対優先
-2. twin_quota=-1（auto）のHKは調整用バッファとして使用
-"""
-
 from collections import defaultdict
 from typing import Dict, List, Set, Any
 import random
@@ -35,7 +26,7 @@ def assign_rooms(
     best_result = None
     best_score = float('-inf')
     
-    for attempt in range(1000):
+    for attempt in range(2000):
         hk_to_rooms = allocator.allocate(strategy=attempt)
         score, errors = allocator.evaluate_solution(hk_to_rooms)
         
@@ -48,10 +39,41 @@ def assign_rooms(
         
         allocator.allocation = {h: [] for h in allocator.hk_ids}
     
+    # HK番号を振り直す
+    result = _renumber_hks(best_result, housekeepers)
+    
+    return result
+
+
+def _renumber_hks(hk_to_rooms: Dict[int, List[int]], housekeepers: List[Dict]) -> Dict[int, int]:
+    """
+    HK番号を振り直す
+    1. 大浴場担当者を最も若い番号にする
+    2. その後、担当階が低い順で番号を振る
+    """
+    # 各HKの情報を取得
+    hk_info = []
+    has_bath_map = {hk['id']: hk.get('has_bath', False) for hk in housekeepers}
+    
+    for hk_id, rooms in hk_to_rooms.items():
+        min_floor = min(r // 100 for r in rooms) if rooms else 999
+        is_bath = has_bath_map.get(hk_id, False)
+        hk_info.append((hk_id, is_bath, min_floor))
+    
+    # ソート: 大浴場担当者を先に（is_bath=True → 0）、担当階が低い順
+    hk_info.sort(key=lambda x: (0 if x[1] else 1, x[2]))
+    
+    # 新しいIDマッピング（元ID → 新ID）
+    old_to_new = {}
+    for new_id, (old_id, _, _) in enumerate(hk_info, 1):
+        old_to_new[old_id] = new_id
+    
+    # 結果を新しいIDで返す
     result = {}
-    for hk_id, room_list in best_result.items():
-        for room in room_list:
-            result[room] = hk_id
+    for hk_id, rooms in hk_to_rooms.items():
+        new_hk_id = old_to_new[hk_id]
+        for room in rooms:
+            result[room] = new_hk_id
     
     return result
 
@@ -61,6 +83,8 @@ def _fl(room: int) -> int:
 
 
 class _RoomAllocator:
+    MAX_HK_PER_FLOOR = 3
+    
     def __init__(self, rooms, eco_rooms, eco_out_rooms, twin_rooms, housekeepers):
         self.eco_rooms = set(eco_rooms) | set(eco_out_rooms)
         self.eco_out_rooms = set(eco_out_rooms)
@@ -76,8 +100,7 @@ class _RoomAllocator:
         self.room_quotas = {hk['id']: hk['room_quota'] for hk in housekeepers}
         self.has_bath = {hk['id']: hk.get('has_bath', False) for hk in housekeepers}
         
-        # Twin Quota: -1はauto、0以上は指定値
-        self.twin_quota_specified = {}  # 指定されたか
+        self.twin_quota_specified = {}
         self.twin_quotas = {}
         self._calculate_twin_quotas(housekeepers)
         
@@ -118,15 +141,74 @@ class _RoomAllocator:
     def _count_twins(self, hk_id):
         return sum(1 for r in self.allocation[hk_id] if r in self.twin_rooms and r not in self.eco_rooms)
     
+    def _count_eco(self, hk_id):
+        return sum(1 for r in self.allocation[hk_id] if r in self.eco_rooms)
+    
     def _get_floors(self, hk_id):
         return set(_fl(r) for r in self.allocation[hk_id] if r not in self.eco_rooms)
+    
+    def _get_all_floors(self, hk_id):
+        return set(_fl(r) for r in self.allocation[hk_id])
     
     def _remaining_quota(self, hk_id):
         return self.room_quotas[hk_id] - self._count_normal(hk_id)
     
+    def _count_hks_on_floor(self, floor):
+        count = 0
+        for h in self.hk_ids:
+            if floor in self._get_all_floors(h):
+                count += 1
+        return count
+    
+    def _can_add_floor(self, hk_id, new_floor):
+        if self.has_bath[hk_id] and new_floor > 4:
+            return False
+        
+        current = self._get_floors(hk_id)
+        all_current = self._get_all_floors(hk_id)
+        
+        if new_floor in all_current:
+            return True
+        
+        if len(current) >= 2:
+            return False
+        
+        if len(current) == 1:
+            existing = list(current)[0]
+            if abs(new_floor - existing) > 2:
+                return False
+        
+        if self._count_hks_on_floor(new_floor) >= self.MAX_HK_PER_FLOOR:
+            return False
+        
+        return True
+    
+    def _can_add_eco_floor(self, hk_id, eco_floor):
+        if self.has_bath[hk_id] and eco_floor > 4:
+            return False
+        
+        all_floors = self._get_all_floors(hk_id)
+        
+        if eco_floor in all_floors:
+            return True
+        
+        if len(all_floors) >= 2:
+            return False
+        
+        if self._count_hks_on_floor(eco_floor) >= self.MAX_HK_PER_FLOOR:
+            return False
+        
+        return True
+    
     def evaluate_solution(self, hk_to_rooms: Dict[int, List[int]]):
         score = 0
         total_errors = 0
+        
+        floor_hk_count = defaultdict(set)
+        for hk_id in self.hk_ids:
+            rooms = hk_to_rooms[hk_id]
+            for r in rooms:
+                floor_hk_count[_fl(r)].add(hk_id)
         
         for hk_id in self.hk_ids:
             rooms = hk_to_rooms[hk_id]
@@ -141,12 +223,22 @@ class _RoomAllocator:
             score -= floor_excess * 1000
             total_errors += floor_excess
             
-            # Twin Quota（指定ありのみカウント）
+            all_floors = set(_fl(r) for r in rooms)
+            all_floor_excess = max(0, len(all_floors) - 2)
+            score -= all_floor_excess * 500
+            total_errors += all_floor_excess
+            
             if self.twin_quota_specified[hk_id]:
                 twins = sum(1 for r in normal if r in self.twin_rooms)
                 twin_diff = abs(twins - self.twin_quotas[hk_id])
                 score -= twin_diff * 100
                 total_errors += twin_diff
+        
+        for floor, hks in floor_hk_count.items():
+            if len(hks) > self.MAX_HK_PER_FLOOR:
+                excess = len(hks) - self.MAX_HK_PER_FLOOR
+                score -= excess * 800
+                total_errors += excess
         
         return score, total_errors
     
@@ -154,7 +246,7 @@ class _RoomAllocator:
         self.allocation = {h: [] for h in self.hk_ids}
         used = set()
         
-        strategy_type = strategy % 20
+        strategy_type = strategy % 30
         
         if strategy_type == 0:
             hk_queue = list(self.bath_hks) + list(self.normal_hks)
@@ -180,21 +272,19 @@ class _RoomAllocator:
             random.shuffle(normal_shuffled)
             hk_queue = list(self.bath_hks) + normal_shuffled
         
-        reverse_floors = (strategy // 20) % 2 == 1
+        reverse_floors = (strategy // 30) % 2 == 1
+        small_floor_first = (strategy // 60) % 2 == 1
         
         for hk_id in hk_queue:
-            self._allocate_hk(hk_id, used, reverse_floors)
+            self._allocate_hk_v2(hk_id, used, reverse_floors, small_floor_first)
         
-        self._fallback_allocation_strict(used)
-        
-        # Twin調整（指定ありHKを優先）
+        self._fallback_allocation_strict_v2(used)
         self._adjust_twin_quotas_priority()
-        
-        self._allocate_eco_rooms()
+        self._allocate_eco_rooms_balanced()
         
         return {h: sorted(self.allocation[h]) for h in self.hk_ids}
     
-    def _allocate_hk(self, hk_id: int, used: Set[int], reverse_floors: bool = False):
+    def _allocate_hk_v2(self, hk_id: int, used: Set[int], reverse_floors: bool = False, small_floor_first: bool = False):
         quota = self.room_quotas[hk_id]
         twin_quota = self.twin_quotas[hk_id]
         is_bath = self.has_bath[hk_id]
@@ -207,35 +297,72 @@ class _RoomAllocator:
         if reverse_floors:
             available_floors = list(reversed(available_floors))
         
+        if small_floor_first:
+            available_floors = sorted(available_floors, 
+                key=lambda f: (len([r for r in self.floor_rooms[f] if r not in used]), f))
+        
         start_floor = None
         for f in available_floors:
             avail = [r for r in self.floor_rooms[f] if r not in used]
-            if avail:
+            if avail and self._count_hks_on_floor(f) < self.MAX_HK_PER_FLOOR:
                 start_floor = f
                 break
+        
+        if start_floor is None:
+            for f in available_floors:
+                avail = [r for r in self.floor_rooms[f] if r not in used]
+                if avail:
+                    start_floor = f
+                    break
         
         if start_floor is None:
             return
         
         assigned = 0
         twins_assigned = 0
-        hk_floors = []
+        hk_floors = [start_floor]
         
-        scan_floors = available_floors if not reverse_floors else list(reversed(sorted(available_floors)))
+        for floor in [start_floor]:
+            available = [r for r in self.floor_rooms[floor] if r not in used]
+            twins_here = sorted([r for r in available if r in self.twin_rooms])
+            singles_here = sorted([r for r in available if r not in self.twin_rooms])
+            
+            twins_needed = max(0, twin_quota - twins_assigned)
+            for room in twins_here[:twins_needed]:
+                if assigned >= quota:
+                    break
+                self.allocation[hk_id].append(room)
+                used.add(room)
+                assigned += 1
+                twins_assigned += 1
+            
+            for room in singles_here:
+                if assigned >= quota:
+                    break
+                self.allocation[hk_id].append(room)
+                used.add(room)
+                assigned += 1
+            
+            for room in twins_here[twins_needed:]:
+                if room in used:
+                    continue
+                if assigned >= quota:
+                    break
+                self.allocation[hk_id].append(room)
+                used.add(room)
+                assigned += 1
+                twins_assigned += 1
         
-        for floor in scan_floors:
-            if not reverse_floors and floor < start_floor:
-                continue
-            if reverse_floors and floor > start_floor:
+        if assigned >= quota:
+            return
+        
+        for floor in available_floors:
+            if floor == start_floor:
                 continue
             if assigned >= quota:
                 break
-            if len(hk_floors) >= 2:
-                break
-            
-            if hk_floors and floor not in hk_floors:
-                if abs(floor - hk_floors[0]) > 2:
-                    break
+            if not self._can_add_floor(hk_id, floor):
+                continue
             
             available = [r for r in self.floor_rooms[floor] if r not in used]
             if not available:
@@ -276,15 +403,36 @@ class _RoomAllocator:
                 if floor not in hk_floors:
                     hk_floors.append(floor)
     
-    def _fallback_allocation_strict(self, used: Set[int]):
+    def _fallback_allocation_strict_v2(self, used: Set[int]):
         remaining = [r for r in self.normal_rooms if r not in used]
         
         for room in sorted(remaining):
             floor = _fl(room)
             is_twin = room in self.twin_rooms
             
-            candidates = [h for h in self.hk_ids if self._remaining_quota(h) > 0]
-            candidates = [h for h in candidates if not (self.has_bath[h] and floor > 4)]
+            candidates = [h for h in self.hk_ids 
+                         if self._remaining_quota(h) > 0 and self._can_add_floor(h, floor)]
+            
+            if not candidates:
+                candidates = []
+                for h in self.hk_ids:
+                    if self._remaining_quota(h) <= 0:
+                        continue
+                    if self.has_bath[h] and floor > 4:
+                        continue
+                    current = self._get_floors(h)
+                    all_current = self._get_all_floors(h)
+                    if floor in all_current:
+                        candidates.append(h)
+                    elif len(current) < 2:
+                        if self._count_hks_on_floor(floor) < self.MAX_HK_PER_FLOOR:
+                            candidates.append(h)
+            
+            if not candidates:
+                candidates = [h for h in self.hk_ids 
+                             if self._remaining_quota(h) > 0 
+                             and (floor in self._get_all_floors(h) or len(self._get_floors(h)) < 2)
+                             and not (self.has_bath[h] and floor > 4)]
             
             if not candidates:
                 continue
@@ -292,13 +440,18 @@ class _RoomAllocator:
             def score(h):
                 s = 0
                 current = self._get_floors(h)
-                if floor in current:
+                all_current = self._get_all_floors(h)
+                if floor in all_current:
                     s += 1000
                 elif len(current) < 2:
                     if not current:
                         s += 500
                     elif abs(floor - min(current)) <= 2 or abs(floor - max(current)) <= 2:
-                        s += 500
+                        s += 800
+                    else:
+                        s += 100
+                if floor not in all_current and self._count_hks_on_floor(floor) >= self.MAX_HK_PER_FLOOR:
+                    s -= 500
                 s += self._remaining_quota(h) * 10
                 if is_twin and self._count_twins(h) < self.twin_quotas[h]:
                     s += 5
@@ -311,11 +464,9 @@ class _RoomAllocator:
             used.add(room)
     
     def _adjust_twin_quotas_priority(self):
-        """Twin調整（指定ありHKを優先的に調整）"""
         for _ in range(2000):
             changed = False
             
-            # 指定ありHKでTwin過剰/不足を探す
             for hk_id in self.hk_ids:
                 if not self.twin_quota_specified[hk_id]:
                     continue
@@ -324,17 +475,14 @@ class _RoomAllocator:
                 target = self.twin_quotas[hk_id]
                 
                 if current > target:
-                    # Twinが多すぎる → 他のHK（autoも含む）に渡す
                     my_twins = [r for r in self.allocation[hk_id] 
                                if r in self.twin_rooms and r not in self.eco_rooms]
                     for my_twin in my_twins:
                         if self._count_twins(hk_id) <= target:
                             break
-                        # スワップ相手を探す（指定ありでTwin不足、またはauto）
                         for other in self.hk_ids:
                             if other == hk_id:
                                 continue
-                            # autoのHKは常にスワップ相手になれる
                             if self.twin_quota_specified[other] and self._count_twins(other) >= self.twin_quotas[other]:
                                 continue
                             other_singles = [r for r in self.allocation[other] 
@@ -350,7 +498,6 @@ class _RoomAllocator:
                             break
                 
                 elif current < target:
-                    # Twinが足りない → 他のHK（autoまたはTwin過剰）から取る
                     my_singles = [r for r in self.allocation[hk_id] 
                                  if r not in self.twin_rooms and r not in self.eco_rooms]
                     for my_single in my_singles:
@@ -359,7 +506,6 @@ class _RoomAllocator:
                         for other in self.hk_ids:
                             if other == hk_id:
                                 continue
-                            # autoのHKからは取れる、指定ありはTwin過剰の場合のみ
                             if self.twin_quota_specified[other] and self._count_twins(other) <= self.twin_quotas[other]:
                                 continue
                             other_twins = [r for r in self.allocation[other] 
@@ -422,70 +568,59 @@ class _RoomAllocator:
         self.allocation[hk1].append(room2)
         self.allocation[hk2].append(room1)
     
-    def _allocate_eco_rooms(self):
-        for room in sorted(self.eco_out_rooms):
-            candidates = [h for h in self.hk_ids if _fl(room) in self._get_floors(h)]
-            if candidates:
-                self.allocation[min(candidates, key=lambda h: len(self.allocation[h]))].append(room)
+    def _allocate_eco_rooms_balanced(self):
+        total_eco = len(self.eco_rooms)
+        avg_eco = total_eco / len(self.hk_ids) if self.hk_ids else 0
         
-        eco_only = self.eco_rooms - self.eco_out_rooms
-        for room in sorted(eco_only):
-            candidates = [h for h in self.hk_ids if _fl(room) in self._get_floors(h)]
+        for room in sorted(self.eco_out_rooms):
+            floor = _fl(room)
+            candidates = [h for h in self.hk_ids if floor in self._get_floors(h)]
+            
+            if candidates:
+                hk_id = min(candidates, key=lambda h: (self._count_eco(h), h))
+                self.allocation[hk_id].append(room)
+        
+        eco_only = sorted(self.eco_rooms - self.eco_out_rooms)
+        
+        for room in eco_only:
+            floor = _fl(room)
+            
+            candidates = [h for h in self.hk_ids if self._can_add_eco_floor(h, floor)]
+            
+            if not candidates:
+                candidates = [h for h in self.hk_ids if floor in self._get_floors(h)]
+            
+            if not candidates:
+                candidates = [h for h in self.hk_ids 
+                             if floor in self._get_all_floors(h) or len(self._get_all_floors(h)) < 2]
+            
             if not candidates:
                 candidates = list(self.hk_ids)
-            if candidates:
-                self.allocation[min(candidates, key=lambda h: len(self.allocation[h]))].append(room)
+            
+            def eco_score(h):
+                eco_count = self._count_eco(h)
+                all_floors = self._get_all_floors(h)
+                normal_floors = self._get_floors(h)
+                
+                score = 0
+                
+                if eco_count < avg_eco:
+                    score += 10000
+                
+                score -= eco_count * 100
+                
+                if floor in normal_floors:
+                    score += 50
+                elif floor in all_floors:
+                    score += 30
+                elif len(all_floors) <= 1:
+                    if self._count_hks_on_floor(floor) < self.MAX_HK_PER_FLOOR:
+                        score += 20
+                    else:
+                        score -= 100
+                
+                return score
+            
+            hk_id = max(candidates, key=eco_score)
+            self.allocation[hk_id].append(room)
 
-
-if __name__ == "__main__":
-    from collections import defaultdict
-    
-    # 新テストケース
-    rooms = {204: None, 205: None, 207: None, 208: None, 209: None, 210: None, 215: None, 216: None, 217: None, 305: None, 312: None, 313: None, 314: None, 315: None, 316: None, 404: None, 406: None, 409: None, 410: None, 412: None, 413: None, 415: None, 416: None, 417: None, 502: None, 505: None, 507: None, 508: None, 509: None, 510: None, 513: None, 515: None, 516: None, 517: None, 601: None, 602: None, 603: None, 604: None, 605: None, 606: None, 617: None, 702: None, 711: None, 712: None, 713: None, 714: None, 717: None, 804: None, 805: None, 806: None, 807: None, 808: None, 811: None, 812: None, 813: None, 815: None, 816: None, 817: None, 902: None, 903: None, 906: None, 907: None, 908: None, 912: None, 913: None, 915: None, 1002: None, 1003: None, 1004: None, 1005: None, 1006: None, 1007: None, 1016: None, 1017: None}
-    eco_rooms = [206, 212, 308, 511, 512, 710, 715]
-    eco_out_rooms = [212, 511, 715]
-    twin_rooms = [214, 216, 217, 314, 316, 317, 414, 416, 417, 514, 516, 517, 614, 616, 617, 714, 716, 717, 814, 816, 817, 914, 916, 917, 1014, 1016, 1017]
-    housekeepers = [{'id': 1, 'room_quota': 7, 'twin_quota': -1, 'has_bath': True}, {'id': 2, 'room_quota': 8, 'twin_quota': 2, 'has_bath': True}, {'id': 3, 'room_quota': 8, 'twin_quota': 2, 'has_bath': True}, {'id': 4, 'room_quota': 10, 'twin_quota': -1, 'has_bath': False}, {'id': 5, 'room_quota': 10, 'twin_quota': -1, 'has_bath': False}, {'id': 6, 'room_quota': 10, 'twin_quota': -1, 'has_bath': False}, {'id': 7, 'room_quota': 10, 'twin_quota': -1, 'has_bath': False}, {'id': 8, 'room_quota': 11, 'twin_quota': -1, 'has_bath': False}]
-    
-    all_eco = set(eco_rooms) | set(eco_out_rooms)
-    
-    result = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, [], housekeepers, 24, 28, 5, 50)
-    
-    print("=" * 80)
-    print("v28 新テストケース")
-    print("=" * 80)
-    
-    hk_rooms = defaultdict(list)
-    for room, hk_id in result.items():
-        hk_rooms[hk_id].append(room)
-    
-    errors = []
-    for hk_id in sorted(hk_rooms.keys()):
-        assigned = hk_rooms[hk_id]
-        normal = [r for r in assigned if r not in all_eco]
-        twins = sum(1 for r in normal if r in twin_rooms)
-        floors = sorted(set(r // 100 for r in normal))
-        hk = housekeepers[hk_id - 1]
-        quota = hk['room_quota']
-        twin_quota = hk['twin_quota']
-        bath = "🛁" if hk['has_bath'] else "  "
-        
-        q_ok = "✓" if len(normal) == quota else "✗"
-        t_ok = "✓" if twin_quota < 0 or twins == twin_quota else "✗"
-        f_ok = "✓" if len(floors) <= 2 else "✗"
-        
-        tq_str = str(twin_quota) if twin_quota >= 0 else "auto"
-        
-        if len(floors) > 2:
-            errors.append(f"HK{hk_id}: Floor")
-        if len(normal) != quota:
-            errors.append(f"HK{hk_id}: Room")
-        if twin_quota >= 0 and twins != twin_quota:
-            errors.append(f"HK{hk_id}: Twin({twins}/{twin_quota})")
-        
-        print(f"{bath} HK{hk_id:2d}: {len(normal):2d}/{quota}室{q_ok} Twin:{twins}/{tq_str}{t_ok} Floor:{floors}{f_ok}")
-    
-    if errors:
-        print(f"\n❌ {len(errors)}件: {errors}")
-    else:
-        print("\n✅ 全制約OK")
