@@ -20,14 +20,6 @@
         <input type="hidden" name="remark_room_{{ forloop.counter }}" value="{{ remark.room }}">
         <input type="hidden" name="remark_{{ forloop.counter }}" value="{{ remark.comment }}">
         {% endfor %}
-        <!-- ハウスキーパー情報をhiddenフィールドで保持 -->
-        {% for house in house_person %}
-        <input type="hidden" name="no_{{ forloop.counter }}" value="{{ house.0 }}">
-        <input type="hidden" name="name_{{ forloop.counter }}" value="{{ house.1 }}">
-        <input type="hidden" name="key_{{ forloop.counter }}" value="{{ house.2 }}">
-        <input type="hidden" name="dd_{{ forloop.counter }}" value="{{ house.3 }}">
-        {% if house.4 %}<input type="hidden" name="eng_{{ forloop.counter }}" value="on">{% endif %}
-        {% endfor %}
         <!-- 連絡先情報をhiddenフィールドで保持 -->
         {% for contact in contacts %}
         <input type="hidden" name="contact_number_{{ forloop.counter }}" value="{{ contact.person_number }}">

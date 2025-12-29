@@ -43,7 +43,6 @@ class homeView(TemplateView):
             must_cleans = request.session.get('must_cleans', [])
             others = request.session.get('others', '')
             remarks = request.session.get('remarks', [])
-            house_person = request.session.get('house_data', [])
             contacts = request.session.get('contacts', [])
             spots = request.session.get('spots', [])
             bath_person = request.session.get('bath_person', [])
@@ -96,13 +95,13 @@ class homeView(TemplateView):
                 'combined_rooms': combined_rooms,
                 'editor_name': editor_name,
                 'remarks': remarks,
-                'house_person': house_person,
+                'house_person': [],
                 'bath_persons': bath_persons,
                 'eco_rooms': eco_rooms,
                 'ame_rooms': ame_rooms,
                 'duvet_rooms': duvet_rooms,
                 'house_len': len(set(house_numbers)),
-                'add_house_len':len(house_person),
+                'add_house_len':0,
                 'room_char_list':room_char_list,
                 'room_char_list_len':10,
                 'remarks_len':max(3-len(remarks), 1),
@@ -280,6 +279,8 @@ class homeView(TemplateView):
                 'from_rooming_list': True,
                 'multiple_rooms': multiple_rooms,
                 'editor_name': editor_name,
+                'multiple_night_cleans':[],
+                'multiple_night_cleans_len':3,
             }
             return render(self.request, self.template_name, context)
 

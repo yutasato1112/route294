@@ -83,7 +83,6 @@ class sidewindView(TemplateView):
             'multiple_rooms':multiple_rooms,
             'multiple_night_cleans':multiple_night_cleans_list,
             'remarks':remarks,
-            'house_person':house_data,
             'contacts':contacts,
             'spots':spots,
             'room_changes':room_changes,

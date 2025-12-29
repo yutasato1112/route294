@@ -1,3 +1,12 @@
+"""
+ホテル清掃指示書 自動振り分けシステム v36
+HK番号振り直し機能追加
+
+修正点:
+1. 大浴場担当者を最も若い番号にする
+2. その後、担当階が低い順で番号を振る
+"""
+
 from collections import defaultdict
 from typing import Dict, List, Set, Any
 import random
@@ -623,4 +632,3 @@ class _RoomAllocator:
             
             hk_id = max(candidates, key=eco_score)
             self.allocation[hk_id].append(room)
-

@@ -203,8 +203,7 @@ def sidewind_front(request):
             eco_count[hid] = eco
             total_count[hid] = total
 
-            mark = "✅" if normal == h["room_quota"] else "⚠️"
-            print(f"ハウス{hid:2}: 通常={normal:2d} / エコ={eco:2d} / 合計={total:2d} / quota={h['room_quota']:2d} {mark}")
+            print(f"ハウス{hid:2}: 通常={normal:2d} / エコ={eco:2d} / 合計={total:2d} ")
 
         print(f"\n合計: 通常={sum(normal_count.values())} / エコ={sum(eco_count.values())} / 全体={sum(total_count.values())}")
 
@@ -263,7 +262,6 @@ def sidewind_front(request):
         request.session['must_cleans'] = must_cleans
         request.session['others'] = others
         request.session['remarks'] = remarks
-        request.session['house_data'] = house_data
         request.session['contacts'] = contacts
         request.session['spots'] = spots
         bath_staff = [h['id'] for h in housekeepers if h['has_bath']]
