@@ -903,13 +903,15 @@ $(document).ready(function () {
         }
     }
 
-    //清掃指示表の氏名(列数)と大浴場清掃を管理
+    //清掃指示表の番号行・氏名行と大浴場清掃を管理
     function updateResultTableColumns() {
-        const headerRow = $("#result_table_header");
+        const headerRowNo = $("#result_table_header_no");
+        const headerRowName = $("#result_table_header_name");
         const bathRow = $("#bath_row");
 
         // 初期化
-        headerRow.empty().append("<th></th>");
+        headerRowNo.empty().append("<th></th>");
+        headerRowName.empty().append("<th></th>");
         bathRow.empty().append("<td><strong>大浴場清掃</strong></td>");
 
         const bathAssignedNos = [];
@@ -928,137 +930,153 @@ $(document).ready(function () {
             }
         });
 
-        // No → Name 辞書作成
+        // No → Name 辞書作成（.td_no の .input_no から取得）
         const noToName = {};
         $(".tr_house").each(function () {
-            const no = $(this).find(".input_no").val().trim();
-            const name = $(this).find(".input_name").val().trim();
+            const no = $(this).find(".td_no .input_no").val().trim();
+            const name = $(this).find(".td_name .input_name").val().trim();
             if (no) noToName[no] = name || "None";
         });
 
         const sortedNos = [...assignedNos].sort((a, b) => parseInt(a) - parseInt(b));
 
+        // 列幅を計算（均等幅）
+        const columnCount = sortedNos.length;
+        const columnWidth = columnCount > 0 ? `${Math.floor(90 / columnCount)}%` : 'auto';
+
         sortedNos.forEach(no => {
             const name = noToName[no] || "None";
-            headerRow.append(`<th>${name}</th>`);
+            const isNone = (name === "None");
+            
+            // 番号行：太字で左詰め、均等幅
+            headerRowNo.append(`<th style="font-weight: bold; text-align: left; width: ${columnWidth};">${no}</th>`);
+            
+            // 名前行：Noneの場合はグレー・イタリック表示、均等幅
+            if (isNone) {
+                headerRowName.append(`<th style="color: #999; font-style: italic; width: ${columnWidth};">${name}</th>`);
+            } else {
+                headerRowName.append(`<th style="width: ${columnWidth};">${name}</th>`);
+            }
+            
             bathRow.append(bathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
         });
+
+        // テーブルのレイアウトを固定
+        $(".fourth_line table").css("table-layout", "fixed");
     }
+        //清掃指示表で担当部屋・エコ部屋を管理
+        function updateAssignedRoomRows() {
+            $(".room_cell_row").remove();
 
-
-    //清掃指示表で担当部屋・エコ部屋を管理
-    function updateAssignedRoomRows() {
-        $(".room_cell_row").remove();
-
-        const assignedNos = new Set();
-        $(".input_room").each(function () {
-            const val = $(this).val().trim();
-            if (val !== "" && val !== "0") assignedNos.add(val);
-        });
-
-        // 🔽 Noを昇順に並べ替え
-        const nos = [...assignedNos].sort((a, b) => parseInt(a) - parseInt(b));
-
-        const roomAssignments = [];
-        $(".input_room").each(function () {
-            const room = $(this).closest("td").data("room");
-            const no = $(this).val().trim();
-            if (room && no !== "" && no !== "0") {
-                roomAssignments.push({ room: String(room), no });
-            }
-        });
-
-        const ecoRooms = new Set();
-        const amenityRooms = new Set();
-
-        $(".input_eco").each(function () {
-            const val = $(this).val().trim();
-            if (val !== "") ecoRooms.add(val);
-        });
-
-        $(".input_amenity").each(function () {
-            const val = $(this).val().trim();
-            if (val !== "") amenityRooms.add(val);
-        });
-
-        const roomMap = {};
-        nos.forEach(no => roomMap[no] = { normal: [], eco: [] });
-
-        roomAssignments.forEach(({ room, no }) => {
-            if (!roomMap[no]) return;
-            if (ecoRooms.has(room)) {
-                roomMap[no].eco.push({ room, type: 'eco' });
-            } else if (amenityRooms.has(room)) {
-                roomMap[no].eco.push({ room, type: 'amenity' });
-            } else {
-                roomMap[no].normal.push(room);
-            }
-        });
-
-        Object.values(roomMap).forEach(roomLists => {
-            roomLists.normal.sort((a, b) => parseInt(a) - parseInt(b));
-            roomLists.eco.sort((a, b) => parseInt(a) - parseInt(b));
-        });
-
-        const $body = $("#result_table_body");
-
-        // 通常部屋
-        const maxNormal = Math.max(...Object.values(roomMap).map(r => r.normal.length), 0);
-        if (maxNormal > 0) {
-            const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>担当部屋</strong></td>");
-            nos.forEach(no => {
-                const val = roomMap[no].normal[0] || "";
-                console.log(typeof val);
-                const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : ''; 
-                labelRow.append(`<td ${redStyle}>${val}</td>`);
-
+            const assignedNos = new Set();
+            $(".input_room").each(function () {
+                const val = $(this).val().trim();
+                if (val !== "" && val !== "0") assignedNos.add(val);
             });
-            $body.append(labelRow);
 
-            for (let i = 1; i < maxNormal; i++) {
-                const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
-                nos.forEach(no => {
-                    const val = roomMap[no].normal[i] || "";const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : '';
-                    row.append(`<td ${redStyle}>${val}</td>`);
+            // 🔽 Noを昇順に並べ替え
+            const nos = [...assignedNos].sort((a, b) => parseInt(a) - parseInt(b));
 
-                });
-                $body.append(row);
-            }
-        }
-
-        // エコ部屋
-        const maxEco = Math.max(...Object.values(roomMap).map(r => r.eco.length), 0);
-        if (maxEco > 0) {
-            const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>エコ部屋</strong></td>");
-            nos.forEach(no => {
-                const obj = roomMap[no].eco[0];
-                if (obj) {
-                    const bgColor = obj.type === 'eco' ? 'yellow' : 'rgb(255, 203, 135)';
-                    const redStyle = /(?:14|16|17)$/.test(obj.room) ? 'color: red;' : '';
-                    labelRow.append(`<td style="background-color: ${bgColor}; ${redStyle}">${obj.room}</td>`);
-                } else {
-                    labelRow.append("<td></td>");
+            const roomAssignments = [];
+            $(".input_room").each(function () {
+                const room = $(this).closest("td").data("room");
+                const no = $(this).val().trim();
+                if (room && no !== "" && no !== "0") {
+                    roomAssignments.push({ room: String(room), no });
                 }
             });
-            $body.append(labelRow);
 
-            for (let i = 1; i < maxEco; i++) {
-                const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
+            const ecoRooms = new Set();
+            const amenityRooms = new Set();
+
+            $(".input_eco").each(function () {
+                const val = $(this).val().trim();
+                if (val !== "") ecoRooms.add(val);
+            });
+
+            $(".input_amenity").each(function () {
+                const val = $(this).val().trim();
+                if (val !== "") amenityRooms.add(val);
+            });
+
+            const roomMap = {};
+            nos.forEach(no => roomMap[no] = { normal: [], eco: [] });
+
+            roomAssignments.forEach(({ room, no }) => {
+                if (!roomMap[no]) return;
+                if (ecoRooms.has(room)) {
+                    roomMap[no].eco.push({ room, type: 'eco' });
+                } else if (amenityRooms.has(room)) {
+                    roomMap[no].eco.push({ room, type: 'amenity' });
+                } else {
+                    roomMap[no].normal.push(room);
+                }
+            });
+
+            Object.values(roomMap).forEach(roomLists => {
+                roomLists.normal.sort((a, b) => parseInt(a) - parseInt(b));
+                roomLists.eco.sort((a, b) => parseInt(a) - parseInt(b));
+            });
+
+            const $body = $("#result_table_body");
+
+            // 通常部屋
+            const maxNormal = Math.max(...Object.values(roomMap).map(r => r.normal.length), 0);
+            if (maxNormal > 0) {
+                const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>担当部屋</strong></td>");
                 nos.forEach(no => {
-                    const obj = roomMap[no].eco[i];
+                    const val = roomMap[no].normal[0] || "";
+                    console.log(typeof val);
+                    const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : ''; 
+                    labelRow.append(`<td ${redStyle}>${val}</td>`);
+
+                });
+                $body.append(labelRow);
+
+                for (let i = 1; i < maxNormal; i++) {
+                    const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
+                    nos.forEach(no => {
+                        const val = roomMap[no].normal[i] || "";const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : '';
+                        row.append(`<td ${redStyle}>${val}</td>`);
+
+                    });
+                    $body.append(row);
+                }
+            }
+
+            // エコ部屋
+            const maxEco = Math.max(...Object.values(roomMap).map(r => r.eco.length), 0);
+            if (maxEco > 0) {
+                const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>エコ部屋</strong></td>");
+                nos.forEach(no => {
+                    const obj = roomMap[no].eco[0];
                     if (obj) {
                         const bgColor = obj.type === 'eco' ? 'yellow' : 'rgb(255, 203, 135)';
                         const redStyle = /(?:14|16|17)$/.test(obj.room) ? 'color: red;' : '';
-                        row.append(`<td style="background-color: ${bgColor}; ${redStyle}">${obj.room}</td>`);
+                        labelRow.append(`<td style="background-color: ${bgColor}; ${redStyle}">${obj.room}</td>`);
                     } else {
-                        row.append("<td></td>");
+                        labelRow.append("<td></td>");
                     }
                 });
-                $body.append(row);
-            }
-        }
+                $body.append(labelRow);
 
-    }
+                for (let i = 1; i < maxEco; i++) {
+                    const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
+                    nos.forEach(no => {
+                        const obj = roomMap[no].eco[i];
+                        if (obj) {
+                            const bgColor = obj.type === 'eco' ? 'yellow' : 'rgb(255, 203, 135)';
+                            const redStyle = /(?:14|16|17)$/.test(obj.room) ? 'color: red;' : '';
+                            row.append(`<td style="background-color: ${bgColor}; ${redStyle}">${obj.room}</td>`);
+                        } else {
+                            row.append("<td></td>");
+                        }
+                    });
+                    $body.append(row);
+                }
+            }
+
+        }
 
     //清掃指示表で終了予定時刻を管理
     function updateEndTimeRow() {

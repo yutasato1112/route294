@@ -7,7 +7,8 @@ import io
 import re
 import pandas as pd
 import openpyxl
-from openpyxl.styles import PatternFill, Font,Side, Border
+from openpyxl.styles import PatternFill, Font, Side, Border
+from copy import copy
 import jaconv
 from django.conf import settings
 import os
@@ -171,60 +172,73 @@ def find_unuse_room_numbers(today_data,room_number_list):
             unuse_room_list.remove(room_number)
     return unuse_room_list
 
-def operating_excel(output_excel_path,multiple_room_list, unuse_room_list, excel_template_path, room_number_list, date):
+def operating_excel(output_excel_path, multiple_room_list, unuse_room_list, excel_template_path, room_number_list, date):
     #Excelテンプレート読み込み
     wb = openpyxl.load_workbook(excel_template_path)
-    ws = wb.active
 
     # 背景色（黄色）
     yellow_fill = PatternFill(start_color="FF99FF", end_color="FF99FF", fill_type="solid")
 
-    # セル斜線（×）
+    # セル斜線用
     thin = Side(border_style="thin", color="000000")
-    diagonal_slash = Border(
-        diagonal=thin,
-        diagonalUp=True,
-        diagonalDown=False
-    )
     
-    # 全セルを走査、部分一致＆全角半角統一で判断
-    for row in ws.iter_rows():
-        for cell in row:
-            if cell.value is None:
-                continue
+    # 処理対象のシート一覧（色変更・斜線は両方のシートで実行）
+    sheet_names = ['yamashita', 'takahashi']
+    
+    for sheet_name in sheet_names:
+        ws = wb[sheet_name]
+        
+        # 全セルを走査、部分一致＆全角半角統一で判断
+        for row in ws.iter_rows():
+            for cell in row:
+                if cell.value is None:
+                    continue
 
-            cell_str = str(cell.value)
+                cell_str = str(cell.value)
 
-            # セルの文字も全角→半角へ正規化
-            cell_str_norm = jaconv.z2h(cell_str, digit=True)
+                # セルの文字も全角→半角へ正規化
+                cell_str_norm = jaconv.z2h(cell_str, digit=True)
 
-            if any(room in cell_str_norm for room in multiple_room_list):
-                cell.fill = yellow_fill
+                if any(room in cell_str_norm for room in multiple_room_list):
+                    cell.fill = yellow_fill
 
-            if any(room in cell_str_norm for room in unuse_room_list):
-                cell.border = diagonal_slash
+                if any(room in cell_str_norm for room in unuse_room_list):
+                    # 既存の枠線を完全にコピーしつつ斜線を追加
+                    existing_border = cell.border
+                    new_border = Border(
+                        left=copy(existing_border.left),
+                        right=copy(existing_border.right),
+                        top=copy(existing_border.top),
+                        bottom=copy(existing_border.bottom),
+                        diagonal=thin,
+                        diagonalUp=True,
+                        diagonalDown=False
+                    )
+                    cell.border = new_border
+    
+    # yamashitaシートのみ：集計・日付書き込み
+    ws_yamashita = wb['yamashita']
+    
     #各階連泊数集計
     multiple_count = count_multiple_rooms_by_floor(room_number_list, multiple_room_list)
 
     #各階清掃部屋数集計
     use_room_list = count_available_rooms_by_floor(room_number_list, unuse_room_list)
     
-    # 集計結果をExcelに書き込み
+    # 集計結果をExcelに書き込み（yamashitaシートのみ）
     write_counts_to_excel(wb, multiple_count, use_room_list, output_excel_path)
     
-    #日付書き込み
+    #日付書き込み（yamashitaシートのみ）
     if date:
-        ws['AW2'] = date
+        ws_yamashita['AW2'] = date
 
     # 修正済み Excel を保存
     wb.save(output_excel_path)
     
     return output_excel_path
 
-
-
 def write_counts_to_excel(wb, multiple_count, use_room_list, output_excel_path):
-    ws = wb.active
+    ws = wb['yamashita']
     # 連泊数集計の書き込み
     base = '連泊：'
     for floor, count in multiple_count.items():
