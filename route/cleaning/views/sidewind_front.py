@@ -135,7 +135,7 @@ def sidewind_front(request):
         for key, value in request.POST.items():
             if key.startswith("room_"):
                 room_number = key.replace("room_", "")
-                if len(room_number) < 5:    
+                if len(room_number) < 5:
                     room_inputs[room_number] = value.strip()
         full_clean_rooms = []
         for room, status in room_inputs.items():
@@ -156,6 +156,7 @@ def sidewind_front(request):
         # bath_roomsは現時点では空リストとして扱う（将来的には大浴場の部屋番号を指定可能）
         bath_rooms = []
         print(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
+
         allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
 
         
@@ -234,7 +235,8 @@ def sidewind_front(request):
             if r in all_allocation:
                 sorted_allocation[r] = all_allocation[r]
             else:
-                sorted_allocation[r] = 0  # 未割当部屋はハウス0として扱う
+                # 元の入力値を確認：'0'が入力されていた場合は'0'、それ以外は空文字列
+                sorted_allocation[r] = room_inputs.get(str(r), '')
 
         # 出力（人間可読 / JSON両対応）
         #print("\n=== 接続用データ配列（全室・未割当=0） ===")

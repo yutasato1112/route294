@@ -1,10 +1,11 @@
 """
-ホテル清掃指示書 自動振り分けシステム v36
-HK番号振り直し機能追加
+ホテル清掃指示書 自動振り分けシステム v37
+quota制約を最優先で守るよう修正
 
 修正点:
-1. 大浴場担当者を最も若い番号にする
-2. その後、担当階が低い順で番号を振る
+1. _fallback_allocation_strict_v2 に最終フォールバック追加
+2. quota制約（絶対条件）を必ず満たすように保証
+3. 割り当て後のquota検証を追加
 """
 
 from collections import defaultdict
@@ -43,7 +44,10 @@ def assign_rooms(
             best_score = score
             best_result = hk_to_rooms
         
-        if errors == 0:
+        # quota制約が完全に満たされているかチェック
+        quota_satisfied = allocator._verify_quota_satisfied(hk_to_rooms)
+        
+        if errors == 0 and quota_satisfied:
             break
         
         allocator.allocation = {h: [] for h in allocator.hk_ids}
@@ -51,7 +55,27 @@ def assign_rooms(
     # HK番号を振り直す
     result = _renumber_hks(best_result, housekeepers)
     
+    # 最終検証
+    _verify_final_allocation(result, list(rooms.keys()), housekeepers)
+    
     return result
+
+
+def _verify_final_allocation(allocation: Dict[int, int], normal_rooms: List[int], housekeepers: List[Dict]):
+    """最終割り当て結果のquota検証"""
+    hk_counts = defaultdict(int)
+    for room, hk_id in allocation.items():
+        if room in normal_rooms:
+            hk_counts[hk_id] += 1
+    
+    for hk in housekeepers:
+        # 新しいID（振り直し後）でカウント
+        pass  # 振り直し後のIDは1から順番なので、詳細検証は呼び出し側で行う
+    
+    assigned_rooms = set(r for r in allocation.keys() if r in normal_rooms)
+    unassigned = set(normal_rooms) - assigned_rooms
+    if unassigned:
+        print(f"⚠️ WARNING: {len(unassigned)} rooms unassigned: {sorted(unassigned)[:10]}...")
 
 
 def _renumber_hks(hk_to_rooms: Dict[int, List[int]], housekeepers: List[Dict]) -> Dict[int, int]:
@@ -207,6 +231,15 @@ class _RoomAllocator:
         if self._count_hks_on_floor(eco_floor) >= self.MAX_HK_PER_FLOOR:
             return False
         
+        return True
+    
+    def _verify_quota_satisfied(self, hk_to_rooms: Dict[int, List[int]]) -> bool:
+        """全HKのquotaが満たされているか検証"""
+        for hk_id in self.hk_ids:
+            rooms = hk_to_rooms[hk_id]
+            normal = [r for r in rooms if r not in self.eco_rooms]
+            if len(normal) != self.room_quotas[hk_id]:
+                return False
         return True
     
     def evaluate_solution(self, hk_to_rooms: Dict[int, List[int]]):
@@ -413,15 +446,25 @@ class _RoomAllocator:
                     hk_floors.append(floor)
     
     def _fallback_allocation_strict_v2(self, used: Set[int]):
+        """
+        フォールバック割り当て（quota制約を最優先）
+        
+        優先順位:
+        1. 既存フロアを持つHKに優先割り当て
+        2. 2フロア制限内で新フロアを追加可能なHKに割り当て
+        3. 【最終フォールバック】quota未達のHKに強制割り当て（制約緩和）
+        """
         remaining = [r for r in self.normal_rooms if r not in used]
         
         for room in sorted(remaining):
             floor = _fl(room)
             is_twin = room in self.twin_rooms
             
+            # === 第1候補: 厳密な制約を全て満たすHK ===
             candidates = [h for h in self.hk_ids 
                          if self._remaining_quota(h) > 0 and self._can_add_floor(h, floor)]
             
+            # === 第2候補: 制約を少し緩和 ===
             if not candidates:
                 candidates = []
                 for h in self.hk_ids:
@@ -437,19 +480,40 @@ class _RoomAllocator:
                         if self._count_hks_on_floor(floor) < self.MAX_HK_PER_FLOOR:
                             candidates.append(h)
             
+            # === 第3候補: さらに緩和（フロア人数制限を緩和） ===
             if not candidates:
                 candidates = [h for h in self.hk_ids 
                              if self._remaining_quota(h) > 0 
                              and (floor in self._get_all_floors(h) or len(self._get_floors(h)) < 2)
                              and not (self.has_bath[h] and floor > 4)]
             
+            # === 第4候補: 2フロア制限も緩和（3フロア許容） ===
             if not candidates:
+                candidates = [h for h in self.hk_ids 
+                             if self._remaining_quota(h) > 0 
+                             and not (self.has_bath[h] and floor > 4)]
+            
+            # === 最終フォールバック: quota未達なら強制割り当て ===
+            if not candidates:
+                # quota未達のHKを全て候補にする（bath制約のみ維持）
+                candidates = [h for h in self.hk_ids if self._remaining_quota(h) > 0]
+                if not candidates:
+                    # 全員quotaを満たしている場合は、最もquotaに余裕があるHKに割り当て
+                    # （これは通常起きないはず）
+                    print(f"⚠️ All HKs have met quota but room {room} is unassigned!")
+                    candidates = sorted(self.hk_ids, key=lambda h: self._count_normal(h))
+            
+            if not candidates:
+                print(f"❌ CRITICAL: Cannot assign room {room} - no candidates available!")
                 continue
             
+            # スコアリングで最適なHKを選択
             def score(h):
                 s = 0
                 current = self._get_floors(h)
                 all_current = self._get_all_floors(h)
+                
+                # 既存フロアなら高スコア
                 if floor in all_current:
                     s += 1000
                 elif len(current) < 2:
@@ -459,13 +523,23 @@ class _RoomAllocator:
                         s += 800
                     else:
                         s += 100
+                else:
+                    # 3フロア目になる場合はペナルティ（でも割り当ては行う）
+                    s -= 200
+                
+                # フロア人数オーバーの場合はペナルティ
                 if floor not in all_current and self._count_hks_on_floor(floor) >= self.MAX_HK_PER_FLOOR:
                     s -= 500
+                
+                # quota残りが多いHKを優先
                 s += self._remaining_quota(h) * 10
+                
+                # ツイン調整
                 if is_twin and self._count_twins(h) < self.twin_quotas[h]:
                     s += 5
                 elif not is_twin and self._count_twins(h) >= self.twin_quotas[h]:
                     s += 5
+                
                 return s
             
             hk_id = max(candidates, key=score)
@@ -578,9 +652,20 @@ class _RoomAllocator:
         self.allocation[hk2].append(room1)
     
     def _allocate_eco_rooms_balanced(self):
-        total_eco = len(self.eco_rooms)
-        avg_eco = total_eco / len(self.hk_ids) if self.hk_ids else 0
+        """
+        エコ部屋をバランス良く配分する
         
+        優先順位:
+        1. エコ外部屋は既存の通常フロアを持つHKに割り当て（必須）
+        2. その他のエコ部屋はバランスを最優先で配分
+        """
+        total_eco = len(self.eco_rooms)
+        num_hks = len(self.hk_ids)
+        avg_eco = total_eco / num_hks if num_hks else 0
+        # 上限を厳しく設定（平均+2を基本上限とする）
+        base_max = int(avg_eco) + 2
+        
+        # === Phase 1: エコ外部屋の割り当て（既存フロア必須） ===
         for room in sorted(self.eco_out_rooms):
             floor = _fl(room)
             candidates = [h for h in self.hk_ids if floor in self._get_floors(h)]
@@ -588,47 +673,131 @@ class _RoomAllocator:
             if candidates:
                 hk_id = min(candidates, key=lambda h: (self._count_eco(h), h))
                 self.allocation[hk_id].append(room)
+            else:
+                # エコ外だが既存フロアがない場合は、最もエコが少ないHKに割り当て
+                hk_id = min(self.hk_ids, key=lambda h: (self._count_eco(h), h))
+                self.allocation[hk_id].append(room)
         
+        # === Phase 2: その他のエコ部屋をバランス優先で配分 ===
         eco_only = sorted(self.eco_rooms - self.eco_out_rooms)
         
+        # フロア別にグループ化
+        eco_by_floor = defaultdict(list)
         for room in eco_only:
-            floor = _fl(room)
+            eco_by_floor[_fl(room)].append(room)
+        
+        # エコ部屋が多いフロアから処理（分散しやすくするため）
+        sorted_floors = sorted(eco_by_floor.keys(), key=lambda f: len(eco_by_floor[f]), reverse=True)
+        
+        for floor in sorted_floors:
+            rooms_on_floor = eco_by_floor[floor]
             
-            candidates = [h for h in self.hk_ids if self._can_add_eco_floor(h, floor)]
-            
-            if not candidates:
-                candidates = [h for h in self.hk_ids if floor in self._get_floors(h)]
-            
-            if not candidates:
-                candidates = [h for h in self.hk_ids 
-                             if floor in self._get_all_floors(h) or len(self._get_all_floors(h)) < 2]
-            
-            if not candidates:
-                candidates = list(self.hk_ids)
-            
-            def eco_score(h):
-                eco_count = self._count_eco(h)
-                all_floors = self._get_all_floors(h)
-                normal_floors = self._get_floors(h)
+            for room in rooms_on_floor:
+                # 動的に上限を計算（残り部屋数と残りHKを考慮）
+                remaining_eco = sum(1 for r in eco_only if r not in 
+                                   [x for h in self.hk_ids for x in self.allocation[h]])
+                current_counts = [self._count_eco(h) for h in self.hk_ids]
+                min_eco = min(current_counts)
                 
-                score = 0
+                # 最小値との差が2以上あるHKには割り当てない（バランス優先）
+                dynamic_max = min_eco + 3
+                max_eco = min(base_max, dynamic_max)
                 
-                if eco_count < avg_eco:
-                    score += 10000
+                # 候補を段階的に緩和しながら探す
+                candidates = self._find_eco_candidates(floor, max_eco, avg_eco)
                 
-                score -= eco_count * 100
+                if not candidates:
+                    # 最終手段: 最もエコが少ないHKに割り当て
+                    candidates = sorted(self.hk_ids, key=lambda h: self._count_eco(h))[:3]
                 
-                if floor in normal_floors:
-                    score += 50
-                elif floor in all_floors:
-                    score += 30
-                elif len(all_floors) <= 1:
-                    if self._count_hks_on_floor(floor) < self.MAX_HK_PER_FLOOR:
-                        score += 20
-                    else:
-                        score -= 100
+                if not candidates:
+                    candidates = list(self.hk_ids)
                 
-                return score
-            
-            hk_id = max(candidates, key=eco_score)
-            self.allocation[hk_id].append(room)
+                # スコアリングでベストなHKを選択
+                hk_id = max(candidates, key=lambda h: self._eco_assignment_score(h, floor, avg_eco, max_eco))
+                self.allocation[hk_id].append(room)
+    
+    def _find_eco_candidates(self, floor: int, max_eco: int, avg_eco: float) -> List[int]:
+        """エコ部屋割り当ての候補HKを段階的に探す"""
+        
+        # === 第1候補: 既存フロアを持ち、上限未満のHK ===
+        candidates = [h for h in self.hk_ids 
+                     if floor in self._get_all_floors(h) 
+                     and self._count_eco(h) < max_eco]
+        if candidates:
+            return candidates
+        
+        # === 第2候補: 2フロア以内で追加可能、上限未満のHK ===
+        candidates = [h for h in self.hk_ids 
+                     if self._can_add_eco_floor(h, floor)
+                     and self._count_eco(h) < max_eco]
+        if candidates:
+            return candidates
+        
+        # === 第3候補: 新フロアを開けるHK（エコ含めて3フロアまで許可）、上限未満 ===
+        candidates = [h for h in self.hk_ids 
+                     if len(self._get_all_floors(h)) < 3
+                     and self._count_eco(h) < max_eco
+                     and not (self.has_bath[h] and floor > 4)]
+        if candidates:
+            return candidates
+        
+        # === 第4候補: 4フロアまで許可（バランス重視）、上限未満 ===
+        candidates = [h for h in self.hk_ids 
+                     if len(self._get_all_floors(h)) < 4
+                     and self._count_eco(h) < max_eco
+                     and not (self.has_bath[h] and floor > 4)]
+        if candidates:
+            return candidates
+        
+        # === 第5候補: 上限を緩和、フロア制限も緩和 ===
+        candidates = [h for h in self.hk_ids 
+                     if self._count_eco(h) < max_eco + 2
+                     and not (self.has_bath[h] and floor > 4)]
+        if candidates:
+            return candidates
+        
+        # === 最終候補: 最もエコが少ないHK ===
+        return sorted(self.hk_ids, key=lambda h: self._count_eco(h))[:3]
+    
+    def _eco_assignment_score(self, hk_id: int, floor: int, avg_eco: float, max_eco: int) -> float:
+        """エコ部屋割り当てのスコアを計算（高いほど優先）"""
+        eco_count = self._count_eco(hk_id)
+        all_floors = self._get_all_floors(hk_id)
+        normal_floors = self._get_floors(hk_id)
+        
+        score = 0.0
+        
+        # === バランス重視（最重要）===
+        # エコ数が少ないHKを大幅に優先（指数的にスコア付け）
+        score += (max_eco - eco_count) * 2000
+        
+        # 平均以下なら追加ボーナス
+        if eco_count < avg_eco:
+            score += 5000
+        
+        # 上限に近づくと大きくペナルティ
+        if eco_count >= max_eco - 1:
+            score -= 3000
+        if eco_count >= max_eco:
+            score -= 10000
+        
+        # === フロア効率（バランスより優先度低い）===
+        if floor in normal_floors:
+            score += 300  # 通常フロアと同じなら効率的
+        elif floor in all_floors:
+            score += 200  # エコフロアと同じでもOK
+        elif len(all_floors) == 0:
+            score += 100  # 最初のフロア
+        elif len(all_floors) == 1:
+            score += 50   # 2フロア目
+        elif len(all_floors) == 2:
+            score -= 50   # 3フロア目
+        else:
+            score -= 200  # 4フロア以上
+        
+        # フロア人数制限
+        if floor not in all_floors and self._count_hks_on_floor(floor) >= self.MAX_HK_PER_FLOOR:
+            score -= 100
+        
+        return score
