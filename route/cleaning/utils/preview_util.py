@@ -7,6 +7,19 @@ from typing import Optional
 from deep_translator import GoogleTranslator
 from google.cloud import translate_v2 as gct  
 from typing import Optional
+import csv
+
+def get_csv_weekly():
+    weekly_data = {}
+    with open('static/csv/weekly.csv', newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        weekly_data = {}
+        for row in reader:
+            week = row['week']
+            jp = row['jp']
+            en = row['en']
+            weekly_data[week] = {'jp': jp, 'en': en}
+    return weekly_data
 
 def catch_post(request):
     date = request.POST.get('date')
@@ -530,6 +543,8 @@ def translate(text):
     return res
 
 def language(str_id, lang_id, text):
+    weekly_data = get_csv_weekly()
+    
     language_dict = {
         'ja': {
             'charge':'担当',
@@ -563,13 +578,13 @@ def language(str_id, lang_id, text):
             'hotel_name':'ルートイン水海道駅前',
             'declaration':'上記日程を終了致しました。',
             'signature':'(清掃担当者)署名　　　　　　　　　　',
-            'Monday':'冷蔵庫上のほこり取り・机下面の清掃お願いします',
-            'Tuesday':'内階段清掃お願いします',
-            'Wednesday':'ズボンプレッサー清掃お願いします',
-            'Thursday':'バスユニットのアメニティの皿清掃お願いします',
-            'Friday':'加湿器フィルター清掃お願いします',
-            'Saturday':'客室壁側面・天井付近クモの巣ほこり取りお願いします',
-            'Sunday':'ドアのふち拭き上げお願いします'
+            'Monday':weekly_data['Monday']['jp'],
+            'Tuesday':weekly_data['Tuesday']['jp'],
+            'Wednesday':weekly_data['Wednesday']['jp'],
+            'Thursday':weekly_data['Thursday']['jp'],
+            'Friday':weekly_data['Friday']['jp'],
+            'Saturday':weekly_data['Saturday']['jp'],
+            'Sunday':weekly_data['Sunday']['jp']
         },
         'en': {
             'charge':'Charge',
@@ -603,13 +618,13 @@ def language(str_id, lang_id, text):
             'hotel_name':'RouteInn Mizkaido',
             'declaration':'The above schedule has been completed.',
             'signature':"(Cleaning Staff) Signature　　　　　　　　　　",
-            'Monday':'Please clean the dust above the refrigerator and under the desk.',
-            'Tuesday':'Please clean the indoor stairs.',
-            'Wednesday':'Please clean the trouser press.',
-            'Thursday':'Please clean the amenity dishes in the bath unit.',
-            'Friday':'Please clean the humidifier filter.',
-            'Saturday':'Please clean the cobwebs and dust on the side walls and ceilings of the guest rooms.',
-            'Sunday':'Please wipe the edges of the doors.'
+            'Monday':weekly_data['Monday']['en'],
+            'Tuesday':weekly_data['Tuesday']['en'],
+            'Wednesday':weekly_data['Wednesday']['en'],
+            'Thursday':weekly_data['Thursday']['en'],
+            'Friday':weekly_data['Friday']['en'],
+            'Saturday':weekly_data['Saturday']['en'],
+            'Sunday':weekly_data['Sunday']['en']
         }
     }
     if str_id != None and lang_id in language_dict:
