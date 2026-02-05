@@ -63,13 +63,158 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">初期内容（オプション）</label>
-                        <textarea class="form-control" name="body" rows="5" placeholder="例: header1,header2,header3"></textarea>
+                        <textarea class="form-control" name="body" rows="3" placeholder="例: header1,header2,header3"></textarea>
                         <div class="form-text">CSV形式で入力してください。空欄の場合は空ファイルが作成されます。</div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                     <button type="submit" class="btn btn-primary">作成</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 新規ユーザー作成モーダル -->
+{% if current_user.is_superuser %}
+<div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header user-modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" class="header-icon">
+                        <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                        <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                    </svg>
+                    <h5 class="modal-title mb-0">新規ユーザー作成</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_user">
+                <div class="modal-body">
+                    <div class="user-field-group">
+                        <label class="user-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="field-icon">
+                                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                            </svg>
+                            ユーザー名 <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="user-input" name="username" placeholder="ユーザー名を入力" required>
+                    </div>
+
+                    <div class="user-field-group">
+                        <label class="user-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="field-icon">
+                                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/>
+                            </svg>
+                            パスワード <span class="text-danger">*</span>
+                        </label>
+                        <input type="password" class="user-input" name="password" placeholder="8文字以上で入力" required minlength="8">
+                        <div class="user-hint">8文字以上の英数字を組み合わせてください</div>
+                    </div>
+
+                    <div class="user-field-group">
+                        <label class="user-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="field-icon">
+                                <path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414zM0 4.697v7.104l5.803-3.558zM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586zm3.436-.586L16 11.801V4.697z"/>
+                            </svg>
+                            メールアドレス（オプション）
+                        </label>
+                        <input type="email" class="user-input" name="email" placeholder="email@example.com">
+                    </div>
+
+                    <div class="permissions-section">
+                        <h6 class="permissions-title">権限設定</h6>
+                        <div class="form-check permission-check">
+                            <input class="form-check-input" type="checkbox" name="is_staff" id="is_staff" checked>
+                            <label class="form-check-label" for="is_staff">
+                                <strong>スタッフ権限</strong> - 管理画面へのアクセスを許可
+                            </label>
+                        </div>
+                        <div class="form-check permission-check">
+                            <input class="form-check-input" type="checkbox" name="is_superuser" id="is_superuser">
+                            <label class="form-check-label" for="is_superuser">
+                                <strong class="text-danger">スーパーユーザー権限</strong> - 全ての管理機能へのアクセスを許可
+                            </label>
+                            <div class="user-hint mt-1">ユーザーの作成・削除など、すべての管理操作が可能になります</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="user-submit-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" class="btn-icon">
+                            <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                            <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                        </svg>
+                        ユーザーを作成
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- パスワード変更モーダル -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header password-modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" class="header-icon">
+                        <path d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.708 0L9 9.207l-.646.647A.5.5 0 0 1 8 10h-.535A4 4 0 0 1 0 8m4-3a3 3 0 1 0 2.712 4.285A.5.5 0 0 1 7.163 9h.63l.853-.854a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.793-.793-1-1h-6.63a.5.5 0 0 1-.451-.285A3 3 0 0 0 4 5"/>
+                        <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                    </svg>
+                    <h5 class="modal-title mb-0">パスワード変更</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="change-password-form">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="password-field-group">
+                        <label class="password-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="field-icon">
+                                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/>
+                            </svg>
+                            現在のパスワード
+                        </label>
+                        <input type="password" class="password-input" id="current-password" placeholder="現在のパスワードを入力" required>
+                    </div>
+
+                    <div class="password-field-group">
+                        <label class="password-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="field-icon">
+                                <path d="M5.338 1.59a61 61 0 0 0-2.837.856.48.48 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.7 10.7 0 0 0 2.287 2.233c.346.244.652.42.893.533q.18.085.293.118a1 1 0 0 0 .101.025 1 1 0 0 0 .1-.025q.114-.034.294-.118c.24-.113.547-.29.893-.533a10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56"/>
+                            </svg>
+                            新しいパスワード
+                        </label>
+                        <input type="password" class="password-input" id="new-password" placeholder="8文字以上で入力" required minlength="8">
+                        <div class="password-hint">8文字以上の英数字を組み合わせてください</div>
+                    </div>
+
+                    <div class="password-field-group">
+                        <label class="password-label">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="field-icon">
+                                <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/>
+                            </svg>
+                            新しいパスワード（確認）
+                        </label>
+                        <input type="password" class="password-input" id="confirm-password" placeholder="もう一度入力してください" required minlength="8">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="password-submit-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" class="btn-icon">
+                            <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
+                        </svg>
+                        パスワードを変更
+                    </button>
                 </div>
             </form>
         </div>
@@ -230,20 +375,113 @@
         </section>
 
         <section class="admin-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3>ユーザー管理</h3>
+                    <p class="caption mb-0">ログインユーザーの管理</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="change-password-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.708 0L9 9.207l-.646.647A.5.5 0 0 1 8 10h-.535A4 4 0 0 1 0 8m4-3a3 3 0 1 0 2.712 4.285A.5.5 0 0 1 7.163 9h.63l.853-.854a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.646-.647a.5.5 0 0 1 .708 0l.646.647.793-.793-1-1h-6.63a.5.5 0 0 1-.451-.285A3 3 0 0 0 4 5"/>
+                            <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                        パスワード変更
+                    </button>
+                    {% if current_user.is_superuser %}
+                    <button type="button" class="btn btn-primary btn-sm" id="create-user-btn">
+                        + 新規ユーザー
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table class="table table-striped admin-table">
+                    <thead>
+                        <tr>
+                            <th>ユーザー名</th>
+                            <th>メール</th>
+                            <th>権限</th>
+                            <th>ステータス</th>
+                            <th>最終ログイン</th>
+                            <th>登録日</th>
+                            {% if current_user.is_superuser %}
+                            <th>操作</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <strong>{{ user.username }}</strong>
+                                {% if user.id == current_user.id %}
+                                <span class="badge bg-primary ms-1">現在のユーザー</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.is_superuser %}
+                                <span class="badge bg-danger">スーパーユーザー</span>
+                                {% elif user.is_staff %}
+                                <span class="badge bg-info">スタッフ</span>
+                                {% else %}
+                                <span class="badge bg-secondary">一般</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge bg-success">有効</span>
+                                {% else %}
+                                <span class="badge bg-secondary">無効</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{% if user.last_login %}{{ user.last_login|date:"Y年n月j日 H:i:s" }}{% else %}-{% endif %}</td>
+                            <td class="text-muted small">{{ user.date_joined|date:"Y年n月j日 H:i:s" }}</td>
+                            {% if current_user.is_superuser %}
+                            <td>
+                                {% if user.id != current_user.id %}
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-user-btn"
+                                        data-user-id="{{ user.id }}" data-username="{{ user.username }}">
+                                    削除
+                                </button>
+                                {% else %}
+                                <span class="text-muted small">-</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="admin-card">
             <div class="card-header">
                 <h3>設定管理</h3>
                 <p class="caption">メール設定の編集</p>
             </div>
-            <form id="email-settings-form" class="p-3">
+            <form id="email-settings-form" class="settings-form">
                 {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label">開発者メールアドレス</label>
-                    <input type="email" class="form-control form-control-sm" id="developer-address"
+                <div class="settings-field-group">
+                    <label class="settings-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="field-icon">
+                            <path d="M.05 3.555A2 2 0 0 1 2 2h12a2 2 0 0 1 1.95 1.555L8 8.414zM0 4.697v7.104l5.803-3.558zM6.761 8.83l-6.57 4.027A2 2 0 0 0 2 14h12a2 2 0 0 0 1.808-1.144l-6.57-4.027L8 9.586zm3.436-.586L16 11.801V4.697z"/>
+                        </svg>
+                        開発者メールアドレス
+                    </label>
+                    <input type="email" class="settings-input" id="developer-address"
                            value="{{ email_settings.developer_address }}" required
-                           style="max-width: 400px;">
-                    <div class="form-text">レポート送信先のメールアドレスを設定します</div>
+                           placeholder="developer@example.com">
+                    <div class="settings-hint">レポート送信先のメールアドレスを設定します</div>
                 </div>
-                <button type="submit" class="btn btn-primary btn-sm">保存</button>
+                <button type="submit" class="settings-submit-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16" class="btn-icon">
+                        <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
+                    </svg>
+                    保存
+                </button>
             </form>
         </section>
 

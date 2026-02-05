@@ -5,8 +5,9 @@ import re
 from pathlib import Path
 
 from django.conf import settings
-from django.contrib.auth import logout
+from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -118,6 +119,23 @@ def _list_logs(query: str = ""):
     return entries[:300]
 
 
+def _list_users():
+    """ユーザー一覧を取得"""
+    users = []
+    for user in User.objects.all().order_by('-date_joined'):
+        users.append({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email or '-',
+            'is_staff': user.is_staff,
+            'is_superuser': user.is_superuser,
+            'is_active': user.is_active,
+            'date_joined': user.date_joined,
+            'last_login': user.last_login,
+        })
+    return users
+
+
 @method_decorator(staff_required, name="dispatch")
 class administratorView(TemplateView):
     template_name = "administrator.html"
@@ -132,6 +150,9 @@ class administratorView(TemplateView):
         # 設定ファイル読み込み
         email_settings = _load_json_setting('email.json') or {}
 
+        # ユーザー一覧
+        users = _list_users()
+
         context.update(
             master_data=_list_master_files(),
             logs=logs,
@@ -139,6 +160,8 @@ class administratorView(TemplateView):
             query=query,
             message=kwargs.get("message"),
             email_settings=email_settings,
+            users=users,
+            current_user=self.request.user,
         )
         return context
 
@@ -212,6 +235,110 @@ class administratorView(TemplateView):
                 existing_data["developer_address"] = developer_address
                 _save_json_setting("email.json", existing_data)
                 message = "メール設定を更新しました"
+
+        elif action == "change_password":
+            current_password = request.POST.get("current_password", "").strip()
+            new_password = request.POST.get("new_password", "").strip()
+            confirm_password = request.POST.get("confirm_password", "").strip()
+
+            errors = []
+
+            # バリデーション
+            if not current_password:
+                errors.append("現在のパスワードを入力してください")
+            elif not request.user.check_password(current_password):
+                errors.append("現在のパスワードが正しくありません")
+
+            if not new_password:
+                errors.append("新しいパスワードを入力してください")
+            elif len(new_password) < 8:
+                errors.append("パスワードは8文字以上で設定してください")
+
+            if new_password != confirm_password:
+                errors.append("新しいパスワードが一致しません")
+
+            if errors:
+                message = "エラー: " + " / ".join(errors)
+                if is_ajax:
+                    return JsonResponse({'success': False, 'message': message})
+            else:
+                # パスワード変更
+                request.user.set_password(new_password)
+                request.user.save()
+                # セッションを維持（ログアウトしないようにする）
+                update_session_auth_hash(request, request.user)
+                message = "パスワードを変更しました"
+
+        elif action == "create_user":
+            # スーパーユーザーのみ実行可能
+            if not request.user.is_superuser:
+                message = "エラー: 権限がありません"
+                if is_ajax:
+                    return JsonResponse({'success': False, 'message': message})
+            else:
+                username = request.POST.get("username", "").strip()
+                password = request.POST.get("password", "").strip()
+                email = request.POST.get("email", "").strip()
+                is_staff = request.POST.get("is_staff") == "on"
+                is_superuser = request.POST.get("is_superuser") == "on"
+
+                errors = []
+
+                # バリデーション
+                if not username:
+                    errors.append("ユーザー名を入力してください")
+                elif User.objects.filter(username=username).exists():
+                    errors.append("このユーザー名は既に使用されています")
+
+                if not password:
+                    errors.append("パスワードを入力してください")
+                elif len(password) < 8:
+                    errors.append("パスワードは8文字以上で設定してください")
+
+                if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+                    errors.append("メールアドレスの形式が不正です")
+
+                if errors:
+                    message = "エラー: " + " / ".join(errors)
+                    if is_ajax:
+                        return JsonResponse({'success': False, 'message': message})
+                else:
+                    # ユーザー作成
+                    user = User.objects.create_user(
+                        username=username,
+                        password=password,
+                        email=email,
+                        is_staff=is_staff
+                    )
+                    # スーパーユーザー権限を設定
+                    if is_superuser:
+                        user.is_superuser = True
+                        user.save()
+                    message = f"ユーザー「{username}」を作成しました"
+
+        elif action == "delete_user":
+            # スーパーユーザーのみ実行可能
+            if not request.user.is_superuser:
+                message = "エラー: 権限がありません"
+                if is_ajax:
+                    return JsonResponse({'success': False, 'message': message})
+            else:
+                user_id = request.POST.get("user_id")
+                try:
+                    user = User.objects.get(id=user_id)
+                    # 自分自身は削除できない
+                    if user.id == request.user.id:
+                        message = "エラー: 自分自身を削除することはできません"
+                        if is_ajax:
+                            return JsonResponse({'success': False, 'message': message})
+                    else:
+                        username = user.username
+                        user.delete()
+                        message = f"ユーザー「{username}」を削除しました"
+                except User.DoesNotExist:
+                    message = "エラー: ユーザーが見つかりません"
+                    if is_ajax:
+                        return JsonResponse({'success': False, 'message': message})
 
         # レスポンス返却
         if is_ajax:

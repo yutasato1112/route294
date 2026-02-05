@@ -202,6 +202,18 @@
 /* ========================================
    削除確認モーダル
    ======================================== */
+#confirmDeleteModal .modal-body {
+    padding: 1.5rem;
+}
+
+#confirmDeleteModal .modal-body p {
+    margin-bottom: 0.5rem;
+}
+
+#confirmDeleteModal .modal-body p:last-child {
+    margin-bottom: 0;
+}
+
 .modal-header.bg-danger {
     background-color: #dc3545 !important;
 }
@@ -215,6 +227,16 @@
    ======================================== */
 .modal-xl {
     max-width: 90%;
+}
+
+#csvEditorModal .modal-body {
+    padding: 1.5rem;
+}
+
+#csvEditorModal .table-responsive {
+    margin-top: 1rem !important;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .csv-edit-table {
@@ -237,17 +259,29 @@
 .csv-edit-table th {
     background-color: #f8f9fa;
     font-weight: 600;
+    font-size: 13px;
 }
 
 .csv-edit-table td,
 .csv-edit-table th {
-    padding: 0.5rem;
+    padding: 0.4rem 0.5rem;
     vertical-align: middle;
 }
 
 #csv-text {
     font-family: 'SFMono-Regular', Consolas, monospace;
     font-size: 13px;
+    min-height: 300px;
+    max-height: 400px;
+}
+
+#csvEditorModal .nav-tabs {
+    border-bottom: 1px solid #dee2e6;
+}
+
+#csvEditorModal .nav-tabs .nav-link {
+    font-size: 13px;
+    padding: 0.5rem 1rem;
 }
 
 .nav-tabs .nav-link {
@@ -318,3 +352,369 @@
 .page-item.disabled .page-link {
     pointer-events: none;
 }
+
+/* ========================================
+   パスワード変更モーダル
+   ======================================== */
+.password-modal-header {
+    background: linear-gradient(135deg, #f8f9ff 0%, #eef3ff 100%);
+    border-bottom: 2px solid #e3ecff;
+}
+
+.password-modal-header .header-icon {
+    color: #1f3c88;
+}
+
+.password-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+#changePasswordModal .modal-body {
+    padding: 1.5rem;
+}
+
+.password-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.password-field-group:last-child {
+    margin-bottom: 0;
+}
+
+.password-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+}
+
+.password-label .field-icon {
+    color: #6b7280;
+}
+
+.password-input {
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    font-size: 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.password-input:focus {
+    outline: none;
+    border-color: #1f3c88;
+    box-shadow: 0 0 0 4px rgba(31, 60, 136, 0.1);
+}
+
+.password-input::placeholder {
+    color: #9ca3af;
+}
+
+.password-hint {
+    font-size: 11px;
+    color: #6b7280;
+    margin-left: 0.25rem;
+    margin-top: 0.25rem;
+}
+
+.password-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #1f3c88 0%, #2d4fa8 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(31, 60, 136, 0.2);
+}
+
+.password-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(31, 60, 136, 0.3);
+    background: linear-gradient(135deg, #2d4fa8 0%, #1f3c88 100%);
+}
+
+.password-submit-btn:active {
+    transform: translateY(0);
+}
+
+.password-submit-btn .btn-icon {
+    transition: transform 0.3s ease;
+}
+
+.password-submit-btn:hover .btn-icon {
+    transform: scale(1.1);
+}
+
+/* ========================================
+   新規ユーザー作成モーダル
+   ======================================== */
+.user-modal-header {
+    background: linear-gradient(135deg, #f8f9ff 0%, #eef3ff 100%);
+    border-bottom: 2px solid #e3ecff;
+}
+
+.user-modal-header .header-icon {
+    color: #1f3c88;
+}
+
+#createUserModal .modal-body {
+    padding: 1.5rem;
+}
+
+.user-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.user-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0;
+}
+
+.user-label .field-icon {
+    color: #6b7280;
+}
+
+.user-input {
+    width: 100%;
+    padding: 0.6rem 0.9rem;
+    font-size: 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.user-input:focus {
+    outline: none;
+    border-color: #1f3c88;
+    box-shadow: 0 0 0 4px rgba(31, 60, 136, 0.1);
+}
+
+.user-input::placeholder {
+    color: #9ca3af;
+}
+
+.user-hint {
+    font-size: 11px;
+    color: #6b7280;
+    margin-left: 0.25rem;
+    margin-top: 0.25rem;
+}
+
+.permissions-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+    border: 1px solid #e3ecff;
+    border-radius: 10px;
+}
+
+.permissions-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.permission-check {
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.permission-check:hover {
+    background-color: rgba(31, 60, 136, 0.05);
+}
+
+.permission-check:last-child {
+    margin-bottom: 0;
+}
+
+.permission-check .form-check-label {
+    font-size: 13px;
+    color: #374151;
+    cursor: pointer;
+}
+
+.user-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #1f3c88 0%, #2d4fa8 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(31, 60, 136, 0.2);
+}
+
+.user-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(31, 60, 136, 0.3);
+    background: linear-gradient(135deg, #2d4fa8 0%, #1f3c88 100%);
+}
+
+.user-submit-btn:active {
+    transform: translateY(0);
+}
+
+.user-submit-btn .btn-icon {
+    transition: transform 0.3s ease;
+}
+
+.user-submit-btn:hover .btn-icon {
+    transform: scale(1.1);
+}
+
+/* ========================================
+   CSV新規作成モーダル
+   ======================================== */
+#csvCreateModal .modal-body {
+    padding: 1.5rem;
+}
+
+#csvCreateModal .mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+#csvCreateModal .form-label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+}
+
+#csvCreateModal .form-control {
+    padding: 0.6rem 0.9rem;
+    font-size: 14px;
+}
+
+#csvCreateModal textarea.form-control {
+    min-height: 80px;
+}
+
+#csvCreateModal .form-text {
+    font-size: 11px;
+    margin-top: 0.25rem;
+}
+
+/* ========================================
+   設定管理フォーム
+   ======================================== */
+.settings-form {
+    padding: 1.5rem 1.5rem 1.25rem;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+}
+
+.settings-field-group {
+    margin-bottom: 1.25rem;
+}
+
+.settings-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.settings-label .field-icon {
+    color: #6b7280;
+}
+
+.settings-input {
+    width: 100%;
+    max-width: 500px;
+    padding: 0.6rem 0.9rem;
+    font-size: 14px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.settings-input:focus {
+    outline: none;
+    border-color: #1f3c88;
+    box-shadow: 0 0 0 4px rgba(31, 60, 136, 0.1);
+}
+
+.settings-input::placeholder {
+    color: #9ca3af;
+}
+
+.settings-hint {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 0.25rem;
+    margin-left: 0.25rem;
+}
+
+.settings-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    background: linear-gradient(135deg, #1f3c88 0%, #2d4fa8 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(31, 60, 136, 0.2);
+}
+
+.settings-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(31, 60, 136, 0.3);
+    background: linear-gradient(135deg, #2d4fa8 0%, #1f3c88 100%);
+}
+
+.settings-submit-btn:active {
+    transform: translateY(0);
+}
+
+.settings-submit-btn .btn-icon {
+    transition: transform 0.3s ease;
+}
+
+.settings-submit-btn:hover .btn-icon {
+    transform: scale(1.1);
+}
+

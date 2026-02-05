@@ -868,6 +868,134 @@ $(document).ready(function() {
 });
 
 // ========================================
+// ユーザー管理
+// ========================================
+
+$(document).ready(function() {
+    // パスワード変更ボタン
+    $('#change-password-btn').on('click', function() {
+        $('#changePasswordModal').modal('show');
+    });
+
+    // 新規ユーザー作成ボタン
+    $('#create-user-btn').on('click', function() {
+        $('#createUserModal').modal('show');
+    });
+
+    // 新規ユーザー作成フォーム送信
+    $('#createUserModal form').on('submit', function(e) {
+        e.preventDefault();
+
+        const formData = {
+            action: 'create_user',
+            username: $(this).find('input[name="username"]').val(),
+            password: $(this).find('input[name="password"]').val(),
+            email: $(this).find('input[name="email"]').val(),
+            is_staff: $(this).find('input[name="is_staff"]').is(':checked') ? 'on' : '',
+            is_superuser: $(this).find('input[name="is_superuser"]').is(':checked') ? 'on' : '',
+            csrfmiddlewaretoken: $(this).find('[name=csrfmiddlewaretoken]').val()
+        };
+
+        showLoading();
+
+        $.ajax({
+            url: '',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                hideLoading();
+                $('#createUserModal').modal('hide');
+
+                if (response.success !== false) {
+                    showToast('success', response.message || 'ユーザーを作成しました', 3000);
+                    setTimeout(() => location.reload(), 3500);
+                } else {
+                    showToast('danger', response.message || 'ユーザー作成に失敗しました');
+                }
+            },
+            error: function(xhr) {
+                hideLoading();
+                const message = xhr.responseJSON?.message || 'ユーザー作成に失敗しました';
+                showToast('danger', message);
+            }
+        });
+    });
+
+    // ユーザー削除ボタン
+    $(document).on('click', '.delete-user-btn', function(e) {
+        e.preventDefault();
+        const userId = $(this).data('user-id');
+        const username = $(this).data('username');
+        showDeleteConfirm('ユーザー', username, 'delete_user', { user_id: userId });
+    });
+
+    // パスワード変更フォーム送信
+    $('#change-password-form').on('submit', function(e) {
+        e.preventDefault();
+
+        const currentPassword = $('#current-password').val();
+        const newPassword = $('#new-password').val();
+        const confirmPassword = $('#confirm-password').val();
+
+        // クライアント側バリデーション
+        if (newPassword.length < 8) {
+            showToast('danger', 'パスワードは8文字以上で設定してください');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showToast('danger', '新しいパスワードが一致しません');
+            return;
+        }
+
+        showLoading();
+
+        $.ajax({
+            url: '',
+            method: 'POST',
+            data: {
+                action: 'change_password',
+                current_password: currentPassword,
+                new_password: newPassword,
+                confirm_password: confirmPassword,
+                csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+            },
+            success: function(response) {
+                hideLoading();
+
+                if (response.success !== false) {
+                    $('#changePasswordModal').modal('hide');
+                    showToast('success', response.message || 'パスワードを変更しました', 3000);
+                    // フォームをクリア
+                    $('#change-password-form')[0].reset();
+                } else {
+                    showToast('danger', response.message || 'パスワード変更に失敗しました');
+                }
+            },
+            error: function(xhr) {
+                hideLoading();
+                const message = xhr.responseJSON?.message || 'パスワード変更に失敗しました';
+                showToast('danger', message);
+            }
+        });
+    });
+
+    // 新規ユーザー作成モーダルを閉じた時にフォームをクリア
+    $('#createUserModal').on('hidden.bs.modal', function() {
+        $(this).find('form')[0].reset();
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('overflow', '');
+    });
+
+    // パスワード変更モーダルを閉じた時にフォームをクリア
+    $('#changePasswordModal').on('hidden.bs.modal', function() {
+        $('#change-password-form')[0].reset();
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('overflow', '');
+    });
+});
+
+// ========================================
 // 設定管理
 // ========================================
 
