@@ -1,23 +1,59 @@
 import csv
 import datetime
+import json
 import re
 from pathlib import Path
 
 from django.conf import settings
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import logout
-from django.http import HttpRequest, HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
+from functools import wraps
 
 
 MASTER_DIR = Path(settings.BASE_DIR) / "static" / "csv"
 LOG_DIR = Path(settings.BASE_DIR) / "logs"
+SETTINGS_DIR = Path(settings.BASE_DIR) / "static"
+
+
+def staff_required(view_func):
+    """
+    カスタムログイン画面を使用するスタッフ専用デコレータ
+    """
+    @wraps(view_func)
+    @login_required(login_url='/login/')
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_staff:
+            raise PermissionDenied("このページにアクセスする権限がありません。")
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 def _now_str() -> str:
     return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _load_json_setting(filename):
+    """JSON設定ファイルを読み込む"""
+    path = SETTINGS_DIR / filename
+    if path.exists():
+        try:
+            with path.open('r', encoding='utf-8') as f:
+                return json.load(f)
+        except (json.JSONDecodeError, Exception):
+            return None
+    return None
+
+
+def _save_json_setting(filename, data):
+    """JSON設定ファイルを保存"""
+    path = SETTINGS_DIR / filename
+    with path.open('w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 
 def _list_master_files():
@@ -82,18 +118,27 @@ def _list_logs(query: str = ""):
     return entries[:300]
 
 
-@method_decorator(staff_member_required, name="dispatch")
+@method_decorator(staff_required, name="dispatch")
 class administratorView(TemplateView):
     template_name = "administrator.html"
 
     def get_context_data(self, **kwargs):
         query = self.request.GET.get("query", "").strip()
         context = super().get_context_data(**kwargs)
+
+        logs = _list_logs(query)
+        logs_json = json.dumps(logs, ensure_ascii=False)
+
+        # 設定ファイル読み込み
+        email_settings = _load_json_setting('email.json') or {}
+
         context.update(
             master_data=_list_master_files(),
-            logs=_list_logs(query),
+            logs=logs,
+            logs_json=logs_json,
             query=query,
             message=kwargs.get("message"),
+            email_settings=email_settings,
         )
         return context
 
@@ -103,6 +148,9 @@ class administratorView(TemplateView):
     def post(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
         action = request.POST.get("action")
         message = None
+
+        # Ajaxリクエストの判定
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         MASTER_DIR.mkdir(parents=True, exist_ok=True)
         LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -144,10 +192,70 @@ class administratorView(TemplateView):
                 removed += 1
             message = f"ログファイルを削除しました（{removed}件）。"
 
-        context = self.get_context_data(message=message)
-        return render(request, self.template_name, context)
+        elif action == "update_email_settings":
+            developer_address = request.POST.get("developer_address", "").strip()
+
+            # バリデーション
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            errors = []
+
+            if not re.match(email_pattern, developer_address):
+                errors.append("開発者メールアドレスの形式が不正です")
+
+            if errors:
+                message = "エラー: " + " / ".join(errors)
+                if is_ajax:
+                    return JsonResponse({'success': False, 'message': message})
+            else:
+                # 既存の設定を読み込み、developer_addressのみ更新
+                existing_data = _load_json_setting("email.json") or {}
+                existing_data["developer_address"] = developer_address
+                _save_json_setting("email.json", existing_data)
+                message = "メール設定を更新しました"
+
+        # レスポンス返却
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': message
+            })
+        else:
+            context = self.get_context_data(message=message)
+            return render(request, self.template_name, context)
 
 
 def logout_view(request: HttpRequest):
     logout(request)
     return redirect("home")
+
+
+@staff_required
+def get_csv_view(request: HttpRequest):
+    """
+    CSVファイルの内容を取得してJSON形式で返す
+    """
+    filename = request.GET.get('filename')
+
+    if not filename:
+        return JsonResponse({'error': 'ファイル名が指定されていません'}, status=400)
+
+    path = MASTER_DIR / filename
+
+    if not path.exists():
+        return JsonResponse({'error': 'ファイルが見つかりません'}, status=404)
+
+    # セキュリティチェック: パストラバーサル対策
+    if not str(path.resolve()).startswith(str(MASTER_DIR.resolve())):
+        return JsonResponse({'error': '不正なファイルパスです'}, status=403)
+
+    try:
+        with path.open('r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            rows = list(reader)
+
+        return JsonResponse({
+            'filename': filename,
+            'data': rows
+        })
+    except Exception as e:
+        return JsonResponse({'error': f'ファイルの読み込みに失敗しました: {str(e)}'}, status=500)

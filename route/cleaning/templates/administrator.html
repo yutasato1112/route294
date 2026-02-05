@@ -3,7 +3,132 @@
 {% block content %}
 <title>管理画面</title>
 <link rel="stylesheet" href="{% static 'css/administrator.css' %}">
-<script src="{% static 'js/administrator.js' %}"></script>
+
+<!-- トーストコンテナ -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    <div id="notification-toast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="toast-title">通知</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toast-body"></div>
+    </div>
+</div>
+
+<!-- ローディングオーバーレイ -->
+<div id="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">処理中...</p>
+    </div>
+</div>
+
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">削除の確認</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="delete-confirm-message"></p>
+                <p class="text-muted small">この操作は取り消せません。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">削除する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSV新規作成モーダル -->
+<div class="modal fade" id="csvCreateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">CSV新規作成</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_master">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">ファイル名</label>
+                        <input type="text" class="form-control" name="name" placeholder="例: weekly（.csv は自動付与されます）" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">初期内容（オプション）</label>
+                        <textarea class="form-control" name="body" rows="5" placeholder="例: header1,header2,header3"></textarea>
+                        <div class="form-text">CSV形式で入力してください。空欄の場合は空ファイルが作成されます。</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">作成</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CSVエディタモーダル -->
+<div class="modal fade" id="csvEditorModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">CSVエディタ: <span id="edit-filename"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- タブ切り替え -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" id="table-editor-tab" data-bs-toggle="tab"
+                                data-bs-target="#table-editor" type="button">
+                            テーブル編集
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" id="text-editor-tab" data-bs-toggle="tab"
+                                data-bs-target="#text-editor" type="button">
+                            テキスト編集
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- テーブル編集タブ -->
+                    <div class="tab-pane active" id="table-editor">
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered csv-edit-table">
+                                <thead id="csv-header"></thead>
+                                <tbody id="csv-body"></tbody>
+                            </table>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" id="add-row">+ 行を追加</button>
+                    </div>
+
+                    <!-- テキスト編集タブ -->
+                    <div class="tab-pane" id="text-editor">
+                        <textarea id="csv-text" class="form-control mt-3" rows="15"></textarea>
+                    </div>
+                </div>
+
+                <!-- バリデーション結果 -->
+                <div id="validation-result" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-primary" id="save-csv">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="admin-page">
     <div class="hero-panel">
@@ -27,9 +152,14 @@
 
     <div class="card-grid">
         <section class="admin-card">
-            <div class="card-header">
-                <h3>マスタデータ（static/csv）</h3>
-                <p class="caption">閲覧・更新・削除・新規作成</p>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3>マスタデータ（static/csv）</h3>
+                    <p class="caption mb-0">閲覧・更新・削除・新規作成</p>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" id="create-csv-btn">
+                    + 新規作成
+                </button>
             </div>
             <div class="table-wrap">
                 <table class="table table-striped admin-table">
@@ -50,43 +180,40 @@
                                 <td>{{ item.updated_at }}</td>
                                 <td>{{ item.size }} bytes</td>
                                 <td class="table-actions">
-                                    <button type="submit" form="master-edit-{{ forloop.counter }}" class="btn btn-sm btn-outline-primary">更新</button>
-                                    <button type="submit" form="master-delete-{{ forloop.counter }}" class="btn btn-sm btn-outline-danger">削除</button>
-                                </td>
-                            </tr>
-                            <tr class="inline-form">
-                                <td colspan="4">
-                                    <form id="master-edit-{{ forloop.counter }}" method="post" class="inline-edit-form">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="action" value="update_master">
-                                        <input type="hidden" name="master_id" value="{{ item.id }}">
-                                        <input type="text" name="name" value="{{ item.name }}" placeholder="ファイル名">
-                                        <textarea name="body" rows="4" placeholder="内容">{{ item.body }}</textarea>
-                                    </form>
-                                    <form id="master-delete-{{ forloop.counter }}" method="post" class="inline-delete-form">
-                                        {% csrf_token %}
-       	     		        <input type="hidden" name="action" value="delete_master">
-                                        <input type="hidden" name="master_id" value="{{ item.id }}">
-                                    </form>
+                                    <button type="button" class="btn btn-sm btn-link preview-toggle collapsed"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#preview-{{ forloop.counter }}">
+                                        ▶ プレビュー
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary edit-master-btn"
+                                            data-filename="{{ item.name }}">
+                                        編集
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger delete-master-btn"
+                                            data-filename="{{ item.name }}">
+                                        削除
+                                    </button>
                                 </td>
                             </tr>
                             {% if item.rows_preview %}
-                            <tr class="inline-form">
-                                <td colspan="4">
-                                    <div class="csv-preview">
-                                        <p class="caption">先頭20行プレビュー</p>
-                                        <div class="table-wrap">
-                                            <table class="table table-sm table-striped preview-table">
-                                                <tbody>
-                                                    {% for row in item.rows_preview %}
-                                                    <tr>
-                                                        {% for cell in row %}
-                                                        <td>{{ cell }}</td>
+                            <tr>
+                                <td colspan="4" class="p-0">
+                                    <div class="collapse" id="preview-{{ forloop.counter }}">
+                                        <div class="csv-preview p-3">
+                                            <p class="caption mb-2">先頭20行プレビュー</p>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm table-striped preview-table">
+                                                    <tbody>
+                                                        {% for row in item.rows_preview %}
+                                                        <tr>
+                                                            {% for cell in row %}
+                                                            <td>{{ cell }}</td>
+                                                            {% endfor %}
+                                                        </tr>
                                                         {% endfor %}
-                                                    </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -100,16 +227,24 @@
                     </tbody>
                 </table>
             </div>
-            <div class="form-inline-block">
-                <h4>新規作成</h4>
-                <form method="post" class="inline-create-form">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="create_master">
-                    <input type="text" name="name" placeholder="ファイル名（.csv 省略可）" required>
-                    <textarea name="body" rows="3" placeholder="内容"></textarea>
-                    <button type="submit" class="btn btn-primary">追加</button>
-                </form>
+        </section>
+
+        <section class="admin-card">
+            <div class="card-header">
+                <h3>設定管理</h3>
+                <p class="caption">メール設定の編集</p>
             </div>
+            <form id="email-settings-form" class="p-3">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">開発者メールアドレス</label>
+                    <input type="email" class="form-control form-control-sm" id="developer-address"
+                           value="{{ email_settings.developer_address }}" required
+                           style="max-width: 400px;">
+                    <div class="form-text">レポート送信先のメールアドレスを設定します</div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">保存</button>
+            </form>
         </section>
 
         <section class="admin-card">
@@ -117,44 +252,93 @@
                 <h3>ログ</h3>
                 <p class="caption">閲覧・削除</p>
             </div>
-            <div class="log-actions">
-                <form method="get" class="log-filter">
-                    <input type="text" name="query" placeholder="キーワード/日付などで検索">
-                    <button type="submit" class="btn btn-outline-primary btn-sm">検索</button>
-                </form>
-                <form method="post" class="log-delete">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="delete_logs">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">ログを全削除</button>
-                </form>
+
+            <!-- フィルターとコントロール -->
+            <div class="log-controls mb-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <!-- レベルフィルター -->
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-danger log-filter active" data-level="ERROR">
+                            ERROR
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning log-filter" data-level="WARNING">
+                            WARNING
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info log-filter" data-level="INFO">
+                            INFO
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary log-filter" data-level="ALL">
+                            ALL
+                        </button>
+                    </div>
+
+                    <!-- 検索 -->
+                    <div class="input-group" style="width: auto;">
+                        <input type="text" class="form-control form-control-sm" id="log-search"
+                               placeholder="キーワード検索" style="min-width: 200px;">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" id="clear-search">
+                            ✕
+                        </button>
+                    </div>
+
+                    <!-- ページサイズ選択 -->
+                    <select class="form-select form-select-sm" id="page-size" style="width: auto;">
+                        <option value="10">10件</option>
+                        <option value="25">25件</option>
+                        <option value="50">50件</option>
+                        <option value="100">100件</option>
+                    </select>
+
+                    <!-- 統計 -->
+                    <span class="text-muted small" id="log-stats"></span>
+
+                    <!-- 削除ボタン -->
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="delete-logs-btn">
+                        全削除
+                    </button>
+                </div>
             </div>
-            <div class="table-wrap">
-                <table class="table table-striped admin-table">
+
+            <!-- ログテーブル -->
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
                     <thead>
                         <tr>
-                            <th>日時</th>
-                            <th>レベル</th>
+                            <th style="width: 160px;">日時</th>
+                            <th style="width: 100px;">レベル</th>
+                            <th style="width: 150px;">ファイル</th>
                             <th>メッセージ</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% with logs=logs %}
-                        {% if logs %}
-                            {% for log in logs %}
-                            <tr>
-                                <td>{{ log.timestamp }}</td>
-                                <td class="mono">{{ log.level }}</td>
-                                <td>{{ log.message }}</td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr><td colspan="3" class="muted">表示できるログがありません</td></tr>
-                        {% endif %}
-                        {% endwith %}
-                    </tbody>
+                    <tbody id="log-table-body"></tbody>
                 </table>
             </div>
+
+            <!-- ページネーション -->
+            <div id="log-pagination" class="mt-3"></div>
         </section>
     </div>
 </div>
+
+<script>
+    // ログデータをJavaScriptで利用可能にする
+    window.logsData = {{ logs_json|safe }};
+
+    // デバッグ: messageの値を確認
+    console.log('Server message:', '{{ message|default:"(empty)" }}');
+    console.log('Message exists:', {{ message|yesno:"true,false,false" }});
+
+    // サーバーサイドからのメッセージを表示
+    {% if message %}
+    $(document).ready(function() {
+        console.log('Showing toast with message:', '{{ message|escapejs }}');
+        showToast('success', '{{ message|escapejs }}', 5000);
+    });
+    {% endif %}
+</script>
+
 {% endblock content %}
+
+{% block scripts %}
+<script src="{% static 'js/administrator.js' %}"></script>
+{% endblock %}

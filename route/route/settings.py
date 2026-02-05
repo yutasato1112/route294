@@ -178,3 +178,8 @@ LOGGING = {
         }
     },
 }
+
+# Authentication settings
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/administrator/'
+LOGOUT_REDIRECT_URL = '/'

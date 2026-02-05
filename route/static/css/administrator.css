@@ -57,9 +57,11 @@
 .logout-btn{ padding: 0.65rem 1.2rem; border-radius: 10px; font-weight: 600; }
 
 .card-grid{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .admin-card{
@@ -75,6 +77,7 @@
 
 .card-header h3{ margin: 0; font-size: 18px; color: #0f172a; }
 .card-header .caption{ margin: 0.15rem 0 0; font-size: 12px; color: #6b7280; }
+.card-header .btn{ white-space: nowrap; }
 
 .table-wrap{ overflow-x: auto; }
 .admin-table{ margin-bottom: 0; }
@@ -90,13 +93,6 @@
 .csv-preview{ margin-top: 0.5rem; }
 .preview-table td{ font-size: 12px; padding: 4px 6px; }
 
-.form-inline-block{ border-top: 1px solid #e5e7eb; padding-top: 0.8rem; }
-.form-inline-block h4{ font-size: 14px; margin: 0 0 0.6rem 0; color: #0f172a; }
-.inline-create-form{ display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.inline-create-form input, .inline-create-form textarea{ flex: 1 1 200px; padding: 0.45rem 0.65rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; }
-.inline-create-form textarea{ min-width: 240px; min-height: 60px; }
-.inline-create-form .btn{ padding: 0.55rem 1.1rem; }
-
 .log-actions{ display: flex; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; }
 .log-filter input{ padding: 0.5rem 0.7rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; min-width: 240px; }
 .log-filter .btn, .log-delete .btn{ padding: 0.5rem 1rem; }
@@ -108,4 +104,217 @@
     .admin-page{ width: 94%; padding-top: 4vh; }
     .hero-panel{ flex-direction: column; align-items: flex-start; }
     .page-heading h2{ font-size: 24px; }
+
+    /* ログコントロール */
+    .log-controls .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .btn-group {
+        width: 100%;
+    }
+
+    .btn-group .btn {
+        flex: 1;
+    }
+
+    .log-controls .input-group,
+    .log-controls .form-select {
+        width: 100% !important;
+    }
+
+    /* モーダル */
+    .modal-xl {
+        max-width: 95%;
+    }
+
+    /* テーブル */
+    .table-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .table-actions .btn {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   トースト通知
+   ======================================== */
+.toast {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.toast-header.bg-success,
+.toast-header.bg-danger,
+.toast-header.bg-info {
+    color: white;
+}
+
+.toast-header.bg-success .btn-close,
+.toast-header.bg-danger .btn-close,
+.toast-header.bg-info .btn-close {
+    filter: invert(1);
+}
+
+/* ========================================
+   ローディングオーバーレイ
+   ======================================== */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.loading-spinner .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* ========================================
+   削除確認モーダル
+   ======================================== */
+.modal-header.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.btn-close-white {
+    filter: invert(1);
+}
+
+/* ========================================
+   CSVエディタモーダル
+   ======================================== */
+.modal-xl {
+    max-width: 90%;
+}
+
+.csv-edit-table {
+    margin-bottom: 1rem;
+}
+
+.csv-edit-table input {
+    border: 1px solid #e2e8f0;
+    padding: 0.25rem 0.5rem;
+    font-size: 13px;
+    width: 100%;
+}
+
+.csv-edit-table input:focus {
+    border-color: #1f3c88;
+    box-shadow: 0 0 0 0.2rem rgba(31, 60, 136, 0.25);
+    outline: none;
+}
+
+.csv-edit-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.csv-edit-table td,
+.csv-edit-table th {
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+#csv-text {
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 13px;
+}
+
+.nav-tabs .nav-link {
+    color: #4b5563;
+}
+
+.nav-tabs .nav-link.active {
+    color: #1f3c88;
+    font-weight: 600;
+    border-color: #dee2e6 #dee2e6 #fff;
+}
+
+/* ========================================
+   ログビューア
+   ======================================== */
+.log-controls {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+#log-table-body tr:hover {
+    background-color: #f1f5f9;
+}
+
+/* ログレベル別バッジ */
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: white;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #212529;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+    color: white;
+}
+
+/* ページネーション */
+.pagination {
+    margin-bottom: 0;
+}
+
+.page-link {
+    color: #1f3c88;
+    border-color: #d0dbff;
+}
+
+.page-link:hover {
+    background-color: #eef3ff;
+    border-color: #1f3c88;
+}
+
+.page-item.active .page-link {
+    background-color: #1f3c88;
+    border-color: #1f3c88;
+}
+
+.page-item.disabled .page-link {
+    pointer-events: none;
 }

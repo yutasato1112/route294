@@ -28,10 +28,13 @@ from cleaning.views import tech as tech_view
 from cleaning.views import administrator as admin_view
 from cleaning.views import sidewind_front
 from cleaning.views import rooming_list as rooming_list_view
+from cleaning.views import login as login_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view.homeView.as_view(), name='home'),
+    path('login/', login_view.LoginView.as_view(), name='login'),
+    path('logout/', admin_view.logout_view, name='logout'),
     path('preview/', preview_view.previewView.as_view(), name='preview'),
     path('download/json/', json_view.download_json, name='download_json'),
     path('report/', report_view.reportView.as_view(), name='report'),
@@ -39,7 +42,7 @@ urlpatterns = [
     path('release/', release_view.releaseView.as_view(), name='release'),
     path('technology/', tech_view.techView.as_view(), name='tech'),
     path('administrator/', admin_view.administratorView.as_view(), name='administrator'),
-    path('logout/', admin_view.logout_view, name='logout'),
+    path('administrator/get-csv/', admin_view.get_csv_view, name='get_csv'),
     path('sidewind_front/', sidewind_front.sidewind_front, name='sidewind_front'),
     path('rooming_list/', rooming_list_view.roomingListView.as_view(), name='rooming_list'),
 ]
