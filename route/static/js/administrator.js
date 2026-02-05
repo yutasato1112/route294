@@ -51,15 +51,11 @@ function escapeHtml(text) {
  * @param {number} duration - 表示時間（ミリ秒、デフォルト: 3000）
  */
 function showToast(type, message, duration = 3000) {
-    // デバッグ: 空メッセージや不正な呼び出しを防ぐ
+    // 空メッセージチェック
     if (!message || message.trim() === '') {
         console.warn('showToast called with empty message');
         return;
     }
-
-    // デバッグ: 呼び出し元を追跡
-    console.log('showToast called:', { type, message, duration });
-    console.trace('Call stack:');
 
     const toast = document.getElementById('notification-toast');
     const toastBody = document.getElementById('toast-body');

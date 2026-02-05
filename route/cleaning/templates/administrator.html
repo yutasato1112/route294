@@ -324,14 +324,9 @@
     // ログデータをJavaScriptで利用可能にする
     window.logsData = {{ logs_json|safe }};
 
-    // デバッグ: messageの値を確認
-    console.log('Server message:', '{{ message|default:"(empty)" }}');
-    console.log('Message exists:', {{ message|yesno:"true,false,false" }});
-
     // サーバーサイドからのメッセージを表示
     {% if message %}
     $(document).ready(function() {
-        console.log('Showing toast with message:', '{{ message|escapejs }}');
         showToast('success', '{{ message|escapejs }}', 5000);
     });
     {% endif %}
