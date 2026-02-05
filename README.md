@@ -6,9 +6,9 @@
 ![Python](https://img.shields.io/badge/Python-3.x-yellow.svg)
 ![License](https://img.shields.io/badge/license-Private-red.svg)
 
-A sophisticated web-based hotel housekeeping management system for a 154-room hotel. Features intelligent room allocation, multi-language support, and comprehensive administrative tools.
+A sophisticated web-based hotel housekeeping management system for a 153-room hotel. Features intelligent room allocation, multi-language support, and comprehensive administrative tools.
 
-**ホテルの客室清掃業務を効率化する高度なWebアプリケーション。154室のホテル向けに、インテリジェントな部屋割り当て、多言語対応、包括的な管理ツールを提供します。**
+**ホテルの客室清掃業務を効率化する高度なWebアプリケーション。153室のホテル向けに、インテリジェントな部屋割り当て、多言語対応、包括的な管理ツールを提供します。**
 
 ---
 
@@ -16,7 +16,7 @@ A sophisticated web-based hotel housekeeping management system for a 154-room ho
 
 ### Core Functionality / コア機能
 - **🏨 Visual Room Grid**: Interactive 9×17 grid for 153 rooms across 10 floors
-  - **ビジュアル客室グリッド**: 10フロア・154室を9×17のインタラクティブなグリッドで表示
+  - **ビジュアル客室グリッド**: 10フロア・153室を9×17のインタラクティブなグリッドで表示
 - **🤖 Autopilot (Sidewind)**: AI-powered room allocation algorithm with constraint optimization
   - **オートパイロット（Sidewind）**: 制約最適化による自動部屋割り当てアルゴリズム
 - **🖨️ Print Preview**: Generate professional cleaning instruction sheets
@@ -175,8 +175,8 @@ Create these files in `route/static/` (gitignored):
 Located in `route/static/csv/`:
 `route/static/csv/` に配置：
 
-- **room_info.csv**: Room metadata (154 rooms)
-  - 部屋のメタデータ（154室）
+- **room_info.csv**: Room metadata (153 rooms)
+  - 部屋のメタデータ（153室）
 - **times_by_type.csv**: Standard cleaning times
   - 標準清掃時間
 - **master_key.csv**: Floor/master key mapping
