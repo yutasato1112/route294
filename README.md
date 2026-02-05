@@ -31,7 +31,7 @@ A sophisticated web-based hotel housekeeping management system for a 153-room ho
 ### Additional Features / その他の機能
 - Wincal PMS integration for occupancy data / Wincal PMS連携による占有データ取得
 - JSON-based session save/load / JSONベースのセッション保存/読み込み
-- Special room tracking (Eco, Amenity, Duvet) / 特別室の追跡（エコ、アメニティ、羽毛布団）
+- Special room tracking (Eco, Amenity, Duvet) / 特別室の追跡（エコ、アメニティ、デュべ）
 - Multiple-night stay management / 連泊管理
 - Bath cleaning assignments / 浴室清掃割り当て
 - Workload balancing and time calculations / 作業負荷の均衡化と時間計算
