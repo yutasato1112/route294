@@ -938,8 +938,8 @@ $(document).ready(function() {
         const confirmPassword = $('#confirm-password').val();
 
         // クライアント側バリデーション
-        if (newPassword.length < 8) {
-            showToast('danger', 'パスワードは8文字以上で設定してください');
+        if (newPassword.length < 4) {
+            showToast('danger', 'パスワードは4文字以上で設定してください');
             return;
         }
 

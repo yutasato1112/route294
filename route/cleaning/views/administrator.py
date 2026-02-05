@@ -251,8 +251,8 @@ class administratorView(TemplateView):
 
             if not new_password:
                 errors.append("新しいパスワードを入力してください")
-            elif len(new_password) < 8:
-                errors.append("パスワードは8文字以上で設定してください")
+            elif len(new_password) < 4:
+                errors.append("パスワードは4文字以上で設定してください")
 
             if new_password != confirm_password:
                 errors.append("新しいパスワードが一致しません")
@@ -292,8 +292,8 @@ class administratorView(TemplateView):
 
                 if not password:
                     errors.append("パスワードを入力してください")
-                elif len(password) < 8:
-                    errors.append("パスワードは8文字以上で設定してください")
+                elif len(password) < 4:
+                    errors.append("パスワードは4文字以上で設定してください")
 
                 if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
                     errors.append("メールアドレスの形式が不正です")
