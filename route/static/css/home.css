@@ -17,9 +17,12 @@ th{
     justify-content: space-between;
     align-items: center;
     padding-top: 5vh;
+    flex-wrap: nowrap;
+    gap: 4px;
 }
 .input_date{
-    width: 15%;
+    flex: 0 1 15%;
+    min-width: 120px;
     height: 6vh;
     padding: 0.5rem;
     border-radius: 10px;
@@ -33,26 +36,60 @@ th{
     background-color: white;
     display: flex;
     justify-content: center;
-    width: 55%;
+    flex: 1 1 55%;
+    min-width: 0;
     border: 1px solid #ccc;
     border-radius: 10px;
     align-items: center;
     text-align: center;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    gap: 2px;
+    padding: 0 6px;
 }
 
 .p_title{
     font-size: medium;
-    width:  15%;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 .p_topics{
     font-size: medium;
-    width:  12%;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 .input_time{
-    width: 11%;
+    flex: 0 1 50px;
+    min-width: 36px;
+    max-width: 60px;
+}
+
+/* 種別が多い場合の自動調整 */
+.input_time_per_room_type.compact {
+    flex-basis: 62%;
+}
+.input_time_per_room_type.compact .p_title,
+.input_time_per_room_type.compact .p_topics {
+    font-size: 13px;
+}
+.input_time_per_room_type.compact .input_time {
+    max-width: 50px;
+    font-size: 13px;
+}
+.input_time_per_room_type.very-compact {
+    flex-basis: 72%;
+}
+.input_time_per_room_type.very-compact .p_title,
+.input_time_per_room_type.very-compact .p_topics {
+    font-size: 12px;
+}
+.input_time_per_room_type.very-compact .input_time {
+    max-width: 44px;
+    font-size: 12px;
 }
 .input_editor_name{
-    width: 8%;
+    flex: 0 1 8%;
+    min-width: 70px;
     height: 6vh;
     border-radius: 10px;
     border: 1px solid #ccc;
@@ -60,8 +97,13 @@ th{
     box-sizing: border-box;
 }
 
+.first_line_btn{
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
 .submit{
-    width: 15%;
+    flex: 0 0 auto;
+    white-space: nowrap;
     height: 6vh;
 }
 
@@ -112,9 +154,15 @@ th{
 
 .input_room {
     width: 100%;
-    font-size: 11px;      
+    font-size: 11px;
     padding: 2px;
     box-sizing: border-box;
+}
+.room_row_cont {
+    border-top: none !important;
+}
+.room_row_cont td {
+    padding-top: 0;
 }
 .selected {
     border: 2px solid blue;

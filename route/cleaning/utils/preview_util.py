@@ -1,6 +1,6 @@
 import datetime
 import itertools
-from ..utils.home_util import read_csv, dist_room
+from ..utils.home_util import read_csv, dist_room, parse_room_types, dist_room_by_type
 import requests
 from googletrans import Translator
 from typing import Optional
@@ -20,6 +20,32 @@ def get_csv_weekly():
             en = row['en']
             weekly_data[week] = {'jp': jp, 'en': en}
     return weekly_data
+
+def get_room_type_times(request):
+    """POSTからroom_type_time_S, room_type_time_T等を抽出 → {'S': 24, 'T': 28}を返す。
+    レガシーsingle_time/twin_timeへのフォールバックあり。"""
+    room_type_times = {}
+    for key, value in request.POST.items():
+        if key.startswith("room_type_time_"):
+            code = key.replace("room_type_time_", "")
+            try:
+                room_type_times[code] = int(value)
+            except (ValueError, TypeError):
+                pass
+    if not room_type_times:
+        single_time = request.POST.get('single_time')
+        twin_time = request.POST.get('twin_time')
+        if single_time:
+            try:
+                room_type_times['S'] = int(single_time)
+            except (ValueError, TypeError):
+                pass
+        if twin_time:
+            try:
+                room_type_times['T'] = int(twin_time)
+            except (ValueError, TypeError):
+                pass
+    return room_type_times
 
 def catch_post(request):
     date = request.POST.get('date')
@@ -157,7 +183,7 @@ def weekly_cleaning(date):
     week = date.strftime('%A')
     return week
     
-def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms, outins, spots, lang):
+def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms, outins, spots, lang, rooms_by_type=None):
     #ルームナンバーのリストを作成
     room_nums = []
     for key, value in room_inputs.items():
@@ -270,10 +296,16 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         
         #部屋タイプ
         room_type = 'E'
-        if room_num in single_rooms:
-            room_type = 'S'
-        elif room_num in twin_rooms:
-            room_type = 'T'
+        if rooms_by_type:
+            for code, room_list in rooms_by_type.items():
+                if room_num in room_list:
+                    room_type = code
+                    break
+        else:
+            if room_num in single_rooms:
+                room_type = 'S'
+            elif room_num in twin_rooms:
+                room_type = 'T'
         
         #フロア
         if len(room_num) <= 3:
@@ -309,7 +341,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
     #ルームナンバーのリストを返す
     return manage_rooms, floor_list
 
-def calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms):
+def calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=None):
     #時間の計算
     single_time = int(single_time)
     twin_time = int(twin_time)
@@ -318,6 +350,8 @@ def calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, t
     for i in range(len(room)):
         if room[i]['eco'] == True:
             total_time += 5
+        elif room_type_times and room[i].get('room_type', 'E') != 'E':
+            total_time += room_type_times.get(room[i]['room_type'], 0)
         elif room[i]['room_num'] in single_rooms:
             total_time += single_time
         elif room[i]['room_num'] in twin_rooms:
@@ -428,24 +462,43 @@ def split_contact_textarea(contact_text):
     contact_4 = '\n'.join(processed_lines[3:]) if len(processed_lines) > 3 else ''
     return contact_1, contact_2, contact_3, contact_4
     
-def calc_room_type_count(rooms):
-    single = 0
-    single_eco = 0
-    twin = 0
-    twin_eco = 0
-    
-    for room in rooms:
-        if room['room_type'] == 'S':
-            if room['eco'] == True:
-                single_eco += 1
-            else:
-                single += 1
-        elif room['room_type'] == 'T':
-            if room['eco'] == True:
-                twin_eco += 1
-            else:
-                twin += 1
-    room_type_count_str = f"S:{single}, SE:{single_eco}, T:{twin}, TE:{twin_eco}"
+def calc_room_type_count(rooms, room_types=None):
+    if room_types:
+        counts = {}
+        eco_counts = {}
+        for rt in room_types:
+            counts[rt['code']] = 0
+            eco_counts[rt['code']] = 0
+        for room in rooms:
+            rt = room.get('room_type', 'E')
+            if rt in counts:
+                if room['eco'] == True:
+                    eco_counts[rt] += 1
+                else:
+                    counts[rt] += 1
+        parts = []
+        for rt in room_types:
+            code = rt['code']
+            parts.append(f"{code}:{counts[code]}")
+            parts.append(f"{code}E:{eco_counts[code]}")
+        room_type_count_str = ", ".join(parts)
+    else:
+        single = 0
+        single_eco = 0
+        twin = 0
+        twin_eco = 0
+        for room in rooms:
+            if room['room_type'] == 'S':
+                if room['eco'] == True:
+                    single_eco += 1
+                else:
+                    single += 1
+            elif room['room_type'] == 'T':
+                if room['eco'] == True:
+                    twin_eco += 1
+                else:
+                    twin += 1
+        room_type_count_str = f"S:{single}, SE:{single_eco}, T:{twin}, TE:{twin_eco}"
     return room_type_count_str
 
 def calc_DD_list(house_data):
@@ -462,7 +515,7 @@ def calc_DD_list(house_data):
         else:
             assignments.append(None)
     result = [
-                None if x is None else " ".join(f"{i}F D.D." for i in x)
+                None if x is None else " ".join(f"{i}F 担当" for i in x)
                 for x in assignments
             ]
     return result

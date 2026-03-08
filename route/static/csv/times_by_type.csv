@@ -1,5 +1,5 @@
-﻿type,time
-S,24
-T,28
-bath,50
-eco,5
+type,time,label
+S,24,シングル
+T,28,ツイン
+bath,50,大浴場
+eco,5,エコ

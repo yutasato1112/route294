@@ -281,7 +281,7 @@ $(document).ready(function () {
         updateAssignedRoomRows();
     });
 
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, #single_time, #twin_time, #bath_time", function () {
+    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, .room_type_time, #bath_time", function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
         updateEndTimeRow();
@@ -336,6 +336,7 @@ $(document).ready(function () {
             updateDdCells();
         }
     }
+
 
     //タイトル行の「キー」をクリックした時の処理
     $("#key_header").on("click", function () {
@@ -654,7 +655,13 @@ $(document).ready(function () {
 
             if (floors.length > 0) {
                 floors.sort((a, b) => a - b);
-                $row.find(".floor_cell").text(floors.join(","));
+                const firstLine = floors.slice(0, 2).join(",");
+                const secondLine = floors.slice(2).join(",");
+                if (secondLine) {
+                    $row.find(".floor_cell").html(firstLine + "<br>" + secondLine);
+                } else {
+                    $row.find(".floor_cell").text(firstLine);
+                }
             } else {
                 $row.find(".floor_cell").text("");
             }
@@ -968,6 +975,15 @@ $(document).ready(function () {
         function updateAssignedRoomRows() {
             $(".room_cell_row").remove();
 
+            // タイプコードにTを含む部屋を赤色表示用セットに格納
+            const _roomsByType = window.rooms_by_type || {};
+            const redRooms = new Set();
+            for (const [code, list] of Object.entries(_roomsByType)) {
+                if (code.includes('T')) {
+                    list.forEach(r => redRooms.add(r));
+                }
+            }
+
             const assignedNos = new Set();
             $(".input_room").each(function () {
                 const val = $(this).val().trim();
@@ -1026,8 +1042,7 @@ $(document).ready(function () {
                 const labelRow = $("<tr class='room_cell_row'></tr>").append("<td><strong>担当部屋</strong></td>");
                 nos.forEach(no => {
                     const val = roomMap[no].normal[0] || "";
-                    console.log(typeof val);
-                    const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : ''; 
+                    const redStyle = redRooms.has(val) ? 'style="color: red;"' : '';
                     labelRow.append(`<td ${redStyle}>${val}</td>`);
 
                 });
@@ -1036,7 +1051,8 @@ $(document).ready(function () {
                 for (let i = 1; i < maxNormal; i++) {
                     const row = $("<tr class='room_cell_row'></tr>").append("<td></td>");
                     nos.forEach(no => {
-                        const val = roomMap[no].normal[i] || "";const redStyle = /(?:14|16|17)$/.test(val) ? 'style="color: red;"' : '';
+                        const val = roomMap[no].normal[i] || "";
+                        const redStyle = redRooms.has(val) ? 'style="color: red;"' : '';
                         row.append(`<td ${redStyle}>${val}</td>`);
 
                     });
@@ -1052,7 +1068,7 @@ $(document).ready(function () {
                     const obj = roomMap[no].eco[0];
                     if (obj) {
                         const bgColor = obj.type === 'eco' ? 'yellow' : 'rgb(255, 203, 135)';
-                        const redStyle = /(?:14|16|17)$/.test(obj.room) ? 'color: red;' : '';
+                        const redStyle = redRooms.has(obj.room) ? 'color: red;' : '';
                         labelRow.append(`<td style="background-color: ${bgColor}; ${redStyle}">${obj.room}</td>`);
                     } else {
                         labelRow.append("<td></td>");
@@ -1066,7 +1082,7 @@ $(document).ready(function () {
                         const obj = roomMap[no].eco[i];
                         if (obj) {
                             const bgColor = obj.type === 'eco' ? 'yellow' : 'rgb(255, 203, 135)';
-                            const redStyle = /(?:14|16|17)$/.test(obj.room) ? 'color: red;' : '';
+                            const redStyle = redRooms.has(obj.room) ? 'color: red;' : '';
                             row.append(`<td style="background-color: ${bgColor}; ${redStyle}">${obj.room}</td>`);
                         } else {
                             row.append("<td></td>");
@@ -1082,12 +1098,23 @@ $(document).ready(function () {
     function updateEndTimeRow() {
         $("#end_time_row").remove();
 
-        const singleRooms = new Set(window.single_rooms || []);
-        const twinRooms = new Set(window.twin_rooms || []);
-        const singleTime = parseInt($("#single_time").val()) || 0;
-        const twinTime = parseInt($("#twin_time").val()) || 0;
+        // 動的にルームタイプSetと時間を構築
+        const roomsByType = window.rooms_by_type || {};
+        const roomTypeSets = {};
+        for (const [code, list] of Object.entries(roomsByType)) {
+            roomTypeSets[code] = new Set(list);
+        }
+        const typeTimes = {};
+        $(".room_type_time").each(function () {
+            typeTimes[$(this).data("type-code")] = parseInt($(this).val()) || 0;
+        });
+
         const bathTime = parseInt($("#bath_time").val()) || 0;
         const ecoTime = 5;
+
+        // レガシーhidden同期
+        if (typeTimes["S"] !== undefined) { $("#single_time").val(typeTimes["S"]); }
+        if (typeTimes["T"] !== undefined) { $("#twin_time").val(typeTimes["T"]); }
 
         const bathNos = [];
         $(".input_bath").each(function () {
@@ -1125,20 +1152,29 @@ $(document).ready(function () {
         const $row = $("<tr id='end_time_row'><td><strong>終了予定</strong></td></tr>");
         assignedNos.forEach(no => {
             const assignedRooms = assignments.filter(a => a.no === no).map(a => a.room);
-            let singleCount = 0, twinCount = 0, ecoCount = 0;
+            let ecoCount = 0;
+            const typeCounts = {};
 
             assignedRooms.forEach(room => {
                 if (ecoRooms.has(room)) {
                     ecoCount++;
-                } else if (singleRooms.has(room)) {
-                    singleCount++;
-                } else if (twinRooms.has(room)) {
-                    twinCount++;
+                } else {
+                    let matched = false;
+                    for (const [code, roomSet] of Object.entries(roomTypeSets)) {
+                        if (roomSet.has(room)) {
+                            typeCounts[code] = (typeCounts[code] || 0) + 1;
+                            matched = true;
+                            break;
+                        }
+                    }
                 }
             });
 
             const hasBath = bathNos.includes(no);
-            const totalMin = (singleCount * singleTime) + (twinCount * twinTime) + (ecoCount * ecoTime) + (hasBath ? bathTime : 0);
+            let totalMin = ecoCount * ecoTime + (hasBath ? bathTime : 0);
+            for (const [code, count] of Object.entries(typeCounts)) {
+                totalMin += count * (typeTimes[code] || 0);
+            }
 
             const base = new Date();
             base.setHours(9);
@@ -1514,11 +1550,18 @@ $(document).ready(function () {
 
 document.addEventListener('DOMContentLoaded', function () {
     function highlightRedRooms() {
+        // タイプコードにTを含む部屋を赤色表示
+        const roomsByType = window.rooms_by_type || {};
+        const redRooms = new Set();
+        for (const [code, list] of Object.entries(roomsByType)) {
+            if (code.includes('T')) {
+                list.forEach(r => redRooms.add(r));
+            }
+        }
         $('[data-room]').each(function () {
             const $cell = $(this);
             const roomNumber = $cell.data("room").toString();
-            const lastTwoDigits = roomNumber.slice(-2); // 末尾2桁を抽出
-            if (["14", "16", "17"].includes(lastTwoDigits)) {
+            if (redRooms.has(roomNumber)) {
                 $cell.addClass("red-room");
             } else {
                 $cell.removeClass("red-room");

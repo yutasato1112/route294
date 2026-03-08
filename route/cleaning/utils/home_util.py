@@ -36,6 +36,30 @@ def dist_room(room_info_data):
     return single_room_list, twin_room_list
 
 
+def parse_room_types(times_by_time_data):
+    """CSV→構造化データ。bath/ecoを除外した部屋タイプリストを返す"""
+    room_types = []
+    bath_time = 50
+    eco_time = 5
+    for row in times_by_time_data:
+        code = row[0]
+        time_val = int(row[1])
+        label = row[2] if len(row) > 2 else code
+        if code == 'bath':
+            bath_time = time_val
+        elif code == 'eco':
+            eco_time = time_val
+        else:
+            room_types.append({'code': code, 'time': time_val, 'label': label})
+    return room_types, bath_time, eco_time
+
+def dist_room_by_type(room_info_data):
+    """部屋をタイプ別に辞書化 → {'S': ['201','202'...], 'T': [...]}"""
+    rooms_by_type = defaultdict(list)
+    for room, room_type in room_info_data:
+        rooms_by_type[room_type].append(room)
+    return dict(rooms_by_type)
+
 def room_person(room_num_table, room_inputs):
     room_person = []
     for floor in room_num_table:

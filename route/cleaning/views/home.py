@@ -5,7 +5,7 @@ import datetime
 import json
 from django.http import JsonResponse
 from urllib.parse import urlparse
-from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char
+from ..utils.home_util import read_csv, processing_list, dist_room, room_person, room_char, parse_room_types, dist_room_by_type
 import logging
 from django.http import HttpResponse
 
@@ -55,7 +55,17 @@ class homeView(TemplateView):
             
             #部屋をタイプ別に一次元配列に加工
             single_room_list, twin_room_list = dist_room(room_info_data)
-            
+
+            #動的ルームタイプ
+            room_types, default_bath_time, default_eco_time = parse_room_types(times_by_time_data)
+            rooms_by_type = dist_room_by_type(room_info_data)
+            # sidewind戻り: session の single_time/twin_time で room_types を上書き
+            for rt in room_types:
+                if rt['code'] == 'S':
+                    rt['time'] = int(single_time)
+                elif rt['code'] == 'T':
+                    rt['time'] = int(twin_time)
+
             #部屋のアサイン状況を配列化
             combined_rooms = []
             house_numbers = []
@@ -91,6 +101,8 @@ class homeView(TemplateView):
                 'master_key':[],
                 'single_rooms':single_room_list,
                 'twin_rooms':twin_room_list,
+                'room_types': room_types,
+                'rooms_by_type_json': json.dumps(rooms_by_type),
                 'rooms':room_num_table,
                 'combined_rooms': combined_rooms,
                 'editor_name': editor_name,
@@ -154,6 +166,11 @@ class homeView(TemplateView):
         
         #部屋をタイプ別に一次元配列に加工
         single_room_list, twin_room_list = dist_room(room_info_data)
+
+        #動的ルームタイプ
+        room_types, default_bath_time, default_eco_time = parse_room_types(times_by_time_data)
+        rooms_by_type = dist_room_by_type(room_info_data)
+
         combined_rooms = []
         for i in range(len(room_num_table)):
             floor_data = []
@@ -180,15 +197,17 @@ class homeView(TemplateView):
         
         context = {
             'method':method,
-            'single_time':int(times_by_time_data[0][1]),
-            'twin_time':int(times_by_time_data[1][1]),
-            'bath_time':int(times_by_time_data[2][1]),
+            'single_time':next((rt['time'] for rt in room_types if rt['code']=='S'), 24),
+            'twin_time':next((rt['time'] for rt in room_types if rt['code']=='T'), 28),
+            'bath_time':default_bath_time,
             'today':today,
             'rooms':room_num_table,
             'combined_rooms': combined_rooms,
             'master_key':master_key_data,
             'single_rooms':single_room_list,
             'twin_rooms':twin_room_list,
+            'room_types': room_types,
+            'rooms_by_type_json': json.dumps(rooms_by_type),
             'house_len':14,
             'room_char_list_len':10,
             'remarks_len':3,
@@ -231,6 +250,10 @@ class homeView(TemplateView):
             room_num_table = processing_list(room_info_data)
             single_room_list, twin_room_list = dist_room(room_info_data)
 
+            #動的ルームタイプ
+            room_types, default_bath_time, default_eco_time = parse_room_types(times_by_time_data)
+            rooms_by_type = dist_room_by_type(room_info_data)
+
             combined_rooms = []
             for floor in room_num_table:
                 floor_data = []
@@ -250,15 +273,17 @@ class homeView(TemplateView):
 
             context = {
                 'method': method,
-                'single_time': int(times_by_time_data[0][1]),
-                'twin_time': int(times_by_time_data[1][1]),
-                'bath_time': int(times_by_time_data[2][1]),
+                'single_time': next((rt['time'] for rt in room_types if rt['code']=='S'), 24),
+                'twin_time': next((rt['time'] for rt in room_types if rt['code']=='T'), 28),
+                'bath_time': default_bath_time,
                 'today': today,
                 'rooms': room_num_table,
                 'combined_rooms': combined_rooms,
                 'master_key': master_key_data,
                 'single_rooms': single_room_list,
                 'twin_rooms': twin_room_list,
+                'room_types': room_types,
+                'rooms_by_type_json': json.dumps(rooms_by_type),
                 'house_len': 14,
                 'add_house_len': 0,
                 'room_char_list_len': 10,
@@ -302,6 +327,10 @@ class homeView(TemplateView):
         #部屋をタイプ別に一次元配列に加工
         single_room_list, twin_room_list = dist_room(room_info_data)
 
+        #動的ルームタイプ
+        room_types, default_bath_time, default_eco_time = parse_room_types(times_by_time_data)
+        rooms_by_type = dist_room_by_type(room_info_data)
+
         #編集情報の取得
         editor_name = data['editor_name']
         date_str = data['date']
@@ -332,7 +361,21 @@ class homeView(TemplateView):
         is_public = data.get('is_public', False)
         multiple_rooms = data.get('multiple_rooms', [])
         spots = data.get('spots', [])
-        
+
+        # JSON内のroom_type_timesでroom_typesの時間を上書き
+        saved_room_type_times = data.get('room_type_times', {})
+        if saved_room_type_times:
+            for rt in room_types:
+                if rt['code'] in saved_room_type_times:
+                    rt['time'] = int(saved_room_type_times[rt['code']])
+        else:
+            # レガシーJSONフォールバック
+            for rt in room_types:
+                if rt['code'] == 'S':
+                    rt['time'] = single_time
+                elif rt['code'] == 'T':
+                    rt['time'] = twin_time
+
         #備考の欄数
         if len(remarks) < 3:
             remarks_len = 3-len(remarks)
@@ -380,6 +423,8 @@ class homeView(TemplateView):
             'master_key':master_key_data,
             'single_rooms':single_room_list,
             'twin_rooms':twin_room_list,
+            'room_types': room_types,
+            'rooms_by_type_json': json.dumps(rooms_by_type),
             'rooms':room_num_table,
             'combined_rooms': combined_rooms,
             'editor_name': editor_name,

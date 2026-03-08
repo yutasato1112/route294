@@ -21,16 +21,22 @@
             <div class="input_time_per_room_type">
                 <!--部屋タイプ別清掃時間-->
                 <p class="p_title">目標時間/min</p>
-                <p class="p_topics">S　:　</p>
-                <input class="input_time" type="number" name="single_time" id="single_time" required value="{{single_time}}">
-                <p class="p_topics"> T　:　</p>
-                <input class="input_time" type="number" name="twin_time" id="twin_time" required value="{{twin_time}}">
+                {% for rt in room_types %}
+                <p class="p_topics">{{ rt.label }}　:　</p>
+                <input class="input_time room_type_time" type="number"
+                       name="room_type_time_{{ rt.code }}"
+                       data-type-code="{{ rt.code }}"
+                       required value="{{ rt.time }}">
+                {% endfor %}
                 <p class="p_topics"> 大浴場　:　</p>
                 <input class="input_time" type="number" name="bath_time" id="bath_time" required value="{{bath_time}}">
+                <!--sidewind後方互換用hidden fields-->
+                <input type="hidden" name="single_time" id="single_time" value="{{single_time}}">
+                <input type="hidden" name="twin_time" id="twin_time" value="{{twin_time}}">
             </div>
             
             <!--中途編集ファイル作成-->
-            <button formaction="{% url 'download_json' %}"  type="submit" class="btn btn-secondary">保存</button>
+            <button formaction="{% url 'download_json' %}"  type="submit" class="btn btn-secondary first_line_btn">保存</button>
             <!--プレビュー表示ボタン-->
             <input formaction="{% url 'preview' %}" type="submit" value="プレビュー表示" class="btn btn-primary submit" formtarget="_blank">
         </div>
@@ -56,13 +62,23 @@
                         <tbody>
                             {% for floor in combined_rooms %}
                             <tr>
-                                {% for roomdata in floor %}
+                                {% for roomdata in floor|slice:":17" %}
                                 <td data-room="{{ roomdata.room }}">
                                     {{ roomdata.room }}
                                     <input type="text" name="room_{{ roomdata.room }}" id="room_{{ roomdata.room }}" class="input_room" value="{{ roomdata.status }}">
                                 </td>
                                 {% endfor %}
                             </tr>
+                            {% if floor|length > 17 %}
+                            <tr class="room_row_cont">
+                                {% for roomdata in floor|slice:"17:" %}
+                                <td data-room="{{ roomdata.room }}">
+                                    {{ roomdata.room }}
+                                    <input type="text" name="room_{{ roomdata.room }}" id="room_{{ roomdata.room }}" class="input_room" value="{{ roomdata.status }}">
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endif %}
                             {% endfor %}
                         </tbody>
                     </table> 
@@ -137,7 +153,7 @@
                             <th>数</th>
                             <th class="floor_th">階</th>
                             <th id="key_header" style="cursor: pointer;" title="クリックして更新">キー</th>
-                            <th id="dd_header" style="cursor: pointer;" title="クリックして更新">D.D.</th>
+                            <th id="dd_header" style="cursor: pointer;" title="クリックして更新">F担当</th>
                             <th>Eng</th>
                         </tr>
                     </thead>
@@ -575,9 +591,22 @@
 </div>
 
 <script>
+    // 部屋タイプ数に応じて時間入力欄のサイズを自動調整
+    (function() {
+        var container = document.querySelector('.input_time_per_room_type');
+        if (container) {
+            var typeCount = container.querySelectorAll('.room_type_time').length;
+            if (typeCount >= 5) {
+                container.classList.add('very-compact');
+            } else if (typeCount >= 3) {
+                container.classList.add('compact');
+            }
+        }
+    })();
     window.master_key = {{ master_key|safe }};
     window.single_rooms = {{ single_rooms|safe }};
     window.twin_rooms = {{ twin_rooms|safe }};
+    window.rooms_by_type = {{ rooms_by_type_json|safe }};
     window.method = "{{ method|safe }}";
     window.sidewind_flag = {{ sidewind_flag|safe }};
     window.json_loaded_flag = {{ json_loaded_flag|safe }};

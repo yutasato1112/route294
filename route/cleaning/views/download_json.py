@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 import json
-from ..utils.preview_util import catch_post, get_cover, special_clean,multiple_night
+from ..utils.preview_util import catch_post, get_cover, special_clean, multiple_night, get_room_type_times
 import datetime
 import os
 
@@ -22,6 +22,8 @@ def download_json(request):
         except Exception as e:
             multiple_rooms = []
 
+        room_type_times = get_room_type_times(request)
+
         timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
         filename = f"worklog_{timestamp}.json"
         data = {
@@ -30,6 +32,7 @@ def download_json(request):
             'single_time':single_time,
             'twin_time':twin_time,
             'bath_time':bath_time,
+            'room_type_times':room_type_times,
             'room_inputs':room_inputs,
             'bath_person':bath_person,
             'remarks':remarks,
