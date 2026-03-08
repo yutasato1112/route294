@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**route294** is a sophisticated hotel housekeeping management system (ホテル清掃指示書作成システム) built with Django. It manages cleaning instructions and room assignments for a 154-room hotel (10 floors, rooms 201-1017).
+**route294** is a sophisticated hotel housekeeping management system (ホテル清掃指示書作成システム) built with Django. It manages cleaning instructions and room assignments for hotels. Room count and floor configuration are defined by master data (room_info.csv) and theoretically unlimited (current deployment: 154 rooms, 10 floors, rooms 201-1017).
 
 ### Key Capabilities
 - Visual room allocation interface with grid-based selection
@@ -17,8 +17,9 @@
 - AI-assisted optimization (OpenAI integration)
 
 ### Version
-Current version: 1.4.12+ (January 2026)
-- Recent focus: Authentication system and administrator panel
+Current version: 1.4.14 (March 2026)
+- Recent focus: Dynamic room types, DD→floor assignment change, UI improvements
+- Authentication system and administrator panel (v1.4.13)
 - Autopilot algorithm continuously improved
 - Weekly cleaning master data retention
 
@@ -62,33 +63,33 @@ Current version: 1.4.12+ (January 2026)
 ├── route/                          # Django project root
 │   ├── route/                      # Project configuration
 │   │   ├── settings.py            # Main settings (email, logging, i18n, auth)
-│   │   ├── urls.py                # URL routing (11 endpoints)
+│   │   ├── urls.py                # URL routing (14 endpoints)
 │   │   ├── wsgi.py / asgi.py      # Server configs
 │   │
 │   ├── cleaning/                   # Main application
 │   │   ├── views/                 # View controllers (11 files)
-│   │   │   ├── home.py            # Main interface (427 lines)
-│   │   │   ├── login.py           # Authentication system (39 lines) ⭐ NEW
-│   │   │   ├── administrator.py   # Admin panel (388 lines) ⭐ NEW
-│   │   │   ├── preview.py         # Print preview generation (209 lines)
+│   │   │   ├── home.py            # Main interface (472 lines)
+│   │   │   ├── login.py           # Authentication system (38 lines)
+│   │   │   ├── administrator.py   # Admin panel (388 lines)
+│   │   │   ├── preview.py         # Print preview generation (216 lines)
 │   │   │   ├── sidewind.py        # Autopilot input form (93 lines)
 │   │   │   ├── sidewind_front.py  # Autopilot backend (273 lines)
 │   │   │   ├── rooming_list.py    # Wincal integration (411 lines)
 │   │   │   ├── report.py          # Bug reporting system (63 lines)
-│   │   │   ├── download_json.py   # JSON export/import (71 lines)
+│   │   │   ├── download_json.py   # JSON export/import (74 lines)
 │   │   │   ├── release.py         # Release notes viewer (12 lines)
 │   │   │   └── tech.py            # Technology info page (12 lines)
 │   │   │
 │   │   ├── utils/                 # Business logic layer
 │   │   │   ├── sidewind_core.py   # Room assignment algorithm (697 lines) 🔴 CRITICAL
-│   │   │   ├── preview_util.py    # Preview formatting & translation (633 lines)
-│   │   │   └── home_util.py       # CSV reading & data processing (91 lines)
+│   │   │   ├── preview_util.py    # Preview formatting & translation (686 lines)
+│   │   │   └── home_util.py       # CSV reading & data processing (114 lines)
 │   │   │
 │   │   ├── templates/             # HTML templates (11 files)
 │   │   │   ├── base.html          # Base layout with navigation
-│   │   │   ├── login.html         # Login page (93 lines) ⭐ NEW
-│   │   │   ├── administrator.html # Admin panel (578 lines) ⭐ NEW
-│   │   │   ├── home.html          # Main interface (561 lines)
+│   │   │   ├── login.html         # Login page (92 lines)
+│   │   │   ├── administrator.html # Admin panel (577 lines)
+│   │   │   ├── home.html          # Main interface (627 lines)
 │   │   │   ├── preview.html       # Print preview (344 lines)
 │   │   │   ├── sidewind.html      # Autopilot interface (151 lines)
 │   │   │   ├── rooming_list.html  # Wincal upload form
@@ -106,17 +107,15 @@ Current version: 1.4.12+ (January 2026)
 │   │   └── apps.py                # App configuration
 │   │
 │   ├── static/                     # Static assets
-│   │   ├── js/                    # JavaScript (4,114 lines total)
-│   │   │   ├── home.js            # Main UI logic (1,572 lines)
+│   │   ├── js/                    # JavaScript (4,186 lines total)
+│   │   │   ├── home.js            # Main UI logic (1,615 lines)
 │   │   │   ├── sidewind.js        # Autopilot UI logic (1,498 lines)
-│   │   │   ├── administrator.js   # Admin panel logic (1,044 lines) ⭐ NEW
+│   │   │   ├── administrator.js   # Admin panel logic (1,044 lines)
 │   │   │   └── preview.js         # Preview logic (29 lines)
 │   │   │
 │   │   ├── css/                   # Stylesheets (9 files)
 │   │   │   ├── home.css           # Main page styles (~8KB)
-│   │   │   ├── login.css          # Login page styles ⭐ NEW
-│   │   │   ├── administrator.css  # Admin panel styles ⭐ NEW
-│   │   │   ├── preview.css        # Preview styles (~7KB)
+│   │   │   ├── login.css          # Login page styles│   │   │   ├── administrator.css  # Admin panel styles│   │   │   ├── preview.css        # Preview styles (~7KB)
 │   │   │   ├── sidewind.css       # Autopilot styles (~8KB)
 │   │   │   ├── report.css         # Bug report styles
 │   │   │   ├── rooming_list.css   # Rooming list styles
@@ -124,8 +123,8 @@ Current version: 1.4.12+ (January 2026)
 │   │   │   └── tech.css           # Tech info styles
 │   │   │
 │   │   ├── csv/                   # Configuration data files
-│   │   │   ├── room_info.csv      # Room metadata (154 rooms)
-│   │   │   ├── times_by_type.csv  # Cleaning time standards
+│   │   │   ├── room_info.csv      # Room metadata (master-data driven, currently 154 rooms)
+│   │   │   ├── times_by_type.csv  # Cleaning time standards (type,time,label)
 │   │   │   ├── master_key.csv     # Floor/master key mapping
 │   │   │   └── weekly.csv         # Weekly cleaning schedules
 │   │   │
@@ -155,8 +154,7 @@ Current version: 1.4.12+ (January 2026)
 
 ## Key Features & Components
 
-### 1. Authentication System (`/login/` - login.html) ⭐ NEW
-
+### 1. Authentication System (`/login/` - login.html)
 **Purpose**: Secure access control for administrative features
 
 **Features**:
@@ -179,8 +177,7 @@ Current version: 1.4.12+ (January 2026)
 - `/login/` - Login page
 - `/logout/` - Logout endpoint (POST)
 
-### 2. Administrator Panel (`/administrator/` - administrator.html) ⭐ NEW
-
+### 2. Administrator Panel (`/administrator/` - administrator.html)
 **Purpose**: Complete system management interface (staff-only)
 
 **Access Control**:
@@ -259,7 +256,7 @@ Current version: 1.4.12+ (January 2026)
 **Purpose**: Daily cleaning instruction creation
 
 **Features**:
-- **Room Grid**: Visual 9×17 grid representing 154 hotel rooms
+- **Room Grid**: Visual grid representing hotel rooms (layout driven by room_info.csv master data)
 - **Room Selection**: Click-to-select interface with status colors
   - Full Cleaning (default)
   - Eco (5-minute quick clean)
@@ -274,11 +271,18 @@ Current version: 1.4.12+ (January 2026)
   - Eco rooms tracking
   - Amenity (Eco-Out) rooms
   - Duvet rooms
-- **Time Configuration**: Customizable cleaning times
-  - Single room (default: 24 min)
-  - Twin room (default: 28 min)
-  - Bath cleaning (default: 50 min)
+- **Time Configuration**: Dynamic room type times from CSV
+  - Room types loaded from `times_by_type.csv` (type, time, label)
+  - Supports unlimited room types (not just S/T)
+  - Bath cleaning time (default: 50 min)
+  - Eco cleaning time
 - **Multiple Night Stays**: Track up to 100 rooms with multi-night guests
+- **Special Cleaning Options** (v1.4.14):
+  - Drain water (排水溝清掃)
+  - Highskite (ハイスカイト)
+  - Chlorine (塩素清掃)
+  - Chemical clean (ケミカルクリーン)
+  - Public bath (大浴場清掃)
 - **Communication**:
   - Room changes (original → destination)
   - Out-ins (guest arrivals/departures)
@@ -318,8 +322,10 @@ Current version: 1.4.12+ (January 2026)
   6. Validate and return allocation
 
 **Recent Improvements** (commits):
+- `0b4eeb4` - ver.1.4.14
+- `539bf11` - commonize
+- `73d7762` - ver.1.4.13
 - `188f969` - update admin page
-- `1af34da` - design login page
 - `360ad25` - update autopilot algorithm
 - `43ff60a` - fix bug that autopilot
 - `0805b1a` - improve sidewind logic
@@ -343,14 +349,14 @@ Current version: 1.4.12+ (January 2026)
 
 **Purpose**: Generate print-ready cleaning instructions
 
-**Processing** (`preview_util.py` - 633 lines):
+**Processing** (`preview_util.py` - 686 lines):
 1. Parse form data from home
 2. Process multiple-night cleaning requests
 3. Handle special bath cleaning requests
 4. Manage eco room inclusion logic
-5. Calculate room counts by type (S/T)
+5. Calculate room counts by dynamic room types
 6. Calculate target completion times
-7. Generate DD (double-check) lists
+7. Generate floor assignment lists (formerly DD lists)
 8. Create cover sheet with daily summary
 9. Create individual sheets per housekeeper
 
@@ -426,8 +432,8 @@ Current version: 1.4.12+ (January 2026)
 - **File Output**: `media/` directory with timestamp naming
 
 **CSV Configuration**:
-- `room_info.csv`: Room metadata (154 rooms)
-- `times_by_type.csv`: Cleaning time standards
+- `room_info.csv`: Room metadata (master-data driven)
+- `times_by_type.csv`: Cleaning time standards (type, time, label)
 - `master_key.csv`: Floor/master key mapping
 - `weekly.csv`: Weekly cleaning schedules
 
@@ -586,7 +592,7 @@ $.ajax({
 ### CSV Data Format
 Configuration files in `static/csv/`:
 - **room_info.csv**: Room number, type, floor
-- **times_by_type.csv**: Room type, cleaning time
+- **times_by_type.csv**: Room type code, cleaning time, label (e.g., `S,24,シングル`)
 - **master_key.csv**: Floor, master key assignment
 - **weekly.csv**: Week day, Japanese instructions, English instructions
 
@@ -628,8 +634,7 @@ URL routing structure:
 
 ### Critical Business Logic Files
 
-#### `cleaning/views/administrator.py` (388 lines) ⭐ NEW
-**THE ADMIN CONTROL CENTER**
+#### `cleaning/views/administrator.py` (388 lines)**THE ADMIN CONTROL CENTER**
 
 Key components:
 - **`@staff_required` decorator**: Custom login enforcement
@@ -657,8 +662,7 @@ Key components:
 - Permission checks (staff/superuser)
 - Self-deletion prevention
 
-#### `cleaning/views/login.py` (39 lines) ⭐ NEW
-**AUTHENTICATION GATEWAY**
+#### `cleaning/views/login.py` (39 lines)**AUTHENTICATION GATEWAY**
 
 - **`LoginView`**: Custom login page handler
 - **GET**: Display login form
@@ -697,34 +701,36 @@ The heart of the Autopilot feature. Contains:
 - Check edge cases (uneven distribution, floor restrictions)
 - Test with maximum housekeepers (100)
 
-#### `cleaning/utils/preview_util.py` (633 lines)
+#### `cleaning/utils/preview_util.py` (686 lines)
 Data transformation for printing:
 - **`catch_post(request)`**: Parse form data
 - **`get_cover(request)`**: Extract cover sheet info
+- **`get_room_type_times(request)`**: Extract dynamic room type times from POST
 - **`multiple_night(request)`**: Process multi-night rooms
 - **`special_clean(request)`**: Handle bath cleaning flags
-- **`calc_room(...)`**: List rooms per housekeeper
-- **`calc_room_type_count(...)`**: Count S/T rooms
+- **`calc_room(...)`**: List rooms per housekeeper (accepts `rooms_by_type` param)
+- **`calc_room_type_count(...)`**: Count rooms by dynamic types
 - **`calc_end_time(...)`**: Calculate completion time
-- **`calc_DD_list(...)`**: Create double-check assignments
+- **`calc_DD_list(...)`**: Create floor assignment lists (formerly DD lists)
 - **`language(word, lang, text)`**: Bilingual translation
 - **`weekly_cleaning(date)`**: Load weekly instructions
 - Translation services integration
 - Time calculations
 - Cover sheet generation
 
-#### `cleaning/utils/home_util.py` (91 lines)
+#### `cleaning/utils/home_util.py` (114 lines)
 Helper functions:
 - **`read_csv()`**: Load configuration CSVs
 - **`processing_list(room_info_data)`**: Convert room data to 2D array by floor
 - **`dist_room(room_info_data)`**: Separate rooms by type (Single/Twin)
+- **`parse_room_types(times_by_type_data)`**: Parse CSV room type data into structured format (code, time, label)
+- **`dist_room_by_type(room_info_data)`**: Distribute rooms by type (returns dict like `{'S': [...], 'T': [...]}`)
 - **`room_person(room_num_table, room_inputs)`**: Map rooms to assigned housekeepers
 - **`room_char(eco, ame, duvet)`**: Process special room characteristics
 
 ### Frontend Files
 
-#### `static/js/administrator.js` (1,044 lines) ⭐ NEW
-Administrator panel logic:
+#### `static/js/administrator.js` (1,044 lines)Administrator panel logic:
 - **CSRF Management**: Token extraction and header setup
 - **Toast System**: `showToast(type, message, duration)`
   - Success, danger, warning, info styles
@@ -748,7 +754,7 @@ Administrator panel logic:
 - **Error Handling**: Try-catch with user feedback
 - **XSS Protection**: `escapeHtml()` function
 
-#### `static/js/home.js` (1,572 lines)
+#### `static/js/home.js` (1,615 lines)
 Main interface logic:
 - **Room Selection Engine**:
   - Click handlers for room grid
@@ -815,8 +821,7 @@ Autopilot interface logic:
 
 ### Template Files
 
-#### `cleaning/templates/login.html` (93 lines) ⭐ NEW
-Login page with:
+#### `cleaning/templates/login.html` (93 lines)Login page with:
 - Centered card design
 - Logo and branding ("Route294")
 - Username/password fields with icons
@@ -827,8 +832,7 @@ Login page with:
 - Bootstrap styling
 - CSRF protection
 
-#### `cleaning/templates/administrator.html` (578 lines) ⭐ NEW
-Administrator panel with:
+#### `cleaning/templates/administrator.html` (578 lines)Administrator panel with:
 - **Hero Panel**:
   - System summary
   - Eyebrow text ("Administrator")
@@ -1310,8 +1314,13 @@ def some_view(request):
 
 ### Recent Commit History
 ```
-188f969 - update admin page (2026-01-XX)
-1af34da - design login page (2026-01-XX)
+0b4eeb4 - ver.1.4.14 (2026-03-XX)
+539bf11 - commonize
+73d7762 - ver.1.4.13
+7fc5dce - misstake fix
+1c667b5 - remake md
+188f969 - update admin page
+1af34da - design login page
 63b83f6 - delete debug log
 9ce3a77 - 管理画面修正 (admin screen fix)
 05915a6 - ver.1.4.12
@@ -1629,7 +1638,7 @@ SECURE_BROWSER_XSS_FILTER = True
 ### Understanding the Domain
 
 **Hotel Context**:
-- 154 rooms across 9 floors (2-10)
+- Room count and floors defined by room_info.csv (current deployment: 154 rooms, 9 floors 2-10)
 - Room types: Single (S), Twin (T)
 - Cleaning types: Full, Eco (5 min), Amenity, None
 - Special: Duvet rooms, multiple-night stays
@@ -1653,12 +1662,15 @@ SECURE_BROWSER_XSS_FILTER = True
 
 ### Feature Priority Understanding
 Based on git history, current focus areas:
-1. **Authentication system** (login, permissions) ⭐ RECENT
-2. **Administrator panel** (user/CSV/log management) ⭐ RECENT
-3. **Autopilot algorithm** (continuous improvements)
-4. **Weekly cleaning** (master data retention)
-5. **Translation functionality**
-6. **Logging and monitoring**
+1. **Dynamic room types** (flexible room type system from CSV) ⭐ RECENT
+2. **Special cleaning options** (drain water, highskite, chlorine, etc.) ⭐ RECENT
+3. **DD→Floor assignment change** (v1.4.14 restructure) ⭐ RECENT
+4. **Authentication system** (login, permissions)
+5. **Administrator panel** (user/CSV/log management)
+6. **Autopilot algorithm** (continuous improvements)
+7. **Weekly cleaning** (master data retention)
+8. **Translation functionality**
+9. **Logging and monitoring**
 
 ### When Asked to Add Features
 
@@ -1905,7 +1917,18 @@ python manage.py findstatic home.js
 ## Release History
 
 ### Recent Versions
-- **1.4.12** (January 2026): Current version
+- **1.4.14** (March 2026): Current version
+  - DD assignment changed to floor assignment
+  - UI improvements
+  - Master data optimization
+  - Dynamic room types support (times_by_type.csv with label column)
+  - Special cleaning options (drain water, highskite, chlorine, chemical clean, public bath)
+
+- **1.4.13** (February 2026)
+  - Admin panel and login screen optimization
+  - Commonize refactoring
+
+- **1.4.12** (January 2026)
   - Authentication system (login/logout)
   - Administrator panel (user management, CSV editor, log viewer)
   - Weekly cleaning master data retention
@@ -1944,7 +1967,7 @@ python manage.py findstatic home.js
 10. **Email Notifications**: For various system events
 
 ### Scalability Considerations
-- **Current Limits**: 100 housekeepers, 154 rooms
+- **Current Limits**: 100 housekeepers, room count unlimited (master-data driven)
 - **Session-Based State**: May not scale well with many concurrent users
 - **SQLite**: Suitable for single-hotel, consider PostgreSQL for multiple hotels
 - **Algorithm Performance**: 200 attempts is fast now, may need optimization for larger hotels
@@ -2067,28 +2090,29 @@ git push
 ### File Size Reference
 | Component | Lines of Code |
 |-----------|---------------|
-| **Views** | ~1,999 total |
-| - administrator.py ⭐ | 388 |
-| - home.py | 427 |
+| **Views** | ~2,052 total |
+| - administrator.py | 388 |
+| - home.py | 472 |
 | - rooming_list.py | 411 |
 | - sidewind_front.py | 273 |
-| - preview.py | 209 |
-| **Utils** | ~1,421 total |
+| - preview.py | 216 |
+| **Utils** | ~1,497 total |
 | - sidewind_core.py | 697 |
-| - preview_util.py | 633 |
-| - home_util.py | 91 |
-| **JavaScript** | ~4,143 total |
-| - home.js | 1,572 |
+| - preview_util.py | 686 |
+| - home_util.py | 114 |
+| **JavaScript** | ~4,186 total |
+| - home.js | 1,615 |
 | - sidewind.js | 1,498 |
-| - administrator.js ⭐ | 1,044 |
+| - administrator.js | 1,044 |
 | - preview.js | 29 |
-| **Templates** | ~2,581 total |
-| - administrator.html ⭐ | 578 |
-| - home.html | 561 |
+| **Templates** | ~2,623 total |
+| - administrator.html | 577 |
+| - home.html | 627 |
 | - preview.html | 344 |
 | - sidewind.html | 151 |
-| - login.html ⭐ | 93 |
-| **Total Code** | ~10,144 lines |
+| - release.html | 225 |
+| - login.html | 92 |
+| **Total Code** | ~10,358 lines |
 
 ---
 
@@ -2101,13 +2125,14 @@ Route294 is a **well-architected, feature-rich hotel housekeeping management sys
 - Comprehensive main interface for daily operations
 - Print-ready instruction sheets with multi-language support
 - Wincal PMS integration for occupancy data
+- Dynamic room type system from CSV configuration
 
-✅ **Modern Authentication** ⭐ NEW:
+✅ **Modern Authentication**:
 - Secure login system with Django auth
 - Role-based access control (public/staff/superuser)
 - Session management with CSRF protection
 
-✅ **Powerful Administrator Panel** ⭐ NEW:
+✅ **Powerful Administrator Panel**:
 - Complete user management (create/edit/delete)
 - CSV master data editor with dual-mode (table/text)
 - Log viewer with search and filtering
@@ -2143,28 +2168,29 @@ Route294 is a **well-architected, feature-rich hotel housekeeping management sys
 - Regular security audits
 
 **Primary Focus Areas** (Current Development):
-1. **Authentication System** ⭐ - Login, permissions, user management
-2. **Administrator Panel** ⭐ - System management interface
-3. **Autopilot Algorithm** - Continuous optimization
-4. **Weekly Cleaning** - Master data management
-5. **Logging & Monitoring** - System observability
+1. **Dynamic Room Types** - Flexible room type configuration from CSV
+2. **Special Cleaning Options** - Expanded cleaning type flags
+3. **Floor Assignment** - Restructured from DD assignment
+4. **Authentication System** - Login, permissions, user management
+5. **Administrator Panel** - System management interface
+6. **Autopilot Algorithm** - Continuous optimization
 
-**Version**: 1.4.12+ (January 2026)
+**Version**: 1.4.14 (March 2026)
 **Status**: Production-ready with proper configuration
-**Total Codebase**: ~10,144 lines of Python/JavaScript/HTML
+**Total Codebase**: ~10,358 lines of Python/JavaScript/HTML
 
 ---
 
-**Document Version**: 2.0
-**Last Updated**: 2026-01-XX
-**Codebase Version**: 1.4.12+
-**Changes in v2.0**:
-- ⭐ Added authentication system documentation
-- ⭐ Added administrator panel documentation
-- ⭐ Added user management documentation
-- Updated file structure with new components
-- Updated URL endpoints (+3 new)
-- Added security considerations section
-- Updated testing checklist
-- Added troubleshooting for authentication issues
-- Updated statistics (code lines, features)
+**Document Version**: 3.0
+**Last Updated**: 2026-03-09
+**Codebase Version**: 1.4.14
+**Changes in v3.0**:
+- Updated version to 1.4.14
+- Added dynamic room types documentation (parse_room_types, dist_room_by_type)
+- Added special cleaning options (drain water, highskite, chlorine, chemical clean, public bath)
+- Updated DD assignment → floor assignment change
+- Updated times_by_type.csv format (added label column)
+- Updated file line counts across all components
+- Updated commit history and release notes
+- Updated feature priority areas
+- Updated total codebase statistics (~10,358 lines)
