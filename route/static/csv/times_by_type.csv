@@ -1,5 +1,8 @@
-type,time,label
-S,24,シングル
-T,28,ツイン
+﻿type,time,label
+S,30,シングル
+W,32,セミダブル
+T,35,ツイン
+DXT,45,デラックスツイン
+OPS,30,バリアフリー
 bath,50,大浴場
 eco,5,エコ
