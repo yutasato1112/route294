@@ -1,0 +1,56 @@
+@echo off
+chcp 65001 >nul
+title Route294 - ホテル清掃指示書作成システム
+
+echo.
+echo  ╔════════════════════════════════════════╗
+echo  ║  Route294                              ║
+echo  ║  ホテル清掃指示書作成システム          ║
+echo  ╚════════════════════════════════════════╝
+echo.
+
+set APP_DIR=%~dp0
+set PYTHON_EXE=%APP_DIR%python\python.exe
+set ROUTE_DIR=%APP_DIR%route
+
+REM Check if Python exists
+if not exist "%PYTHON_EXE%" (
+    echo ERROR: Python が見つかりません: %PYTHON_EXE%
+    echo インストールが壊れている可能性があります。再インストールしてください。
+    pause
+    exit /b 1
+)
+
+REM Create logs/media directories if missing
+if not exist "%ROUTE_DIR%\logs" mkdir "%ROUTE_DIR%\logs"
+if not exist "%ROUTE_DIR%\media" mkdir "%ROUTE_DIR%\media"
+
+REM Run initial setup (migrations) if DB doesn't exist
+if not exist "%ROUTE_DIR%\db.sqlite3" (
+    echo 初回セットアップを実行しています...
+    cd /d "%ROUTE_DIR%"
+    "%PYTHON_EXE%" manage.py migrate --run-syncdb >nul 2>&1
+    echo セットアップ完了。
+    echo.
+)
+
+REM Start Django server
+echo サーバーを起動しています...
+echo.
+echo  ブラウザで http://localhost:8000/ が開きます。
+echo  このウィンドウを閉じるとサーバーが停止します。
+echo.
+echo  ────────────────────────────────────────
+echo.
+
+cd /d "%ROUTE_DIR%"
+
+REM Open browser after 2 second delay
+start "" cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:8000/"
+
+REM Start Django development server (blocks until Ctrl+C or window close)
+"%PYTHON_EXE%" manage.py runserver localhost:8000 2>&1
+
+echo.
+echo サーバーが停止しました。
+timeout /t 2 /nobreak >nul
