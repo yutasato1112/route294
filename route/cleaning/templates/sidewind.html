@@ -47,6 +47,13 @@
         {% endfor %}
         <!-- その他備考をhiddenフィールドで保持 -->
         <input type="hidden" name="others" value="{{ others }}">
+        <!-- 男浴・女浴担当をhiddenフィールドで保持 -->
+        {% for person in male_bath_person %}
+        <input type="hidden" name="male_bath" value="{{ person }}">
+        {% endfor %}
+        {% for person in female_bath_person %}
+        <input type="hidden" name="female_bath" value="{{ person }}">
+        {% endfor %}
         <div class="first_line">
             <!--作業者名-->
             <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if method == 'POST' %} value={{editor_name}} {% endif %} >

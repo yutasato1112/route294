@@ -298,6 +298,23 @@ td{
     width: 90%;
     margin: auto;
     margin-bottom: 15px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+.bath_persons_half{
+    display: flex;
+    align-items: center;
+    width: 50%;
+    justify-content: center;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+.bath_persons_half p{
+    margin: 0;
+}
+.bath_label{
+    font-weight: bold;
+    margin-right: 8px;
 }
 .room_change{
     display: flex;

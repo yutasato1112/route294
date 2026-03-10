@@ -60,7 +60,8 @@ def catch_post(request):
             if len(room_number) < 5:    
                 room_inputs[room_number] = value.strip()
     
-    bath_person = request.POST.getlist("bath") 
+    male_bath_person = request.POST.getlist("male_bath")
+    female_bath_person = request.POST.getlist("female_bath")
     
     remarks = []
     # POST データの key を全部ループ
@@ -116,7 +117,7 @@ def catch_post(request):
 
     room_info_data, times_by_time_data, master_key_data = read_csv()
     single_rooms, twin_rooms = dist_room(room_info_data)
-    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms
+    return date, single_time, twin_time, bath_time, room_inputs, male_bath_person, female_bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms
 
 def get_cover(request):
     post = request.POST
@@ -172,11 +173,14 @@ def get_cover(request):
     
         
 
-def is_bath(bath_person, person):
-    if str(person) in bath_person:
-        return True
-    else:
-        return False
+def is_bath(male_bath_person, female_bath_person, person):
+    return str(person) in male_bath_person or str(person) in female_bath_person
+
+def is_male_bath(male_bath_person, person):
+    return str(person) in male_bath_person
+
+def is_female_bath(female_bath_person, person):
+    return str(person) in female_bath_person
     
 def weekly_cleaning(date):
     #日付から曜日を取得
@@ -366,7 +370,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
     #ルームナンバーのリストを返す
     return manage_rooms, floor_list
 
-def calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=None):
+def calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=None, bath_count=1):
     #時間の計算
     single_time = int(single_time)
     twin_time = int(twin_time)
@@ -382,7 +386,7 @@ def calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, t
         elif room[i]['room_num'] in twin_rooms:
             total_time += twin_time
     if bath == True:
-        total_time += bath_time
+        total_time += bath_time * bath_count
     #時間の計算
     base_time = datetime.datetime.combine(datetime.date.today(), datetime.time(hour=9, minute=30))
     end_time = base_time + datetime.timedelta(minutes=total_time)
@@ -635,6 +639,11 @@ def language(str_id, lang_id, text):
             'inspection':'インスペ',
             'public_bath_cleaning':'大浴場清掃',
             'public_bath_cleaning_please':'大浴場清掃よろしくお願いいたします。',
+            'male_bath_cleaning':'男浴清掃',
+            'female_bath_cleaning':'女浴清掃',
+            'male_bath_cleaning_please':'男浴清掃よろしくお願いいたします。',
+            'female_bath_cleaning_please':'女浴清掃よろしくお願いいたします。',
+            'both_bath_cleaning_please':'男浴・女浴清掃よろしくお願いいたします。',
             'master_key_number':'マスターキー番号',
             'target_completion_time_for_cleaning':'清掃終了目標時間',
             'cleaning_completion_time':'清掃終了時間',
@@ -675,6 +684,11 @@ def language(str_id, lang_id, text):
             'inspection':'Inspection',
             'public_bath_cleaning':'Public Bath Cleaning',
             'public_bath_cleaning_please':'Please clean the public bath.',
+            'male_bath_cleaning':'Men\'s Bath Cleaning',
+            'female_bath_cleaning':'Women\'s Bath Cleaning',
+            'male_bath_cleaning_please':'Please clean the men\'s bath.',
+            'female_bath_cleaning_please':'Please clean the women\'s bath.',
+            'both_bath_cleaning_please':'Please clean the men\'s and women\'s baths.',
             'master_key_number':'Master Key Number',
             'target_completion_time_for_cleaning':'Target Completion Time for Cleaning',
             'cleaning_completion_time':'Cleaning Completion Time',

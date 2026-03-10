@@ -124,9 +124,10 @@ def sidewind_front(request):
 
         #その他の情報を取得
         try:
-            _, _, _, _, _, bath_person, remarks, house_data, _, _, _, _, _, _, contacts, spots, _ = catch_post(request)
+            _, _, _, _, _, male_bath_person, female_bath_person, remarks, house_data, _, _, _, _, _, _, contacts, spots, _ = catch_post(request)
         except Exception as e:
-            bath_person = []
+            male_bath_person = []
+            female_bath_person = []
             remarks = []
             house_data = []
             contacts = []
@@ -274,8 +275,10 @@ def sidewind_front(request):
         request.session['contacts'] = contacts
         request.session['spots'] = spots
         bath_staff = [h['id'] for h in housekeepers if h['has_bath']]
-        request.session['bath_staff'] = bath_staff
-        request.session['bath_person'] = bath_person
+        request.session['male_bath_staff'] = bath_staff
+        request.session['female_bath_staff'] = []
+        request.session['male_bath_only'] = []
+        request.session['female_bath_only'] = []
                 
         return redirect(reverse('home'))
     return redirect(reverse('sidewind'))

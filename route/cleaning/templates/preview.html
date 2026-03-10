@@ -23,10 +23,20 @@
     </div>
     <p class="cover_semi_title">大浴場担当者 {% if is_drain_water %}+ 湯抜き{% endif %} {% if is_highskite %}+ ハイスキット{% endif %}  {% if is_chlorine %}+ 高濃度塩素消毒{% endif %}  {% if is_chemical_clean %}+ 循環配管薬品洗浄{% endif %}  {% if is_public %}+ パブリック{% endif %}</p>
     <div class="bath_persons">
-        {% for person in bath_person %}
-        <p>{{person}}</p>
-        <p>さん　</p>
-        {% endfor %}
+        <div class="bath_persons_half">
+            <p class="bath_label">男浴：</p>
+            {% for person in male_bath_person %}
+            <p>{{person}}</p>
+            <p>さん　</p>
+            {% endfor %}
+        </div>
+        <div class="bath_persons_half">
+            <p class="bath_label">女浴：</p>
+            {% for person in female_bath_person %}
+            <p>{{person}}</p>
+            <p>さん　</p>
+            {% endfor %}
+        </div>
     </div>
     <p class="cover_semi_title">ルームチェンジ</p>
     {% for room_change in room_changes_persons %}

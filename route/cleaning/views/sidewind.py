@@ -21,7 +21,7 @@ class sidewindView(TemplateView):
     def post(self, request, *args, **kwargs):
         method = 'POST'
         #データ受け取り
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, male_bath_person, female_bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
 
         #連泊入力の受け取り
         try:
@@ -91,6 +91,8 @@ class sidewindView(TemplateView):
             'outins':outins,
             'must_cleans':must_cleans,
             'others':others,
+            'male_bath_person':male_bath_person,
+            'female_bath_person':female_bath_person,
         }
         return render(self.request, self.template_name, context)
     

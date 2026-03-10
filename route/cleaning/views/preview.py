@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
-from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean, multiple_night, language, get_room_type_times
+from ..utils.preview_util import catch_post, is_bath, is_male_bath, is_female_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean, multiple_night, language, get_room_type_times
 from ..utils.home_util import read_csv, parse_room_types, dist_room_by_type
 
 # Create your views here.
@@ -16,7 +16,7 @@ class previewView(TemplateView):
     
     def post(self, request, *args, **kwargs):
         #データ受け取り
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, male_bath_person, female_bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
 
         #動的ルームタイプデータ
         room_type_times = get_room_type_times(request)
@@ -65,12 +65,11 @@ class previewView(TemplateView):
         
         #部屋数のカウント
         total_cleaning_room = sum(1 for v in room_inputs.values() if v != '0')
-        #大浴場追加要員
-        original_add_bath = request.POST.getlist('bath_only')
-        add_bath = []
-        for i in original_add_bath:
-            if i != '':
-                add_bath.append(i)
+        #大浴場追加要員（男浴・女浴）
+        original_male_add_bath = request.POST.getlist('male_bath_only')
+        male_add_bath = [i for i in original_male_add_bath if i != '']
+        original_female_add_bath = request.POST.getlist('female_bath_only')
+        female_add_bath = [i for i in original_female_add_bath if i != '']
         
         #DDリストの作成
         rooms = []
@@ -93,11 +92,14 @@ class previewView(TemplateView):
             name = house_data[i][1]
             key_name_list.append([house_data[i][0],name])
             key = house_data[i][2]
-            bath = is_bath(bath_person, i+1)
+            bath = is_bath(male_bath_person, female_bath_person, i+1)
+            m_bath = is_male_bath(male_bath_person, i+1)
+            f_bath = is_female_bath(female_bath_person, i+1)
+            bath_count = (1 if m_bath else 0) + (1 if f_bath else 0)
             weekly = weekly_cleaning(date)
             room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins,spots, lang, rooms_by_type=rooms_by_type, soto_ame_rooms=soto_ame_rooms)
             rooms.append(room)
-            time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=room_type_times)
+            time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=room_type_times, bath_count=bath_count)
             date_jp = changeDate(date,lang)
             date_jp_cover = changeDate(date,'ja')
             
@@ -120,10 +122,22 @@ class previewView(TemplateView):
             #部屋タイプ別カウント
             room_type_count_str = calc_room_type_count(room, room_types=room_types_list)
             
+            # 大浴場清掃メッセージ（男浴・女浴に応じて変更）
+            if m_bath and f_bath:
+                bath_please_key = 'both_bath_cleaning_please'
+            elif m_bath:
+                bath_please_key = 'male_bath_cleaning_please'
+            elif f_bath:
+                bath_please_key = 'female_bath_cleaning_please'
+            else:
+                bath_please_key = 'public_bath_cleaning_please'
+
             persons_cleaning_data = {
                 'name':name,
                 'rooms':room,
                 'bath':bath,
+                'male_bath':m_bath,
+                'female_bath':f_bath,
                 'key':key,
                 'weekly':language(weekly,lang,None),
                 'end_time':time_of_end,
@@ -151,7 +165,7 @@ class previewView(TemplateView):
                 'cleaned':language('cleaned',lang,None),
                 'inspection':language('inspection',lang,None),
                 'public_bath_cleaning':language('public_bath_cleaning',lang,None),
-                'public_bath_cleaning_please':language('public_bath_cleaning_please',lang,None),
+                'public_bath_cleaning_please':language(bath_please_key,lang,None),
                 'master_key_number':language('master_key_number',lang,None),
                 'target_completion_time_for_cleaning':language('target_completion_time_for_cleaning',lang,None),
                 'cleaning_completion_time':language('cleaning_completion_time',lang,None),
@@ -175,10 +189,13 @@ class previewView(TemplateView):
                 'signature':language('signature',lang,None)
             }
             total_data.append(persons_cleaning_data)
-        #大浴場清掃担当者の名前リスト化
-        bath_person_name = search_bath_person(bath_person, key_name_list)
-        for i in add_bath:
-            bath_person_name.append(i)
+        #大浴場清掃担当者の名前リスト化（男浴・女浴別）
+        male_bath_person_name = search_bath_person(male_bath_person, key_name_list)
+        for i in male_add_bath:
+            male_bath_person_name.append(i)
+        female_bath_person_name = search_bath_person(female_bath_person, key_name_list)
+        for i in female_add_bath:
+            female_bath_person_name.append(i)
         
         #備考と名前のリスト化
         remarks_name_list = search_remarks_name_list(key_name_list, rooms)
@@ -204,7 +221,8 @@ class previewView(TemplateView):
             'date':date_jp_cover,
             'house_person_count' : person_count,
             'total_cleaning_room':total_cleaning_room,
-            'bath_person': bath_person_name,
+            'male_bath_person': male_bath_person_name,
+            'female_bath_person': female_bath_person_name,
             'remarks' : remarks_name_list,
             'room_changes_persons':room_changes_person,
             'outins':outins_list,

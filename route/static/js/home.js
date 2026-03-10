@@ -277,15 +277,15 @@ $(document).ready(function () {
         updateResultTableColumns();
     });
     //
-    $(document).on("input", ".input_name, .input_no, .input_bath", function () {
+    $(document).on("input", ".input_name, .input_no, .input_male_bath, .input_female_bath", function () {
         updateResultTableColumns();
     });
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco", function () {
+    $(document).on("input", ".input_name, .input_no, .input_male_bath, .input_female_bath, .input_room, .input_eco", function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
     });
 
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, .room_type_time, #bath_time", function () {
+    $(document).on("input", ".input_name, .input_no, .input_male_bath, .input_female_bath, .input_room, .input_eco, .room_type_time, #bath_time", function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
         updateEndTimeRow();
@@ -940,22 +940,32 @@ $(document).ready(function () {
         }
     }
 
-    //清掃指示表の番号行・氏名行と大浴場清掃を管理
+    //清掃指示表の番号行・氏名行と男浴・女浴清掃を管理
     function updateResultTableColumns() {
         const headerRowNo = $("#result_table_header_no");
         const headerRowName = $("#result_table_header_name");
-        const bathRow = $("#bath_row");
+        const maleBathRow = $("#male_bath_row");
+        const femaleBathRow = $("#female_bath_row");
 
         // 初期化
         headerRowNo.empty().append("<th></th>");
         headerRowName.empty().append("<th></th>");
-        bathRow.empty().append("<td><strong>大浴場清掃</strong></td>");
+        maleBathRow.empty().append("<td><strong>男浴清掃</strong></td>");
+        femaleBathRow.empty().append("<td><strong>女浴清掃</strong></td>");
 
-        const bathAssignedNos = [];
-        $(".input_bath").each(function () {
+        const maleBathAssignedNos = [];
+        $(".input_male_bath").each(function () {
             const val = $(this).val().trim();
             if (val !== "" && val !== "0") {
-                bathAssignedNos.push(val);
+                maleBathAssignedNos.push(val);
+            }
+        });
+
+        const femaleBathAssignedNos = [];
+        $(".input_female_bath").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "" && val !== "0") {
+                femaleBathAssignedNos.push(val);
             }
         });
 
@@ -984,18 +994,19 @@ $(document).ready(function () {
         sortedNos.forEach(no => {
             const name = noToName[no] || "None";
             const isNone = (name === "None");
-            
+
             // 番号行：太字で左詰め、均等幅
             headerRowNo.append(`<th style="font-weight: bold; text-align: left; width: ${columnWidth};">${no}</th>`);
-            
+
             // 名前行：Noneの場合はグレー・イタリック表示、均等幅
             if (isNone) {
                 headerRowName.append(`<th style="color: #999; font-style: italic; width: ${columnWidth};">${name}</th>`);
             } else {
                 headerRowName.append(`<th style="width: ${columnWidth};">${name}</th>`);
             }
-            
-            bathRow.append(bathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
+
+            maleBathRow.append(maleBathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
+            femaleBathRow.append(femaleBathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
         });
 
         // テーブルのレイアウトを固定
@@ -1154,11 +1165,18 @@ $(document).ready(function () {
         if (typeTimes["S"] !== undefined) { $("#single_time").val(typeTimes["S"]); }
         if (typeTimes["T"] !== undefined) { $("#twin_time").val(typeTimes["T"]); }
 
-        const bathNos = [];
-        $(".input_bath").each(function () {
+        const maleBathNos = [];
+        $(".input_male_bath").each(function () {
             const val = $(this).val().trim();
             if (val !== "" && val !== "0") {
-                bathNos.push(val);
+                maleBathNos.push(val);
+            }
+        });
+        const femaleBathNos = [];
+        $(".input_female_bath").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "" && val !== "0") {
+                femaleBathNos.push(val);
             }
         });
 
@@ -1208,8 +1226,10 @@ $(document).ready(function () {
                 }
             });
 
-            const hasBath = bathNos.includes(no);
-            let totalMin = ecoCount * ecoTime + (hasBath ? bathTime : 0);
+            const hasMaleBath = maleBathNos.includes(no);
+            const hasFemaleBath = femaleBathNos.includes(no);
+            let bathCount = (hasMaleBath ? 1 : 0) + (hasFemaleBath ? 1 : 0);
+            let totalMin = ecoCount * ecoTime + bathCount * bathTime;
             for (const [code, count] of Object.entries(typeCounts)) {
                 totalMin += count * (typeTimes[code] || 0);
             }
@@ -1223,7 +1243,7 @@ $(document).ready(function () {
             $row.append(`<td>${hh}:${mm}</td>`);
         });
 
-        $("#bath_row").before($row);
+        $("#male_bath_row").before($row);
     }
 
 
@@ -1561,29 +1581,6 @@ $(document).ready(function () {
     }
 
 
-    //階数の一括処理
-    $("#delete_floor_btn").on("click", function () {
-        const floorVal = $("#delete_floor").val().trim();
-        if (floorVal === "") {
-            alert("階数を入力してください。");
-            return;
-        }
-
-        // 指定された階に属する部屋番号を検出（例：501, 502... 5xx）
-        $('[data-room]').each(function () {
-            const $cell = $(this);
-            const roomNumber = $cell.data("room");
-            if (roomNumber && String(roomNumber).startsWith(floorVal)) {
-                $cell.find(".input_room").val("0"); // 清掃指示を空にする
-            }
-        });
-
-        updateHouseCount();             // 数を再計算
-        updateHouseFloorAssignments(); // 担当階を再更新
-        updateMutedRooms();            // muted 表示再更新
-        updateAssignedRoomRows();      // 表示テーブル更新
-        updateRoomStats();
-    });
 });
 
 document.addEventListener('DOMContentLoaded', function () {

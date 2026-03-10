@@ -235,7 +235,14 @@ th{
     box-sizing: border-box;
     overflow: hidden;
 }
-.input_bath{
+.bath_tile_title{
+    font-weight: bold;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin: 0;
+}
+.input_male_bath, .input_female_bath{
     width: 15%;
 }
 .floor_area{
@@ -249,8 +256,8 @@ th{
     box-sizing: border-box;
     overflow: hidden;
 }
-.input_delete_floor{
-    width: 20%;
+.input_female_bath{
+    width: 15%;
 }
 .input_no{
     width: 90%;
@@ -444,13 +451,28 @@ input[type="number"]::-webkit-inner-spin-button {
     width: 20%;
 }
 
-.bath_only_area{
-    background-color: white;
-    border:  1px solid #ccc;
-    border-radius: 5px;
+.bath_only_line{
     display: flex;
-    justify-content: center;
-    padding: 2%;
+    justify-content: space-between;
+    gap: 2%;
+    margin-top: 0.5vh;
+}
+.bath_only_card{
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    width: 49%;
+}
+.bath_only_inputs{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.bath_only_inputs .bath_only{
+    width: calc(50% - 2px);
+    box-sizing: border-box;
 }
 
 .bottom_second_line{

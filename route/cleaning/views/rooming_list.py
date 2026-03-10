@@ -183,7 +183,7 @@ def operating_excel(output_excel_path, multiple_room_list, unuse_room_list, exce
     thin = Side(border_style="thin", color="000000")
     
     # 処理対象のシート一覧（色変更・斜線は両方のシートで実行）
-    sheet_names = ['yamashita', 'takahashi']
+    sheet_names = ['R下妻']
     
     for sheet_name in sheet_names:
         ws = wb[sheet_name]
@@ -217,20 +217,23 @@ def operating_excel(output_excel_path, multiple_room_list, unuse_room_list, exce
                     cell.border = new_border
     
     # yamashitaシートのみ：集計・日付書き込み
-    ws_yamashita = wb['yamashita']
-    
-    #各階連泊数集計
-    multiple_count = count_multiple_rooms_by_floor(room_number_list, multiple_room_list)
+    try:
+        ws_yamashita = wb['yamashita']
+        
+        #各階連泊数集計
+        multiple_count = count_multiple_rooms_by_floor(room_number_list, multiple_room_list)
 
-    #各階清掃部屋数集計
-    use_room_list = count_available_rooms_by_floor(room_number_list, unuse_room_list)
-    
-    # 集計結果をExcelに書き込み（yamashitaシートのみ）
-    write_counts_to_excel(wb, multiple_count, use_room_list, output_excel_path)
-    
-    #日付書き込み（yamashitaシートのみ）
-    if date:
-        ws_yamashita['AW2'] = date
+        #各階清掃部屋数集計
+        use_room_list = count_available_rooms_by_floor(room_number_list, unuse_room_list)
+        
+        # 集計結果をExcelに書き込み（yamashitaシートのみ）
+        write_counts_to_excel(wb, multiple_count, use_room_list, output_excel_path)
+        
+        #日付書き込み（yamashitaシートのみ）
+        if date:
+            ws_yamashita['AW2'] = date
+    except KeyError:
+        print("集計と日付の書き込みはスキップされます。")
 
     # 修正済み Excel を保存
     wb.save(output_excel_path)

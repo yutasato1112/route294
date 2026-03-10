@@ -187,7 +187,7 @@ th{
     box-sizing: border-box;
     overflow: hidden;
 }
-.input_bath{
+.input_male_bath, .input_female_bath{
     width: 15%;
 }
 .floor_area{

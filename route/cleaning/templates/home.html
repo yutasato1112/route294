@@ -99,26 +99,42 @@
                     </div>
                 </div>
                 <div class="third_line">
-                    <!--大浴場清掃-->
+                    <!--男浴担当-->
                     <div class="bath_area">
-                        <p>大浴場清掃：</p>
-                        <input type="number" name="bath" id="bath" class="input_bath"  value={{bath_persons.0}}>
-                        <input type="number" name="bath" id="bath" class="input_bath"  value={{bath_persons.1}}>
-                        <input type="number" name="bath" id="bath" class="input_bath"  value={{bath_persons.2}}>
-                        <input type="number" name="bath" id="bath" class="input_bath"  value={{bath_persons.3}}>
+                        <p class="bath_tile_title">男浴担当</p>
+                        <input type="number" name="male_bath" class="input_male_bath"  value={{male_bath_persons.0}}>
+                        <input type="number" name="male_bath" class="input_male_bath"  value={{male_bath_persons.1}}>
+                        <input type="number" name="male_bath" class="input_male_bath"  value={{male_bath_persons.2}}>
+                        <input type="number" name="male_bath" class="input_male_bath"  value={{male_bath_persons.3}}>
                     </div>
-                    <!--フロア別一括操作-->
+                    <!--女浴担当-->
                     <div class="floor_area">
-                        <p>フロア別一括操作：</p>
-                        <input type="number" name="floor" id="delete_floor" class="input_delete_floor">
-                        <p>　階を　</p>
-                        <button type="button" class="btn btn-danger " id="delete_floor_btn">削除</button>
+                        <p class="bath_tile_title">女浴担当</p>
+                        <input type="number" name="female_bath" class="input_female_bath"  value={{female_bath_persons.0}}>
+                        <input type="number" name="female_bath" class="input_female_bath"  value={{female_bath_persons.1}}>
+                        <input type="number" name="female_bath" class="input_female_bath"  value={{female_bath_persons.2}}>
+                        <input type="number" name="female_bath" class="input_female_bath"  value={{female_bath_persons.3}}>
                     </div>
                 </div>
-                <div class="bath_only_area">
-                    <p>大浴場のみ　：　</p>
-                    <input type="text" name="bath_only" id="bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{add_bath.0}} {% endif %}>
-                    <input type="text" name="bath_only" id="bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{add_bath.1}} {% endif %}>
+                <div class="bath_only_line">
+                    <div class="bath_only_card">
+                        <p class="bath_tile_title">男浴のみ</p>
+                        <div class="bath_only_inputs">
+                            <input type="text" name="male_bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{male_add_bath.0}} {% endif %}>
+                            <input type="text" name="male_bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{male_add_bath.1}} {% endif %}>
+                            <input type="text" name="male_bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{male_add_bath.2}} {% endif %}>
+                            <input type="text" name="male_bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{male_add_bath.3}} {% endif %}>
+                        </div>
+                    </div>
+                    <div class="bath_only_card">
+                        <p class="bath_tile_title">女浴のみ</p>
+                        <div class="bath_only_inputs">
+                            <input type="text" name="female_bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{female_add_bath.0}} {% endif %}>
+                            <input type="text" name="female_bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{female_add_bath.1}} {% endif %}>
+                            <input type="text" name="female_bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{female_add_bath.2}} {% endif %}>
+                            <input type="text" name="female_bath_only" placeholder="氏名" class="bath_only"{% if method == 'POST' %} value={{female_add_bath.3}} {% endif %}>
+                        </div>
+                    </div>
                 </div>
                 <div class="special_clearn_area">
                     <label class="checkbox-label">
@@ -312,8 +328,11 @@
                     </tr>
                 </thead>
                 <tbody id="result_table_body">
-                    <tr id="bath_row">
-                        <!-- <td>大浴場清掃</td><td>〇</td>... -->
+                    <tr id="male_bath_row">
+                        <!-- <td>男浴清掃</td><td>〇</td>... -->
+                    </tr>
+                    <tr id="female_bath_row">
+                        <!-- <td>女浴清掃</td><td>〇</td>... -->
                     </tr>
                     <!-- 担当部屋・エコ部屋の行が JSで追加される -->
                 </tbody>

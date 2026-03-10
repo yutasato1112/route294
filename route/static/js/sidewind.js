@@ -274,15 +274,15 @@ $(document).ready(function () {
         updateResultTableColumns();
     });
     //
-    $(document).on("input", ".input_name, .input_no, .input_bath", function () {
+    $(document).on("input", ".input_name, .input_no, .input_male_bath, .input_female_bath", function () {
         updateResultTableColumns();
     });
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco", function () {
+    $(document).on("input", ".input_name, .input_no, .input_male_bath, .input_female_bath, .input_room, .input_eco", function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
     });
 
-    $(document).on("input", ".input_name, .input_no, .input_bath, .input_room, .input_eco, #single_time, #twin_time, #bath_time", function () {
+    $(document).on("input", ".input_name, .input_no, .input_male_bath, .input_female_bath, .input_room, .input_eco, #single_time, #twin_time, #bath_time", function () {
         updateResultTableColumns();
         updateAssignedRoomRows();
         updateEndTimeRow();
@@ -904,20 +904,29 @@ $(document).ready(function () {
         }
     }
 
-    //清掃指示表の氏名(列数)と大浴場清掃を管理
+    //清掃指示表の氏名(列数)と男浴・女浴清掃を管理
     function updateResultTableColumns() {
         const headerRow = $("#result_table_header");
-        const bathRow = $("#bath_row");
+        const maleBathRow = $("#male_bath_row");
+        const femaleBathRow = $("#female_bath_row");
 
         // 初期化
         headerRow.empty().append("<th></th>");
-        bathRow.empty().append("<td><strong>大浴場清掃</strong></td>");
+        maleBathRow.empty().append("<td><strong>男浴清掃</strong></td>");
+        femaleBathRow.empty().append("<td><strong>女浴清掃</strong></td>");
 
-        const bathAssignedNos = [];
-        $(".input_bath").each(function () {
+        const maleBathAssignedNos = [];
+        $(".input_male_bath").each(function () {
             const val = $(this).val().trim();
             if (val !== "" && val !== "0") {
-                bathAssignedNos.push(val);
+                maleBathAssignedNos.push(val);
+            }
+        });
+        const femaleBathAssignedNos = [];
+        $(".input_female_bath").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "" && val !== "0") {
+                femaleBathAssignedNos.push(val);
             }
         });
 
@@ -942,7 +951,8 @@ $(document).ready(function () {
         sortedNos.forEach(no => {
             const name = noToName[no] || "None";
             headerRow.append(`<th>${name}</th>`);
-            bathRow.append(bathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
+            maleBathRow.append(maleBathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
+            femaleBathRow.append(femaleBathAssignedNos.includes(no) ? "<td>〇</td>" : "<td></td>");
         });
     }
 
@@ -1080,11 +1090,18 @@ $(document).ready(function () {
         const bathTime = parseInt($("#bath_time").val()) || 0;
         const ecoTime = 5;
 
-        const bathNos = [];
-        $(".input_bath").each(function () {
+        const maleBathNos = [];
+        $(".input_male_bath").each(function () {
             const val = $(this).val().trim();
             if (val !== "" && val !== "0") {
-                bathNos.push(val);
+                maleBathNos.push(val);
+            }
+        });
+        const femaleBathNos = [];
+        $(".input_female_bath").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "" && val !== "0") {
+                femaleBathNos.push(val);
             }
         });
 
@@ -1134,8 +1151,10 @@ $(document).ready(function () {
                 }
             });
 
-            const hasBath = bathNos.includes(no);
-            const totalMin = (singleCount * singleTime) + (twinCount * twinTime) + (ecoCount * ecoTime) + (hasBath ? bathTime : 0);
+            const hasMaleBath = maleBathNos.includes(no);
+            const hasFemaleBath = femaleBathNos.includes(no);
+            const bathCount = (hasMaleBath ? 1 : 0) + (hasFemaleBath ? 1 : 0);
+            const totalMin = (singleCount * singleTime) + (twinCount * twinTime) + (ecoCount * ecoTime) + (bathCount * bathTime);
 
             const base = new Date();
             base.setHours(9);
@@ -1146,7 +1165,7 @@ $(document).ready(function () {
             $row.append(`<td>${hh}:${mm}</td>`);
         });
 
-        $("#bath_row").before($row);
+        $("#male_bath_row").before($row);
     }
 
 

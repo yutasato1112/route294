@@ -36,7 +36,8 @@ class homeView(TemplateView):
             ame_rooms = request.session['ame']
             soto_ame_rooms = request.session.get('soto_ame', [])
             duvet_rooms = request.session['duvet']
-            bath_persons = request.session['bath_staff']
+            male_bath_persons = request.session.get('male_bath_staff', request.session.get('bath_staff', []))
+            female_bath_persons = request.session.get('female_bath_staff', [])
             multiple_rooms = request.session.get('multiple_rooms', [])
             multiple_night_cleans_list = request.session.get('multiple_night_cleans', [])
             room_changes = request.session.get('room_changes', [])
@@ -46,7 +47,8 @@ class homeView(TemplateView):
             remarks = request.session.get('remarks', [])
             contacts = request.session.get('contacts', [])
             spots = request.session.get('spots', [])
-            bath_person = request.session.get('bath_person', [])
+            male_bath_only = request.session.get('male_bath_only', request.session.get('bath_person', []))
+            female_bath_only = request.session.get('female_bath_only', [])
 
             #csv読み込み
             room_info_data, times_by_time_data, master_key_data = read_csv()
@@ -87,11 +89,9 @@ class homeView(TemplateView):
             padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
             multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]
 
-            #大浴場追加要員
-            add_bath = []
-            for person in bath_person:
-                if person != '':
-                    add_bath.append(person)
+            #大浴場追加要員（男浴・女浴）
+            male_add_bath = [p for p in male_bath_only if p != '']
+            female_add_bath = [p for p in female_bath_only if p != '']
 
             context = {
                 'method':method,
@@ -109,7 +109,8 @@ class homeView(TemplateView):
                 'editor_name': editor_name,
                 'remarks': remarks,
                 'house_person': [],
-                'bath_persons': bath_persons,
+                'male_bath_persons': male_bath_persons,
+                'female_bath_persons': female_bath_persons,
                 'eco_rooms': eco_rooms,
                 'ame_rooms': ame_rooms,
                 'soto_ame_rooms': soto_ame_rooms,
@@ -128,7 +129,8 @@ class homeView(TemplateView):
                 'outins':outins,
                 'must_cleans':must_cleans,
                 'others':others,
-                'add_bath':add_bath,
+                'male_add_bath':male_add_bath,
+                'female_add_bath':female_add_bath,
                 'contacts': contacts,
                 'add_contacts_len':len(contacts),
                 'contacts_len':len(contacts)+3,
@@ -344,7 +346,9 @@ class homeView(TemplateView):
         twin_time = int(data['twin_time'])
         bath_time = int(data['bath_time'])
         room_inputs = data['room_inputs']
-        bath_persons = data['bath_person']
+        # 男浴・女浴担当（レガシーJSONフォールバック対応）
+        male_bath_persons = data.get('male_bath_person', data.get('bath_person', []))
+        female_bath_persons = data.get('female_bath_person', [])
         remarks = data['remarks']
         house_person = data['house_data']
         eco_rooms = data['eco_rooms']
@@ -409,12 +413,11 @@ class homeView(TemplateView):
         else:
             room_char_list_len = 1
         
-        #大浴場追加要員
-        original_add_bath = data['add_bath']
-        add_bath = []
-        for i in original_add_bath:
-            if i != '':
-                add_bath.append(i)
+        #大浴場追加要員（男浴・女浴）
+        original_male_add_bath = data.get('male_add_bath', data.get('add_bath', []))
+        male_add_bath = [i for i in original_male_add_bath if i != '']
+        original_female_add_bath = data.get('female_add_bath', [])
+        female_add_bath = [i for i in original_female_add_bath if i != '']
                 
         #連泊部屋入力欄対応
         padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
@@ -434,7 +437,8 @@ class homeView(TemplateView):
             'rooms':room_num_table,
             'combined_rooms': combined_rooms,
             'editor_name': editor_name,
-            'bath_persons': bath_persons,
+            'male_bath_persons': male_bath_persons,
+            'female_bath_persons': female_bath_persons,
             'remarks': remarks,
             'house_person': house_person,
             'eco_rooms': eco_rooms,
@@ -455,7 +459,8 @@ class homeView(TemplateView):
             'outins':outins,
             'must_cleans':must_cleans,
             'others':others,
-            'add_bath':add_bath,
+            'male_add_bath':male_add_bath,
+            'female_add_bath':female_add_bath,
             'contacts': contacts,
             'add_contacts_len':len(contacts),
             'contacts_len':len(contacts)+3,

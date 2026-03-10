@@ -8,13 +8,12 @@ import os
 
 def download_json(request):
     if request.method == 'POST':
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, male_bath_person, female_bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
         room_changes, outins, must_cleans, others, multiple_night_cleans = get_cover(request)
-        original_add_bath = request.POST.getlist('bath_only')
-        add_bath = []
-        for i in original_add_bath:
-            if i != '':
-                add_bath.append(i)
+        original_male_add_bath = request.POST.getlist('male_bath_only')
+        male_add_bath = [i for i in original_male_add_bath if i != '']
+        original_female_add_bath = request.POST.getlist('female_bath_only')
+        female_add_bath = [i for i in original_female_add_bath if i != '']
         is_drain_water, is_highskite, is_chlorine, is_chemical_clean, is_public = special_clean(request)      
 
         try:
@@ -34,7 +33,8 @@ def download_json(request):
             'bath_time':bath_time,
             'room_type_times':room_type_times,
             'room_inputs':room_inputs,
-            'bath_person':bath_person,
+            'male_bath_person':male_bath_person,
+            'female_bath_person':female_bath_person,
             'remarks':remarks,
             'house_data':house_data,
             'eco_rooms':eco_rooms,
@@ -46,7 +46,8 @@ def download_json(request):
             'multiple_night_cleans': multiple_night_cleans,
             'must_cleans':must_cleans,
             'others':others,
-            'add_bath':add_bath,
+            'male_add_bath':male_add_bath,
+            'female_add_bath':female_add_bath,
             'contacts':contacts,
             'is_drain_water': is_drain_water,
             'is_highskite': is_highskite,
