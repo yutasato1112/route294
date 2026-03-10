@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
+import json
 from ..utils.preview_util import catch_post, is_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean, multiple_night, language, get_room_type_times
 from ..utils.home_util import read_csv, parse_room_types, dist_room_by_type
 
@@ -17,6 +18,13 @@ class previewView(TemplateView):
     def post(self, request, *args, **kwargs):
         #データ受け取り
         date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
+
+        #宿泊人数データ
+        guest_counts_json = request.POST.get('guest_counts_json', '{}')
+        try:
+            guest_counts = json.loads(guest_counts_json)
+        except (json.JSONDecodeError, TypeError):
+            guest_counts = {}
 
         #動的ルームタイプデータ
         room_type_times = get_room_type_times(request)
@@ -96,6 +104,9 @@ class previewView(TemplateView):
             bath = is_bath(bath_person, i+1)
             weekly = weekly_cleaning(date)
             room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins,spots, lang, rooms_by_type=rooms_by_type, soto_ame_rooms=soto_ame_rooms)
+            #宿泊人数を各部屋に追加
+            for r in room:
+                r['guest_count'] = guest_counts.get(r['room_num'], '')
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=room_type_times)
             date_jp = changeDate(date,lang)

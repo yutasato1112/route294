@@ -276,6 +276,7 @@ def sidewind_front(request):
         bath_staff = [h['id'] for h in housekeepers if h['has_bath']]
         request.session['bath_staff'] = bath_staff
         request.session['bath_person'] = bath_person
+        request.session['guest_counts_json'] = request.POST.get('guest_counts_json', '{}')
                 
         return redirect(reverse('home'))
     return redirect(reverse('sidewind'))

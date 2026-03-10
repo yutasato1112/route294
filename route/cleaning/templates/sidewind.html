@@ -47,6 +47,8 @@
         {% endfor %}
         <!-- その他備考をhiddenフィールドで保持 -->
         <input type="hidden" name="others" value="{{ others }}">
+        <!-- 宿泊人数をhiddenフィールドで保持 -->
+        <input type="hidden" name="guest_counts_json" value="{{ guest_counts_json }}">
         <div class="first_line">
             <!--作業者名-->
             <input type="text" name="editor_name" id="name" class="input_editor_name" placeholder="編集者名字" {% if method == 'POST' %} value={{editor_name}} {% endif %} >

@@ -91,6 +91,7 @@ class sidewindView(TemplateView):
             'outins':outins,
             'must_cleans':must_cleans,
             'others':others,
+            'guest_counts_json':request.POST.get('guest_counts_json', '{}'),
         }
         return render(self.request, self.template_name, context)
     

@@ -54,7 +54,8 @@ def download_json(request):
             'is_chemical_clean': is_chemical_clean,
             'is_public': is_public,
             'multiple_rooms': multiple_rooms,
-            'spots': spots
+            'spots': spots,
+            'guest_counts': json.loads(request.POST.get('guest_counts_json', '{}'))
         }
         
 

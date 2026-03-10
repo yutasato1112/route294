@@ -5,6 +5,7 @@ from ..utils.home_util import read_csv, processing_list, dist_room, room_person,
 
 import io
 import re
+import json
 import pandas as pd
 import openpyxl
 from openpyxl.styles import PatternFill, Font, Side, Border
@@ -42,9 +43,19 @@ class roomingListView(TemplateView):
         room_info_data, times_by_time_data, master_key_data = read_csv()
         room_number_list = rooms = [x[0] for x in room_info_data]
         
+        #翌日CSVから宿泊人数取得
+        guest_counts = {}
+        for _, row in tomorrow_data.iterrows():
+            room = row[10]
+            if pd.notna(room) and 7 in row.index and pd.notna(row[7]):
+                try:
+                    guest_counts[str(room)] = int(float(row[7]))
+                except (ValueError, TypeError):
+                    pass
+
         #連泊部屋リスト取得
         multiple_room_list = find_multiple_room_numbers(today_data, tomorrow_data)
-        
+
         #未使用部屋リスト取得
         unuse_room_list = find_unuse_room_numbers(today_data, room_number_list)
         
@@ -107,6 +118,7 @@ class roomingListView(TemplateView):
             'unuse_room_list': unuse_room_list,
             'editor_name': editor_name,
             'date': date,
+            'guest_counts_json': json.dumps(guest_counts, ensure_ascii=False),
         }
         return render(self.request, self.template_name, context)
         
@@ -118,7 +130,7 @@ def read_csv_from_wincal(file):
 
     # DataFrame 読み込み
     data = (
-        pd.read_csv(wrapped, header=None, usecols=[0, 10, 11, 15])
+        pd.read_csv(wrapped, header=None, usecols=[0, 7, 10, 11, 15])
           .sort_values(by=10)
     )
 
