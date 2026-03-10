@@ -93,6 +93,7 @@ class sidewindView(TemplateView):
             'others':others,
             'male_bath_person':male_bath_person,
             'female_bath_person':female_bath_person,
+            'guest_counts_json':request.POST.get('guest_counts_json', '{}'),
         }
         return render(self.request, self.template_name, context)
     

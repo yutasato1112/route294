@@ -279,6 +279,7 @@ def sidewind_front(request):
         request.session['female_bath_staff'] = []
         request.session['male_bath_only'] = []
         request.session['female_bath_only'] = []
+        request.session['guest_counts_json'] = request.POST.get('guest_counts_json', '{}')
                 
         return redirect(reverse('home'))
     return redirect(reverse('sidewind'))

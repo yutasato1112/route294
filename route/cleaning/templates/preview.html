@@ -199,7 +199,7 @@
                     <td class="main_table_content">{{forloop.counter}}</td>
                     <td class="main_table_content">
                         <div class="room_num">
-                            <div>{{room.room_num}}</div>
+                            <div>{{room.room_num}}{% if room.guest_count %}<span class="guest_count">({{room.guest_count}})</span>{% endif %}</div>
                             <div>({{room.room_type}})</div>
                         </div>
                     </td>

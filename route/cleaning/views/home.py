@@ -150,6 +150,7 @@ class homeView(TemplateView):
                 'json_loaded_flag':0,
                 'multiple_night_cleans':multiple_night_cleans_list,
                 'multiple_night_cleans_len':len(multiple_night_cleans_list)+3,
+                'guest_counts_json': request.session.get('guest_counts_json', '{}'),
             }
             return render(self.request, self.template_name, context)
         
@@ -233,6 +234,7 @@ class homeView(TemplateView):
             'multiple_night_cleans':[],
             'multiple_night_cleans_len':3,
             'soto_ame_empty_len':5,
+            'guest_counts_json': '{}',
         }
         return render(self.request, self.template_name, context)
 
@@ -251,6 +253,7 @@ class homeView(TemplateView):
 
             multiple_rooms = [r for r in multiple_room_list.split(',') if r]
             unuse_rooms = [r for r in unuse_room_list.split(',') if r]
+            guest_counts_json = request.POST.get('guest_counts_json', '{}')
             
             room_info_data, times_by_time_data, master_key_data = read_csv()
             room_num_table = processing_list(room_info_data)
@@ -310,6 +313,7 @@ class homeView(TemplateView):
                 'from_rooming_list': True,
                 'multiple_rooms': multiple_rooms,
                 'editor_name': editor_name,
+                'guest_counts_json': guest_counts_json,
                 'multiple_night_cleans':[],
                 'multiple_night_cleans_len':3,
                 'soto_ame_empty_len':5,
@@ -481,5 +485,6 @@ class homeView(TemplateView):
             'from_rooming_list': False,
             'multiple_night_cleans':multiple_night_cleans,
             'multiple_night_cleans_len':len(multiple_night_cleans)+3,
+            'guest_counts_json': json.dumps(data.get('guest_counts', {}), ensure_ascii=False),
         }
         return render(self.request, self.template_name, context)
