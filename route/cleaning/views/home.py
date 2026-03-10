@@ -34,6 +34,7 @@ class homeView(TemplateView):
             bath_time = request.session['bath_time']
             eco_rooms = request.session['eco_rooms']
             ame_rooms = request.session['ame']
+            soto_ame_rooms = request.session.get('soto_ame', [])
             duvet_rooms = request.session['duvet']
             bath_persons = request.session['bath_staff']
             multiple_rooms = request.session.get('multiple_rooms', [])
@@ -79,8 +80,8 @@ class homeView(TemplateView):
                     house_numbers.append(allocation.get(str(room_num_table[i][j])))
                 combined_rooms.append(floor_data)
             
-            #エコ・アメ・デュべ部屋の処理
-            room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms)
+            #エコ・アメ・外アメ・デュべ部屋の処理
+            room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms, soto_ame_rooms)
 
             #連泊部屋入力欄対応
             padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
@@ -111,6 +112,8 @@ class homeView(TemplateView):
                 'bath_persons': bath_persons,
                 'eco_rooms': eco_rooms,
                 'ame_rooms': ame_rooms,
+                'soto_ame_rooms': soto_ame_rooms,
+                'soto_ame_empty_len': max(5 - len(soto_ame_rooms), 1),
                 'duvet_rooms': duvet_rooms,
                 'house_len': len(set(house_numbers)),
                 'add_house_len':0,
@@ -227,11 +230,12 @@ class homeView(TemplateView):
             'add_house_len':0,
             'multiple_night_cleans':[],
             'multiple_night_cleans_len':3,
+            'soto_ame_empty_len':5,
         }
         return render(self.request, self.template_name, context)
-    
-    
-    
+
+
+
     def post(self, request, *args, **kwargs):
         method = 'POST'
 
@@ -306,6 +310,7 @@ class homeView(TemplateView):
                 'editor_name': editor_name,
                 'multiple_night_cleans':[],
                 'multiple_night_cleans_len':3,
+                'soto_ame_empty_len':5,
             }
             return render(self.request, self.template_name, context)
 
@@ -344,6 +349,7 @@ class homeView(TemplateView):
         house_person = data['house_data']
         eco_rooms = data['eco_rooms']
         ame_rooms = data['ame_rooms']
+        soto_ame_rooms = data.get('soto_ame_rooms', [])
         duvet_rooms = data['duvet_rooms']
         room_changes = data['room_changes']
         outins = data['outins']
@@ -396,8 +402,8 @@ class homeView(TemplateView):
         else:
             house_len = 1
             
-        #エコ・アメ・デュべ部屋の処理
-        room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms)
+        #エコ・アメ・外アメ・デュべ部屋の処理
+        room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms, soto_ame_rooms)
         if len(room_char_list) < 10:
             room_char_list_len = 10-len(house_person)
         else:
@@ -433,6 +439,8 @@ class homeView(TemplateView):
             'house_person': house_person,
             'eco_rooms': eco_rooms,
             'ame_rooms': ame_rooms,
+            'soto_ame_rooms': soto_ame_rooms,
+            'soto_ame_empty_len': max(5 - len(soto_ame_rooms), 1),
             'duvet_rooms': duvet_rooms,
             'house_len': house_len,
             'add_house_len':len(house_person),

@@ -96,7 +96,10 @@ def sidewind_front(request):
         #部屋処理
         eco_rooms = [int(x) for x in request.POST.getlist('eco_room') if x != '']
         eco_out_rooms = [int(x) for x in request.POST.getlist('amenity') if x != '']
+        soto_ame_rooms = [int(x) for x in request.POST.getlist('soto_ame') if x != '']
         duvet_rooms = [int(x) for x in request.POST.getlist('duvet') if x != '']
+        # アルゴリズム用：エコ外と外アメを結合
+        all_eco_out_rooms = eco_out_rooms + soto_ame_rooms
 
         #連泊入力の受け取り
         try:
@@ -121,7 +124,7 @@ def sidewind_front(request):
 
         #その他の情報を取得
         try:
-            _, _, _, _, _, bath_person, remarks, house_data, _, _, _, _, _, _, contacts, spots = catch_post(request)
+            _, _, _, _, _, bath_person, remarks, house_data, _, _, _, _, _, _, contacts, spots, _ = catch_post(request)
         except Exception as e:
             bath_person = []
             remarks = []
@@ -139,25 +142,25 @@ def sidewind_front(request):
                     room_inputs[room_number] = value.strip()
         full_clean_rooms = []
         for room, status in room_inputs.items():
-            if status != '0' and room not in eco_out_rooms and room not in eco_rooms :
+            if status != '0' and room not in all_eco_out_rooms and room not in eco_rooms :
                 full_clean_rooms.append(int(room))
         full_clean_rooms = sorted(full_clean_rooms,key=int)
-        
+
         eco_time = int(times_by_time_data[3][1])
         all_rooms = [int(x[0]) for x in room_info_data]
-        
-        no_clean_rooms = [int(r) for r in all_rooms if r not in full_clean_rooms + eco_rooms + eco_out_rooms]
-        rooms = {r: None for r in full_clean_rooms if r not in eco_rooms + eco_out_rooms}
-        
+
+        no_clean_rooms = [int(r) for r in all_rooms if r not in full_clean_rooms + eco_rooms + all_eco_out_rooms]
+        rooms = {r: None for r in full_clean_rooms if r not in eco_rooms + all_eco_out_rooms}
+
         #清掃部屋数とquotaの整合性確認
-        verify_quota_match(rooms, eco_rooms, eco_out_rooms, housekeepers, twin_rooms)
+        verify_quota_match(rooms, eco_rooms, all_eco_out_rooms, housekeepers, twin_rooms)
         
         #実行
         # bath_roomsは現時点では空リストとして扱う（将来的には大浴場の部屋番号を指定可能）
         bath_rooms = []
-        print(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
+        print(rooms, eco_rooms, all_eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
 
-        allocation = assign_rooms(rooms, eco_rooms, eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
+        allocation = assign_rooms(rooms, eco_rooms, all_eco_out_rooms, twin_rooms, bath_rooms, housekeepers, single_time, twin_time, eco_time, bath_time)
 
         
         all_allocation = allocation
@@ -168,7 +171,7 @@ def sidewind_front(request):
         print(f"\n全室数: {len(all_rooms)}室")
         print(f"清掃不要部屋: {len(no_clean_rooms)}室")
         print(f"通常清掃部屋: {len(rooms)}室")
-        print(f"エコ部屋: {len(eco_rooms)}室 / エコ外: {len(eco_out_rooms)}室")
+        print(f"エコ部屋: {len(eco_rooms)}室 / エコ外: {len(eco_out_rooms)}室 / 外アメ: {len(soto_ame_rooms)}室")
 
         #print("\n=== 自動割り当て結果（全室・上位表示） ===")
         for r in sorted(all_allocation.keys()):
@@ -177,13 +180,15 @@ def sidewind_front(request):
                 tag = "（エコ）"
             elif r in eco_out_rooms:
                 tag = "（エコ外）"
+            elif r in soto_ame_rooms:
+                tag = "（外アメ）"
             elif r in twin_rooms:
                 tag = "（ツイン）"
             #print(f"部屋 {r:4} → ハウス {all_allocation[r]} {tag}")
 
         # ---------- ハウス別集計 ----------
         print("\n=== ハウス別担当数 ===")
-        eco_set = set(eco_rooms + eco_out_rooms)
+        eco_set = set(eco_rooms + all_eco_out_rooms)
         normal_set = set(rooms.keys())  # 通常部屋のみ
 
         normal_count = {}
@@ -244,6 +249,7 @@ def sidewind_front(request):
         
         print('eco_rooms:', eco_rooms)
         print('eco_out_rooms:', eco_out_rooms)
+        print('soto_ame_rooms:', soto_ame_rooms)
         print('allocation:', sorted_allocation)
         
         #セッション
@@ -256,6 +262,7 @@ def sidewind_front(request):
         request.session['bath_time'] = bath_time
         request.session['eco_rooms'] = eco_rooms
         request.session['ame'] = eco_out_rooms
+        request.session['soto_ame'] = soto_ame_rooms
         request.session['duvet'] = duvet_rooms
         request.session['multiple_rooms'] = multiple_rooms
         request.session['multiple_night_cleans'] = multiple_night_cleans_list

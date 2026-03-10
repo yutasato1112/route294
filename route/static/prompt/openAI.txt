@@ -38,7 +38,7 @@
 {
   "today": datetime.date(...),
   "eco_rooms": [...],             # エコ部屋（文字列）
-  "ame_rooms": [...],             # 外アメ部屋（エコと同等扱い）
+  "ame_rooms": [...],             # エコ外部屋（エコと同等扱い）
   "duvet_rooms": [...],           # デュベ部屋（フル清掃扱い）
   "not_clean_required": [...],    # 清掃不要な部屋（除外）
   "house_data": [                 # 清掃者情報（番号, 名前, 属性）

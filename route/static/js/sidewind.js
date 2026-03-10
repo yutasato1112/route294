@@ -218,7 +218,7 @@ $(document).ready(function () {
 
     //エコ・アメ・デュべのカウント更新
     updateCounts(); 
-    $(document).on('input', '.input_eco, .input_amenity, .input_duvet', function () {
+    $(document).on('input', '.input_eco, .input_amenity, .input_soto_ame, .input_duvet', function () {
         updateCounts(); // 入力変更時
     });
 
@@ -245,13 +245,17 @@ $(document).ready(function () {
             e.preventDefault();
         }
     });
-    //エコ・アメ・デュべ表のエコ・デュべが入力された時の処理
-    $(document).on("input", ".input_amenity,.input_eco, .input_duvet", function () {
+    //エコ・アメ・外アメ・デュべ表のハイライト処理
+    $(document).on("input", ".input_amenity, .input_soto_ame, .input_eco, .input_duvet", function () {
         highlightRooms();
     });
-    //エコ・アメ・デュべ表のエコ・アメ・デュべが入力された時の処理
+    //エコ・アメ・デュべ表の行追加
     $(document).on("input", ".input_eco, .input_amenity, .input_duvet", function () {
         checkAndAddCleanMethodRow();
+    });
+    //外アメ入力欄の動的追加
+    $(document).on("input", ".input_soto_ame", function () {
+        checkAndAddSotoAmeInput();
     });
     //備考表の部屋番号・備考が入力された時の処理
     $(document).on("input", ".input_remark_room, .input_remark", function () {
@@ -365,7 +369,7 @@ $(document).ready(function () {
     setupNavigation(".input_amenity", "td:nth-child(2)");
     setupNavigation(".input_duvet", ".td_duvet");
 
-    //エコ・アメ・デュべのカウント更新
+    //エコ・アメ・外アメ・デュべのカウント更新
     function updateCounts() {
         const ecoCount = $('.input_eco').filter(function () {
             return $(this).val().trim() !== '';
@@ -375,12 +379,17 @@ $(document).ready(function () {
             return $(this).val().trim() !== '';
         }).length;
 
+        const sotoAmeCount = $('.input_soto_ame').filter(function () {
+            return $(this).val().trim() !== '';
+        }).length;
+
         const duvetCount = $('.input_duvet').filter(function () {
             return $(this).val().trim() !== '';
         }).length;
 
         $('#eco-count').text(`(${ecoCount})`);
         $('#amenity-count').text(`(${amenityCount})`);
+        $('#soto-ame-count').text(`(${sotoAmeCount})`);
         $('#duvet-count').text(`(${duvetCount})`);
     }
 
@@ -721,6 +730,14 @@ $(document).ready(function () {
                 $('[data-room="' + roomNumber + '"]').css('background-color', 'rgb(255, 203, 135)');
             }
         });
+
+        $('.input_soto_ame').each(function () {
+            const roomNumber = $(this).val().trim();
+            if (roomNumber !== '') {
+                ameRooms.add(roomNumber);
+                $('[data-room="' + roomNumber + '"]').css('background-color', 'rgb(255, 203, 135)');
+            }
+        });
     }
 
     //ハウスさん表で番号重複を管理
@@ -795,6 +812,19 @@ $(document).ready(function () {
             `;
 
             $("#clean_method_body").append(newRow);
+        }
+    }
+
+    //外アメ入力欄の動的追加（空欄がなくなったら1行分追加）
+    function checkAndAddSotoAmeInput() {
+        const hasEmpty = $(".input_soto_ame").filter(function () {
+            return $(this).val().trim() === "";
+        }).length > 0;
+        if (!hasEmpty) {
+            const ROW_SIZE = 5;
+            for (let i = 0; i < ROW_SIZE; i++) {
+                $("#soto_ame_inputs").append('<input type="text" name="soto_ame" class="input_soto_ame">');
+            }
         }
     }
 
@@ -941,6 +971,7 @@ $(document).ready(function () {
 
         const ecoRooms = new Set();
         const amenityRooms = new Set();
+        const sotoAmeRooms = new Set();
 
         $(".input_eco").each(function () {
             const val = $(this).val().trim();
@@ -952,6 +983,11 @@ $(document).ready(function () {
             if (val !== "") amenityRooms.add(val);
         });
 
+        $(".input_soto_ame").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") sotoAmeRooms.add(val);
+        });
+
         const roomMap = {};
         nos.forEach(no => roomMap[no] = { normal: [], eco: [] });
 
@@ -961,6 +997,8 @@ $(document).ready(function () {
                 roomMap[no].eco.push({ room, type: 'eco' });
             } else if (amenityRooms.has(room)) {
                 roomMap[no].eco.push({ room, type: 'amenity' });
+            } else if (sotoAmeRooms.has(room)) {
+                roomMap[no].eco.push({ room, type: 'soto_ame' });
             } else {
                 roomMap[no].normal.push(room);
             }
@@ -1067,6 +1105,12 @@ $(document).ready(function () {
             }
         });
         $(".input_amenity").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") {
+                ecoRooms.add(val);
+            }
+        });
+        $(".input_soto_ame").each(function () {
             const val = $(this).val().trim();
             if (val !== "") {
                 ecoRooms.add(val);

@@ -21,7 +21,7 @@ class sidewindView(TemplateView):
     def post(self, request, *args, **kwargs):
         method = 'POST'
         #データ受け取り
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
 
         #連泊入力の受け取り
         try:
@@ -58,8 +58,8 @@ class sidewindView(TemplateView):
                     if room['status'] != '' and room['status'] != 0:
                         room['status'] = ''
         
-        #エコ・アメ・デュべ部屋の処理
-        room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms)
+        #エコ・アメ・外アメ・デュべ部屋の処理
+        room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms, soto_ame_rooms)
 
         if len(room_char_list) < 10:
             room_char_list_len = 10-len(room_char_list)
@@ -77,6 +77,8 @@ class sidewindView(TemplateView):
             'room_char_list_len':room_char_list_len,
             'eco_rooms':eco_rooms,
             'ame_rooms':ame_rooms,
+            'soto_ame_rooms':soto_ame_rooms,
+            'soto_ame_empty_len': max(5 - len(soto_ame_rooms), 1),
             'duvet_rooms':duvet_rooms,
             'room_char_list':room_char_list,
             'quota_len':10,

@@ -139,7 +139,7 @@
                     <thead>
                         <tr>
                             <th class="eco_title">エコ部屋<span id="eco-count" class="count-label">(0)</span></th>
-                            <th class="ame_title">外アメ<span id="amenity-count" class="count-label">(0)</span></th>
+                            <th class="ame_title">エコ外<span id="amenity-count" class="count-label">(0)</span></th>
                             <th class="duvet_title">デュべ<span id="duvet-count" class="count-label">(0)</span></th>
                         </tr>
                     </thead>
@@ -181,6 +181,19 @@
                         {% endwith %}
                     </tbody>
                 </table>
+                <div class="soto_ame_area">
+                    <p class="soto_ame_label">外アメ<span id="soto-ame-count" class="count-label">(0)</span></p>
+                    <div class="soto_ame_inputs" id="soto_ame_inputs">
+                        {% for room in soto_ame_rooms %}
+                        <input type="text" name="soto_ame" class="input_soto_ame" value="{{ room }}">
+                        {% endfor %}
+                        {% with ''|center:soto_ame_empty_len as range %}
+                            {% for _ in range %}
+                            <input type="text" name="soto_ame" class="input_soto_ame">
+                            {% endfor %}
+                        {% endwith %}
+                    </div>
+                </div>
             </div>
         </div>
     </form>
