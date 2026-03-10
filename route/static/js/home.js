@@ -658,7 +658,7 @@ $(document).ready(function () {
                 const firstLine = floors.slice(0, 2).join(",");
                 const secondLine = floors.slice(2).join(",");
                 if (secondLine) {
-                    $row.find(".floor_cell").html(firstLine + "<br>" + secondLine);
+                    $row.find(".floor_cell").html(firstLine + ",<br>" + secondLine);
                 } else {
                     $row.find(".floor_cell").text(firstLine);
                 }
