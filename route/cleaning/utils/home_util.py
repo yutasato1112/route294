@@ -85,7 +85,7 @@ def room_person(room_num_table, room_inputs):
         combined_rooms.append(floor_data)
     return combined_rooms
 
-def room_char(eco_rooms, ame_rooms, duvet_rooms):
+def room_char(eco_rooms, ame_rooms, duvet_rooms, soto_ame_rooms=None):
     room_char = []
     eco_row = len(eco_rooms)//3
     if len(eco_rooms)%3 != 0:
@@ -97,7 +97,7 @@ def room_char(eco_rooms, ame_rooms, duvet_rooms):
     if len(duvet_rooms)%3 != 0:
         duvet_row += 1
     total_row = max(eco_row, ame_row, duvet_row)
-    
+
     for line_num in range(total_row):
         tmp_room_char = []
         #eco_room のスライスを line_num に応じて取る

@@ -110,12 +110,13 @@ def catch_post(request):
                 spots.append({"room": room, "content": content})
         
     eco_rooms = request.POST.getlist("eco_room")
-    ame_rooms = request.POST.getlist("amenity")           
-    duvet_rooms = request.POST.getlist("duvet")  
-    
+    ame_rooms = request.POST.getlist("amenity")
+    duvet_rooms = request.POST.getlist("duvet")
+    soto_ame_rooms = request.POST.getlist("soto_ame")
+
     room_info_data, times_by_time_data, master_key_data = read_csv()
     single_rooms, twin_rooms = dist_room(room_info_data)
-    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots
+    return date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms
 
 def get_cover(request):
     post = request.POST
@@ -183,7 +184,9 @@ def weekly_cleaning(date):
     week = date.strftime('%A')
     return week
     
-def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms, outins, spots, lang, rooms_by_type=None):
+def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, single_rooms, twin_rooms, multiple_rooms, outins, spots, lang, rooms_by_type=None, soto_ame_rooms=None):
+    if soto_ame_rooms is None:
+        soto_ame_rooms = []
     #ルームナンバーのリストを作成
     room_nums = []
     for key, value in room_inputs.items():
@@ -200,6 +203,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         eco = False
         duvet = False
         ame = False
+        soto_ame = False
         remark_comment = ''
         #eco_roomsのリストを作成
         if room_num in eco_rooms:
@@ -207,13 +211,19 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         #ame_roomsのリスト作成
         if room_num in ame_rooms:
             ame = True
+        #soto_ame_roomsのリスト作成
+        if room_num in soto_ame_rooms:
+            soto_ame = True
         #duvet_roomsのリストを作成
         if room_num in duvet_rooms:
             duvet = True
         #remarksのリストを作成
         if lang == 'en':
             if len(remarks) == 0:
-                if eco == True and ame == True:
+                if eco == True and soto_ame == True:
+                    if 'Outside-Amenity' not in remark_comment:
+                        remark_comment = 'Outside-Amenity　' + remark_comment
+                elif eco == True and ame == True:
                     if 'Eco-Outside' not in remark_comment:
                         remark_comment = 'Eco-Outside　' + remark_comment
                 elif eco == True:
@@ -228,23 +238,32 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
                             remark_comment = remark_comment + '　' + remark_tran
                         else:
                             remark_comment = remark_tran
-                        if eco == True and ame == True:
+                        if eco == True and soto_ame == True:
+                            if 'Outside-Amenity' not in remark_comment:
+                                remark_comment = 'Outside-Amenity　' + remark_comment
+                        elif eco == True and ame == True:
                             if 'Eco-Outside' not in remark_comment:
                                 remark_comment = 'Eco-Outside　' + remark_comment
                         elif eco == True:
                             if 'Eco' not in remark_comment:
                                 remark_comment = 'Eco　' + remark_comment
                     else:
-                        if eco == True and ame == True:
+                        if eco == True and soto_ame == True:
+                            if 'Outside-Amenity' not in remark_comment:
+                                remark_comment = 'Outside-Amenity　' + remark_comment
+                        elif eco == True and ame == True:
                             if 'Eco-Outside' not in remark_comment:
                                 remark_comment = 'Eco-Outside　' + remark_comment
                         elif eco == True:
                             if 'Eco' not in remark_comment:
                                 remark_comment = 'Eco　' + remark_comment
-        
+
         else:
             if len(remarks) == 0:
-                if eco == True and ame == True:
+                if eco == True and soto_ame == True:
+                    if '外アメ' not in remark_comment:
+                        remark_comment = '外アメ　' + remark_comment
+                elif eco == True and ame == True:
                     if 'エコ外' not in remark_comment:
                         remark_comment = 'エコ外　' + remark_comment
                 elif eco == True:
@@ -258,14 +277,20 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
                             remark_comment = remark_comment + '　' + remark['comment']
                         else:
                             remark_comment = remark['comment']
-                        if eco == True and ame == True:
+                        if eco == True and soto_ame == True:
+                            if '外アメ' not in remark_comment:
+                                remark_comment = '外アメ　' + remark_comment
+                        elif eco == True and ame == True:
                             if 'エコ外' not in remark_comment:
                                 remark_comment = 'エコ外　' + remark_comment
                         elif eco == True:
                             if 'エコ' not in remark_comment:
                                 remark_comment = 'エコ　' + remark_comment
                     else:
-                        if eco == True and ame == True:
+                        if eco == True and soto_ame == True:
+                            if '外アメ' not in remark_comment:
+                                remark_comment = '外アメ　' + remark_comment
+                        elif eco == True and ame == True:
                             if 'エコ外' not in remark_comment:
                                 remark_comment = 'エコ外　' + remark_comment
                         elif eco == True:
@@ -317,7 +342,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         if multiple_rooms and room_num in multiple_rooms:
             multiple = True
         else:
-            if room_num in eco_rooms or room_num in ame_rooms or room_num in duvet_rooms:
+            if room_num in eco_rooms or room_num in ame_rooms or room_num in soto_ame_rooms or room_num in duvet_rooms:
                 multiple = True
             else:
                 multiple = False
@@ -398,8 +423,8 @@ def search_remarks_name_list(key_name_list, rooms):
             spot_comment = room.get("spot_content", "").strip()
             if remark:  # 備考がある場合のみ
                 result_remarks = remark
-                if "エコ" in remark or "エコ外" in remark or "Eco" in remark or "Eco-Outside" in remark:
-                    result_remarks = result_remarks.replace("エコ外", "").replace("エコ", "").replace("Eco-Outside", "").replace("Eco", "").strip()
+                if "エコ" in remark or "エコ外" in remark or "外アメ" in remark or "Eco" in remark or "Eco-Outside" in remark or "Outside-Amenity" in remark:
+                    result_remarks = result_remarks.replace("外アメ", "").replace("エコ外", "").replace("エコ", "").replace("Outside-Amenity", "").replace("Eco-Outside", "").replace("Eco", "").strip()
                 if spot_comment in result_remarks:
                     result_remarks = result_remarks.replace(spot_comment, "").strip()
                 if result_remarks is not None and result_remarks.strip():

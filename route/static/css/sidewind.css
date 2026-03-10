@@ -478,6 +478,42 @@ input[type="number"]::-webkit-inner-spin-button {
 /* .duvet_title{
     background-color: lightblue!important;
 } */
+.second_right > table:last-of-type{
+    margin-bottom: 0;
+}
+.soto_ame_area{
+    display: flex;
+    align-items: flex-start;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid #eee;
+}
+.soto_ame_label{
+    background-color: rgb(255, 203, 135);
+    font-weight: bold;
+    font-size: 12px;
+    white-space: nowrap;
+    padding: 4px 8px;
+    margin: 0 0 0 0;
+    flex-shrink: 0;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+}
+.soto_ame_label.count-label{
+    margin: 0;
+}
+.soto_ame_inputs{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 2px 6px;
+    flex: 1;
+    min-width: 0;
+}
+.input_soto_ame{
+    width: 3vw;
+}
 
 
 .input_multiple_night_room{

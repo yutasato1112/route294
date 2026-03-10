@@ -16,7 +16,7 @@ class previewView(TemplateView):
     
     def post(self, request, *args, **kwargs):
         #データ受け取り
-        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots = catch_post(request)
+        date, single_time, twin_time, bath_time, room_inputs, bath_person, remarks, house_data, eco_rooms, ame_rooms, duvet_rooms, single_rooms, twin_rooms, editor_name, contacts, spots, soto_ame_rooms = catch_post(request)
 
         #動的ルームタイプデータ
         room_type_times = get_room_type_times(request)
@@ -36,7 +36,12 @@ class previewView(TemplateView):
         #ameがTrueの時にecoもTrueにする
         ame_rooms.remove('')
         eco_rooms.remove('')
+        soto_ame_rooms.remove('')
         for i in ame_rooms:
+            if i not in eco_rooms:
+                eco_rooms.append(i)
+        #soto_ameがTrueの時にecoもTrueにする
+        for i in soto_ame_rooms:
             if i not in eco_rooms:
                 eco_rooms.append(i)
         
@@ -70,10 +75,10 @@ class previewView(TemplateView):
         #DDリストの作成
         rooms = []
         for i in range(pages):
-            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms, multiple_rooms,outins, spots, 'ja', rooms_by_type=rooms_by_type)
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms, multiple_rooms,outins, spots, 'ja', rooms_by_type=rooms_by_type, soto_ame_rooms=soto_ame_rooms)
             rooms.append(room)
         DD_list = calc_DD_list(house_data)
-   
+
         total_data = []
         #パーソンごとにデータを整理
         key_name_list = []
@@ -84,13 +89,13 @@ class previewView(TemplateView):
                 lang = 'en'
             else:
                 lang = 'ja'
-                
+
             name = house_data[i][1]
             key_name_list.append([house_data[i][0],name])
             key = house_data[i][2]
             bath = is_bath(bath_person, i+1)
             weekly = weekly_cleaning(date)
-            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins,spots, lang, rooms_by_type=rooms_by_type)
+            room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins,spots, lang, rooms_by_type=rooms_by_type, soto_ame_rooms=soto_ame_rooms)
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=room_type_times)
             date_jp = changeDate(date,lang)
