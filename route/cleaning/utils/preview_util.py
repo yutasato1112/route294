@@ -217,10 +217,13 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         #duvet_roomsのリストを作成
         if room_num in duvet_rooms:
             duvet = True
+        #外アメの場合はエコ欄にマークをつけない
+        if soto_ame:
+            eco = False
         #remarksのリストを作成
         if lang == 'en':
             if len(remarks) == 0:
-                if eco == True and soto_ame == True:
+                if soto_ame == True:
                     if 'Outside-Amenity' not in remark_comment:
                         remark_comment = 'Outside-Amenity　' + remark_comment
                 elif eco == True and ame == True:
@@ -238,7 +241,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
                             remark_comment = remark_comment + '　' + remark_tran
                         else:
                             remark_comment = remark_tran
-                        if eco == True and soto_ame == True:
+                        if soto_ame == True:
                             if 'Outside-Amenity' not in remark_comment:
                                 remark_comment = 'Outside-Amenity　' + remark_comment
                         elif eco == True and ame == True:
@@ -248,7 +251,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
                             if 'Eco' not in remark_comment:
                                 remark_comment = 'Eco　' + remark_comment
                     else:
-                        if eco == True and soto_ame == True:
+                        if soto_ame == True:
                             if 'Outside-Amenity' not in remark_comment:
                                 remark_comment = 'Outside-Amenity　' + remark_comment
                         elif eco == True and ame == True:
@@ -260,7 +263,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
 
         else:
             if len(remarks) == 0:
-                if eco == True and soto_ame == True:
+                if soto_ame == True:
                     if '外アメ' not in remark_comment:
                         remark_comment = '外アメ　' + remark_comment
                 elif eco == True and ame == True:
@@ -277,7 +280,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
                             remark_comment = remark_comment + '　' + remark['comment']
                         else:
                             remark_comment = remark['comment']
-                        if eco == True and soto_ame == True:
+                        if soto_ame == True:
                             if '外アメ' not in remark_comment:
                                 remark_comment = '外アメ　' + remark_comment
                         elif eco == True and ame == True:
@@ -287,7 +290,7 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
                             if 'エコ' not in remark_comment:
                                 remark_comment = 'エコ　' + remark_comment
                     else:
-                        if eco == True and soto_ame == True:
+                        if soto_ame == True:
                             if '外アメ' not in remark_comment:
                                 remark_comment = '外アメ　' + remark_comment
                         elif eco == True and ame == True:
