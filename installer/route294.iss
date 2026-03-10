@@ -47,7 +47,6 @@ Source: "build\route\*"; DestDir: "{app}\route"; Flags: ignoreversion recursesub
 ; Launcher scripts
 Source: "build\launcher.bat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "build\stop.bat"; DestDir: "{app}"; Flags: ignoreversion
-Source: "build\first_setup.bat"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\route\logs"; Permissions: users-modify
@@ -60,13 +59,9 @@ Name: "{autodesktop}\Route294"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "
 ; Start Menu shortcuts
 Name: "{group}\Route294"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\route\static\favicon.ico"; Tasks: startmenuicon
 Name: "{group}\Route294 停止"; Filename: "{app}\stop.bat"; WorkingDir: "{app}"; IconFilename: "{app}\route\static\favicon.ico"; Tasks: startmenuicon
-Name: "{group}\初回セットアップ"; Filename: "{app}\first_setup.bat"; WorkingDir: "{app}"; Tasks: startmenuicon
 Name: "{group}\アンインストール"; Filename: "{uninstallexe}"; Tasks: startmenuicon
 
 [Run]
-; Run initial migration after install
-Filename: "{app}\python\python.exe"; Parameters: "manage.py migrate --run-syncdb"; WorkingDir: "{app}\route"; StatusMsg: "データベースを初期化しています..."; Flags: runhidden waituntilterminated
-
 ; Optionally launch after install
 Filename: "{app}\{#MyAppExeName}"; Description: "Route294 を起動する"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent shellexec
 
