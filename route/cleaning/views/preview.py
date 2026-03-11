@@ -113,9 +113,12 @@ class previewView(TemplateView):
             bath_count = (1 if m_bath else 0) + (1 if f_bath else 0)
             weekly = weekly_cleaning(date)
             room, floor = calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, i+1, single_rooms, twin_rooms,multiple_rooms,outins,spots, lang, rooms_by_type=rooms_by_type, soto_ame_rooms=soto_ame_rooms)
-            #宿泊人数を各部屋に追加
+            #宿泊人数を連泊中の部屋のみに追加
             for r in room:
-                r['guest_count'] = guest_counts.get(r['room_num'], '')
+                if r.get('multiple'):
+                    r['guest_count'] = guest_counts.get(r['room_num'], '')
+                else:
+                    r['guest_count'] = ''
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=room_type_times, bath_count=bath_count)
             date_jp = changeDate(date,lang)
