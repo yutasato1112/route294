@@ -118,9 +118,7 @@ REM Create empty directories
 if not exist "%BUILD_DIR%\route\logs" mkdir "%BUILD_DIR%\route\logs"
 if not exist "%BUILD_DIR%\route\media" mkdir "%BUILD_DIR%\route\media"
 
-REM Remove sensitive files if present
-del "%BUILD_DIR%\route\static\email.json" 2>nul
-del "%BUILD_DIR%\route\static\openai.json" 2>nul
+REM 限定公開のため、email.json / openai.json はそのまま含める
 
 REM ----------------------------------------
 REM 6. Build installer with Inno Setup

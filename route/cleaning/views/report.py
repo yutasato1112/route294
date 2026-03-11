@@ -82,8 +82,9 @@ class reportView(TemplateView):
         message = "送信者：" + name + "\n" + "緊急度：" + emargency_level + "\n" + "ジャンル：" + genre + "\n" + "詳細：" + detail
 
         #送信先取得
-        if os.path.exists(os.path.join('static/email.json')):
-            with open(os.path.join('static/email.json')) as email_file:
+        email_json_path = os.path.join(settings.BASE_DIR, 'static', 'email.json')
+        if os.path.exists(email_json_path):
+            with open(email_json_path) as email_file:
                 email_info = json.load(email_file)
         else:
             context = {'error': 'email.json が見つかりません。管理画面からメール設定を行ってください。'}

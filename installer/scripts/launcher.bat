@@ -25,6 +25,11 @@ REM Create logs/media directories if missing
 if not exist "%ROUTE_DIR%\logs" mkdir "%ROUTE_DIR%\logs"
 if not exist "%ROUTE_DIR%\media" mkdir "%ROUTE_DIR%\media"
 
+REM Create default email.json if missing
+if not exist "%ROUTE_DIR%\static\email.json" (
+    echo {"address": "", "password": "", "developer_address": ""} > "%ROUTE_DIR%\static\email.json"
+)
+
 REM Run initial setup (migrations) if DB doesn't exist
 if not exist "%ROUTE_DIR%\db.sqlite3" (
     echo 初回セットアップを実行しています...
