@@ -79,28 +79,3 @@ Type: filesandordirs; Name: "{app}\python\Lib\site-packages\__pycache__"
 [Messages]
 WelcomeLabel2=Route294（ホテル清掃指示書作成システム）をインストールします。%n%nこのソフトウェアはローカルWebサーバーとして動作します。%nインストール後、デスクトップのショートカットからワンクリックで起動できます。
 
-[Code]
-// Check if port 8000 is already in use
-function IsPortInUse(): Boolean;
-var
-  ResultCode: Integer;
-begin
-  Result := False;
-  if Exec('cmd.exe', '/c netstat -an | findstr ":8000.*LISTENING"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
-    Result := (ResultCode = 0);
-end;
-
-function NextButtonClick(CurPageID: Integer): Boolean;
-begin
-  Result := True;
-  if CurPageID = wpReady then
-  begin
-    if IsPortInUse() then
-    begin
-      MsgBox('ポート 8000 が既に使用されています。' + #13#10 +
-             '他のRoute294インスタンスまたはアプリケーションを終了してからインストールしてください。',
-             mbError, MB_OK);
-      Result := False;
-    end;
-  end;
-end;

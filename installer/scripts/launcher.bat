@@ -39,20 +39,6 @@ if not exist "%ROUTE_DIR%\db.sqlite3" (
     echo.
 )
 
-REM Start Django server
-echo サーバーを起動しています...
-echo.
-echo  ブラウザで http://localhost:8000/ が開きます。
-echo  このウィンドウを閉じるとサーバーが停止します。
-echo.
-echo  ────────────────────────────────────────
-echo.
-
-cd /d "%ROUTE_DIR%"
-
-REM Open browser after 2 second delay
-start "" cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:8000/"
-
 REM Pre-check: verify Django can be imported
 "%PYTHON_EXE%" -c "import django" 2>&1
 if errorlevel 1 (
@@ -64,8 +50,38 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Find an available port starting from 8000
+set PORT=8000
+
+:find_port
+netstat -an | findstr ":%PORT% .*LISTENING" >nul 2>&1
+if %errorlevel%==0 (
+    echo ポート %PORT% は使用中です。次のポートを試します...
+    set /a PORT+=1
+    if %PORT% GEQ 8100 (
+        echo ERROR: 利用可能なポートが見つかりませんでした（8000-8099）。
+        pause
+        exit /b 1
+    )
+    goto find_port
+)
+
+REM Start Django server
+echo サーバーを起動しています...（ポート: %PORT%）
+echo.
+echo  ブラウザで http://localhost:%PORT%/ が開きます。
+echo  このウィンドウを閉じるとサーバーが停止します。
+echo.
+echo  ────────────────────────────────────────
+echo.
+
+cd /d "%ROUTE_DIR%"
+
+REM Open browser after 2 second delay
+start "" cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:%PORT%/"
+
 REM Start Django development server (blocks until Ctrl+C or window close)
-"%PYTHON_EXE%" manage.py runserver localhost:8000 2>&1
+"%PYTHON_EXE%" manage.py runserver localhost:%PORT% 2>&1
 
 if errorlevel 1 (
     echo.
