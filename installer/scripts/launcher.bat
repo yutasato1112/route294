@@ -48,9 +48,31 @@ cd /d "%ROUTE_DIR%"
 REM Open browser after 2 second delay
 start "" cmd /c "timeout /t 2 /nobreak >nul && start http://localhost:8000/"
 
+REM Pre-check: verify Django can be imported
+"%PYTHON_EXE%" -c "import django" 2>&1
+if errorlevel 1 (
+    echo.
+    echo ERROR: Django が正しくインストールされていません。
+    echo 再インストールしてください。
+    echo.
+    pause
+    exit /b 1
+)
+
 REM Start Django development server (blocks until Ctrl+C or window close)
 "%PYTHON_EXE%" manage.py runserver localhost:8000 2>&1
 
+if errorlevel 1 (
+    echo.
+    echo ════════════════════════════════════════
+    echo  ERROR: サーバーの起動に失敗しました。
+    echo  上記のエラーメッセージを確認してください。
+    echo ════════════════════════════════════════
+    echo.
+    pause
+    exit /b 1
+)
+
 echo.
 echo サーバーが停止しました。
-timeout /t 2 /nobreak >nul
+pause

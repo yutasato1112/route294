@@ -86,8 +86,8 @@ class reportView(TemplateView):
             with open(os.path.join('static/email.json')) as email_file:
                 email_info = json.load(email_file)
         else:
-            print('email.json could not be found.')
-            quit()
+            context = {'error': 'email.json が見つかりません。管理画面からメール設定を行ってください。'}
+            return render(self.request, self.template_name, context)
 
         #メール送信（過去24時間のログを.logファイルとして添付）
         email = EmailMessage(

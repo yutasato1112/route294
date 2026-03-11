@@ -138,17 +138,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if os.path.exists(os.path.join('static/email.json')):
     with open(os.path.join('static/email.json')) as email_file:
         email_info = json.load(email_file)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = email_info['address']
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    EMAIL_HOST_PASSWORD = email_info['password']
 else:
-    print('email.json could not be found.')
-    quit()
-    
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend' 
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = email_info['address']
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER 
-EMAIL_HOST_PASSWORD = email_info['password']
+    print('WARNING: email.json が見つかりません。メール機能は無効です。')
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 #logging
 today = datetime.date.today().strftime('%Y%m%d')

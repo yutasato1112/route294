@@ -34,8 +34,8 @@ LanguageDetectionMethod=uilanguage
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "デスクトップにショートカットを作成"; GroupDescription: "追加オプション:"; Flags: checked
-Name: "startmenuicon"; Description: "スタートメニューにショートカットを作成"; GroupDescription: "追加オプション:"; Flags: checked
+Name: "desktopicon"; Description: "デスクトップにショートカットを作成"; GroupDescription: "追加オプション:"
+Name: "startmenuicon"; Description: "スタートメニューにショートカットを作成"; GroupDescription: "追加オプション:"
 
 [Files]
 ; Python Embedded + packages
