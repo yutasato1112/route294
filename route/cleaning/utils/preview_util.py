@@ -472,16 +472,119 @@ def add_rc(total_data, room_changes_person):
     return total_data
 
 def split_contact_textarea(contact_text):
-    def split_by_length(s, max_len=20):
-        return [s[i:i+max_len] for i in range(0, len(s), max_len)]
+    # --- 表示幅の定数 ---
+    # .note の実効幅: 210mm * 0.9 * 0.6 * 0.9 ≈ 102mm
+    # font-size 18px → 全角1文字 ≈ 4.76mm → 約 21.4 全角文字分
+    _MAX_WIDTH = 21.0  # 全角換算の最大表示幅
+
+    # 日本語接続詞（この位置の直前で改行すると読みやすい）長い語優先でソート済み
+    _JA_CONJUNCTIONS = sorted((
+        'しかし', 'しかしながら', 'ただし', 'ただ',
+        'また', 'および', 'ならびに', 'もしくは',
+        'そして', 'それから', 'さらに', 'なお',
+        'つまり', 'すなわち', 'よって', 'したがって',
+        'だから', 'そのため', 'このため',
+        'けれど', 'けれども', 'だが', 'でも',
+        'それで', 'そこで', 'ところが', 'ところで',
+    ), key=len, reverse=True)
+    # 英語接続詞・前置詞（スペースの直後にこれらが来る位置で改行）
+    _EN_CONJUNCTIONS = {
+        'and', 'but', 'or', 'so', 'then', 'also',
+        'however', 'because', 'therefore', 'finally',
+        'please', 'after', 'before', 'until', 'since',
+    }
+    # 直後で切って良い文字（句読点・括弧閉じ等）全角・半角両対応
+    _BREAK_AFTER = set('、。！？　・）】」』,.!?;:)]')
+    # 直前で切って良い文字（括弧開き等）
+    _BREAK_BEFORE = set('（【「『([')
+    # 助詞（直後で切って良い）― 句読点・接続詞より優先度低
+    _PARTICLES = set('はがをにでともへより')
+
+    def _char_width(c):
+        """全角=1.0, 半角=0.5 として文字の表示幅を返す。"""
+        import unicodedata
+        eaw = unicodedata.east_asian_width(c)
+        # F(Fullwidth), W(Wide), A(Ambiguous=東アジアでは全角扱い)
+        return 1.0 if eaw in ('F', 'W', 'A') else 0.5
+
+    def _text_width(s):
+        """文字列の表示幅を全角換算で返す。"""
+        return sum(_char_width(c) for c in s)
+
+    def _max_chars_in_width(s, max_w):
+        """s の先頭から表示幅 max_w に収まる最大文字数を返す。"""
+        w = 0.0
+        for i, c in enumerate(s):
+            w += _char_width(c)
+            if w > max_w:
+                return i
+        return len(s)
+
+    def _is_en_conjunction_at(s, i):
+        """位置 i が英語の接続詞の語頭（直前がスペース）かを判定。"""
+        if i == 0 or s[i - 1] != ' ':
+            return False
+        rest = s[i:]
+        space_pos = rest.find(' ')
+        word = rest[:space_pos] if space_pos != -1 else rest
+        return word.lower() in _EN_CONJUNCTIONS
+
+    def _find_break(s, char_limit):
+        """char_limit 付近で自然な切れ目を探す。見つからなければ None。"""
+        search_start = max(char_limit // 3, 1)
+        # 第1優先: 句読点・括弧・接続詞（日英両対応）
+        for i in range(char_limit, search_start, -1):
+            if s[i - 1] in _BREAK_AFTER:
+                return i
+            if s[i] in _BREAK_BEFORE:
+                return i
+            # 日本語接続詞
+            for conj in _JA_CONJUNCTIONS:
+                if s[i:].startswith(conj):
+                    return i
+            # 英語接続詞（語境界チェック付き）
+            if _is_en_conjunction_at(s, i):
+                return i
+        # 第2優先: 助詞の直後 / 英語の単語境界（スペース直後）
+        for i in range(char_limit, search_start, -1):
+            if s[i - 1] in _PARTICLES:
+                return i
+            if s[i - 1] == ' ':
+                return i
+        return None
+
+    def split_by_width(s):
+        if not s:
+            return ['']
+        if _text_width(s) <= _MAX_WIDTH:
+            return [s]
+        results = []
+        while s:
+            s = s.lstrip(' ')
+            if not s:
+                break
+            if _text_width(s) <= _MAX_WIDTH:
+                results.append(s)
+                break
+            # 表示幅に収まる最大文字数を算出
+            char_limit = _max_chars_in_width(s, _MAX_WIDTH)
+            if char_limit < 1:
+                char_limit = 1
+            # 自然な切れ目を探索
+            pos = _find_break(s, char_limit)
+            if pos is None:
+                pos = char_limit
+            results.append(s[:pos].rstrip(' '))
+            s = s[pos:]
+        return results
 
     # 改行コードの統一
     lines = contact_text.replace('\r\n', '\n').replace('\r', '\n').split('\n')
 
-    # 各行を20文字ごとに分割し、flattenする
+    # 表示幅に収まらない行のみ自然な位置で分割し、flattenする
     processed_lines = []
     for line in lines:
-        processed_lines.extend(split_by_length(line.strip(), 20))
+        processed_lines.extend(split_by_width(line.strip()))
 
     # contact_1～contact_4までを取り、残りはcontact_4にまとめて格納
     contact_1 = processed_lines[0] if len(processed_lines) > 0 else ''
