@@ -4,6 +4,7 @@
 	width: 210mm;
 	height: 297mm;
     margin: 0 auto;
+    overflow: hidden;
 }
 
 .title{
@@ -169,6 +170,7 @@ td{
     text-align: center;
     margin: auto;
     border-bottom: 1px solid black;
+    border-top: 1px solid black;
     font-size: 15px;
     font-weight: bold;
 }
@@ -223,6 +225,32 @@ td{
 
 .stamp_table{
     height: 47px;
+}
+.linen_label{
+    font-size: 0.8rem;
+    line-height: 1;
+    white-space: nowrap;
+    width: 1%;
+    padding: 8px 10px !important;
+}
+.linen_lock_label{
+    white-space: normal;
+    width: 5em;
+}
+.linen_write{
+    width: auto;
+}
+.key_instructions{
+    width: 90%;
+    margin: 0 auto;
+    font-size: 0.95rem;
+}
+.linen_stamp{
+    width: 47px;
+    height: 47px;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
 }
 .forget_table{
     width: 90%;
@@ -335,9 +363,10 @@ td{
 .Amemo{
     line-height: 1;
     position: relative;
-    top: -15px;
     margin-bottom: 0;
     padding-bottom: 0;
+    width: 90%;
+    margin: auto;
 }
 
 .cover_outin_roomchange{
@@ -413,6 +442,28 @@ td{
 }
 .mark_color{
     color: red;
+}
+
+/* English version adjustments */
+.lang_en .bottom_left_left{
+    font-size: 13px;
+}
+.lang_en .linen_label{
+    white-space: normal;
+    width: 20%;
+    font-size: 0.7rem;
+}
+.lang_en .linen_lock_label{
+    width: 15%;
+}
+.lang_en .key_instructions{
+    font-size: 0.8rem;
+}
+.lang_en .note{
+    font-size: 14px;
+}
+.affilication_en{
+    top: -55px !important;
 }
 
 @media print {

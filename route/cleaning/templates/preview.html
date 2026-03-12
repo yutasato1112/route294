@@ -171,7 +171,7 @@
 
 </div>
 {% for person_data in data %}
-<div class="preview_container">
+<div class="preview_container lang_{{ person_data.lang }}">
     <div class="title">
         <p class="cleaner">{{ person_data.charge }}</p>
         <p class="name">{{person_data.name}}</p>
@@ -204,13 +204,14 @@
                         </div>
                     </td>
                     {% if room.multiple == True %}
-                    <td class="content_mark main_table_content mark_color">●</td>
+                    <!-- <td class="content_mark main_table_content mark_color">○</td> -->
+                    <td class="content_mark main_table_content">○</td>
                     {% else %}
                     <td class="main_table_content"><!--連泊(空欄)--></td>
                     {% endif %}
                     <td class="main_table_content"><!--C/O(空白)--></td>
                     {% if room.eco == True %}
-                    <td class="content_mark main_table_content">★</td>
+                    <td class="content_mark main_table_content">ｴｺ</td>
                     {% else %}
                     <td></td>
                     {% endif %}
@@ -273,6 +274,17 @@
                     <tr>
                         <td class="bottom_left_left">{{ person_data.spot_cleaning }}・<br>{{ person_data.meating }}</td>
                         <td class="bottom_left_right">：</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="table table-bordered bottom_table linen_table">
+                <tbody>
+                    <tr>
+                        <td class="linen_label">{{ person_data.assigned_linen_closet }}<br>{{ person_data.stock_check }}</td>
+                        <td class="linen_write"></td>
+                        <td class="linen_label linen_lock_label">{{ person_data.linen_closet_lock }}{{ person_data.linen_closet_lock_2 }}</td>
+                        <td class="linen_stamp">{{ person_data.sign }}</td>
+                    </tr>
                 </tbody>
             </table>
             <table class="table table-bordered stamp_table bottom_table">
@@ -287,32 +299,22 @@
                     </tr>
                 </tbody>
             </table>
-            <p class="Amemo">{{ person_data.room_type_count_str }}</p>
+            <!--<p class="Amemo">{{ person_data.room_type_count_str }}</p>-->
         </div>
         <div class="bottom_line_right">
             <!--連絡事項-->
-            <p class="note_title note">[{{ person_data.notice }}]　　{% if person_data.DD_list != None  %}<span class="dd_data">{{ person_data.DD_list }}</span>{% endif %}</p>
+            <!-- <p class="note_title note">[{{ person_data.notice }}]　　{% if person_data.DD_list != None  %}<span class="dd_data">{{ person_data.DD_list }}</span>{% endif %}</p> -->
+             <p class="note_title note">[{{ person_data.notice }}]</p>
             <p class="note">{{person_data.contact_1}}</p>
             <p class="note">{{person_data.contact_2}}</p>
             <p class="note">{{person_data.contact_3}}</p>
             <p class="note">{{person_data.contact_4}}</p>
 
-            <table class="special_menu bottom_table">
-                <tbody>
-                    <tr>
-                        <td class="special_menu_title">{{ person_data.special_cleaning }}</td>
-                        <td>{{ person_data.line_first }}</td>
-                        <td rowspan="2" class="air_block">
-                            <div>{{ person_data.airconditioner_filter_cleaning }}</div>
-                            <div class="num_air">{{ person_data.units }}</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>{{ person_data.line_second }}</td>
-                        <td>{{ person_data.line_third }}</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="key_instructions">
+                <p>{{ person_data.key_instructions }}</p>
+            </div>
+
+
             <p class="weekly">{{person_data.weekly}}</p>
             <table class="table table-bordered forget_table bottom_table">
                 <thead>
@@ -334,17 +336,20 @@
                         <td></td>
                         <td></td>
                     </tr>
+                    <!--
                     <tr class="forget_col">
                         <td></td>
                         <td></td>
                         <td></td>
                         <td></td>
                     </tr>
+                    -->
                 </tbody>
             </table>
+            <p class="Amemo">{{ person_data.room_type_count_str }}</p>
         </div>
     </div>
-    <div class="affilication">
+    <div class="affilication {% if person_data.lang == 'en' %}affilication_en{% endif %}">
         <p class="aff">{{ person_data.hotel_name }}</p>
         <p class="aff">{{ person_data.declaration }}</p>
         <p class="sign">{{ person_data.signature }}</p>
