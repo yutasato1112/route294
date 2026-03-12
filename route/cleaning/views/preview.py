@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 
 import json
-from ..utils.preview_util import catch_post, is_bath, is_male_bath, is_female_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean, multiple_night, language, get_room_type_times
+from ..utils.preview_util import catch_post, is_bath, is_male_bath, is_female_bath, weekly_cleaning,calc_room, calc_end_time, changeDate, search_bath_person, search_remarks_name_list, get_cover, select_person_from_room_change, add_rc, split_contact_textarea, calc_room_type_count, calc_DD_list, calc_cover_remarks, special_clean, multiple_night, language, get_room_type_times, get_csv_preview_labels
 from ..utils.home_util import read_csv, parse_room_types, dist_room_by_type
 
 # Create your views here.
@@ -242,6 +242,9 @@ class previewView(TemplateView):
             second = '　　　'+outins[i+1] if i + 1 < len(outins) else '　　　　　'
             outins_list.append((first, second))
             
+        # 表紙用ラベル（日本語）をCSVから取得
+        cover_labels = get_csv_preview_labels().get('ja', {})
+
         context = {
             'data':total_data,
             'editor_name': editor_name,
@@ -262,5 +265,6 @@ class previewView(TemplateView):
             'is_chemical_clean': is_chemical_clean,
             'is_public': is_public,
             'multiple_rooms': multiple_rooms,
+            'cl': cover_labels,
         }
         return render(self.request, self.template_name, context)
