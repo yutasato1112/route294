@@ -7,154 +7,154 @@
 <script src="{% static 'js/preview.js' %}"></script>
 
 <div class="preview_container">
-    <p class="cover_title">清掃指示内容</p>
+    <p class="cover_title">{{ cl.cover_title }}</p>
     <div class="cover_second_line">
         <p>{{date}}</p>
         <div class="house_people">
-            <p>ハウスさん</p>
+            <p>{{ cl.cover_house_person }}</p>
             <p>{{house_person_count}}</p>
-            <p>名</p>
+            <p>{{ cl.cover_people_counter }}</p>
         </div>
     </div>
     <div class="cleaning_room_num">
-        <p>ナイト清掃指示部屋総数</p>
+        <p>{{ cl.cover_night_total }}</p>
         <p class="total_rooms">　{{total_cleaning_room}}　</p>
-        <p>部屋</p>
+        <p>{{ cl.cover_rooms_unit }}</p>
     </div>
-    <p class="cover_semi_title">大浴場担当者 {% if is_drain_water %}+ 湯抜き{% endif %} {% if is_highskite %}+ ハイスキット{% endif %}  {% if is_chlorine %}+ 高濃度塩素消毒{% endif %}  {% if is_chemical_clean %}+ 循環配管薬品洗浄{% endif %}  {% if is_public %}+ パブリック{% endif %}</p>
+    <p class="cover_semi_title">{{ cl.cover_bath_person }} {% if is_drain_water %}+ {{ cl.cover_drain_water }}{% endif %} {% if is_highskite %}+ {{ cl.cover_highskite }}{% endif %}  {% if is_chlorine %}+ {{ cl.cover_chlorine }}{% endif %}  {% if is_chemical_clean %}+ {{ cl.cover_chemical_clean }}{% endif %}  {% if is_public %}+ {{ cl.cover_public }}{% endif %}</p>
     <div class="bath_persons">
         {% for person in bath_person %}
         <p>{{person}}</p>
-        <p>さん　</p>
+        <p>{{ cl.cover_honorific }}　</p>
         {% endfor %}
     </div>
-    <p class="cover_semi_title">ルームチェンジ</p>
+    <p class="cover_semi_title">{{ cl.cover_room_change }}</p>
     {% for room_change in room_changes_persons %}
     <div class="room_change">
         <p>　　{{room_change.original}}</p>
-        <p>号室</p>
+        <p>{{ cl.cover_room_unit }}</p>
         <p>　　{{room_change.original_name}}</p>
-        <p>さん　　　</p>
+        <p>{{ cl.cover_honorific }}　　　</p>
         <p>→</p>
         <p>　　{{room_change.destination}}</p>
-        <p>号室</p>
+        <p>{{ cl.cover_room_unit }}</p>
         <p>　　{{room_change.destination_name}}</p>
-        <p>さん</p>
+        <p>{{ cl.cover_honorific }}</p>
     </div>
     {% endfor %}
     <div class="room_change">
         <p>　　　　　</p>
-        <p>号室</p>
+        <p>{{ cl.cover_room_unit }}</p>
         <p>　　　　　</p>
-        <p>さん　　　</p>
+        <p>{{ cl.cover_honorific }}　　　</p>
         <p>→</p>
         <p>　　　　　　</p>
-        <p>号室</p>
+        <p>{{ cl.cover_room_unit }}</p>
         <p>　　　　　</p>
-        <p>さん</p>
+        <p>{{ cl.cover_honorific }}</p>
     </div>
     <div class="room_change">
         <p>　　　　　</p>
-        <p>号室</p>
+        <p>{{ cl.cover_room_unit }}</p>
         <p>　　　　　</p>
-        <p>さん　　　</p>
+        <p>{{ cl.cover_honorific }}　　　</p>
         <p>→</p>
         <p>　　　　　　</p>
-        <p>号室</p>
+        <p>{{ cl.cover_room_unit }}</p>
         <p>　　　　　</p>
-        <p>さん</p>
+        <p>{{ cl.cover_honorific }}</p>
     </div>
     <div class="room_change">
         <p>　　　　　</p>
-        <p>号室</p>
+        <p>{{ cl.cover_room_unit }}</p>
         <p>　　　　　</p>
-        <p>さん　　　</p>
+        <p>{{ cl.cover_honorific }}　　　</p>
         <p>→</p>
         <p>　　　　　　</p>
-        <p>号室</p>
+        <p>{{ cl.cover_room_unit }}</p>
         <p>　　　　　</p>
-        <p>さん</p>
+        <p>{{ cl.cover_honorific }}</p>
     </div>
 
-    
+
     <div class="cover_outin_roomchange">
         <div class="outin_roomchange">
-            <p class="cover_semisemi_title">アウト/イン</p>
+            <p class="cover_semisemi_title">{{ cl.cover_out_in }}</p>
             {% for outinA, outinB in outins %}
             <div class="outin_line">
                 <p>{{outinA}}</p>
-                <p>号室</p>
+                <p>{{ cl.cover_room_unit }}</p>
                 <p>{{outinB}}</p>
-                <p>号室</p>
+                <p>{{ cl.cover_room_unit }}</p>
             </div>
             {% endfor %}
             <div class="outin_line">
                 <p>　　　　　</p>
-                <p>号室</p>
+                <p>{{ cl.cover_room_unit }}</p>
                 <p>　　　　　　　</p>
-                <p>号室</p>
+                <p>{{ cl.cover_room_unit }}</p>
             </div>
             <div class="outin_line">
                 <p>　　　　　</p>
-                <p>号室</p>
+                <p>{{ cl.cover_room_unit }}</p>
                 <p>　　　　　　　</p>
-                <p>号室</p>
+                <p>{{ cl.cover_room_unit }}</p>
             </div>
         </div>
         <div class="room_change_reason">
-            <p class="cover_semisemi_title">ルームチェンジ等の為要清掃　理由</p>
+            <p class="cover_semisemi_title">{{ cl.cover_must_clean }}</p>
             {% for must_clean in must_cleans %}
             <div class="room_change_line">
                 <p class="room_change_reason_room">{{must_clean.room}}</p>
-                <p style="width: 50px;">号室</p>
+                <p style="width: 50px;">{{ cl.cover_room_unit }}</p>
                 <p>→</p>
                 <p class="room_change_reason_room">{{must_clean.room_to}}</p>
-                <p style="width: 50px;">号室</p>
+                <p style="width: 50px;">{{ cl.cover_room_unit }}</p>
                 <p class="room_change_reason_contents">{{must_clean.reason}}</p>
             </div>
             {% endfor %}
             <div class="room_change_line">
                 <p>　　 　　</p>
-                <p style="width: 50px;">号室</p>
+                <p style="width: 50px;">{{ cl.cover_room_unit }}</p>
                 <p>→</p>
                 <p>　　 　　</p>
-                <p style="width: 50px;">号室</p>
+                <p style="width: 50px;">{{ cl.cover_room_unit }}</p>
                 <p class="room_change_reason_contents">　　　　　　　　　　</p>
             </div>
             <div class="room_change_line">
                 <p>　　 　　</p>
-                <p style="width: 50px;">号室</p>
+                <p style="width: 50px;">{{ cl.cover_room_unit }}</p>
                 <p>→</p>
                 <p>　　 　　</p>
-                <p style="width: 50px;">号室</p>
+                <p style="width: 50px;">{{ cl.cover_room_unit }}</p>
                 <p class="room_change_reason_contents">　　　　　　　　　　</p>
             </div>
         </div>
     </div>
-    <p class="cover_semi_title">入れ込み・回収指示</p>
+    <p class="cover_semi_title">{{ cl.cover_remark_instruction }}</p>
     <div class="cover_remark">
         <table class="table table-striped table-bordered bottom_table">
             {% for remark in cover_remarks %}
             <tr class="cover_tr">
-                <td class="cover_room_num">{{ remark.0 }}号室</td>
+                <td class="cover_room_num">{{ remark.0 }}{{ cl.cover_room_unit }}</td>
                 <td class="cover_remark_content">{{ remark.1 }}</td>
-                <td class="cover_name">{{ remark.2 }}さん</td>
+                <td class="cover_name">{{ remark.2 }}{{ cl.cover_honorific }}</td>
             </tr>
             {% endfor %}
-        
+
             {# 1行追加した上で最低10行になるよう空行追加 #}
             {% with remarks|length as remark_len %}
                 {% for i in remark_len|add:"1"|until:11 %}
                 <tr class="cover_tr">
-                    <td class="cover_room_num_null">　　　号室</td>
+                    <td class="cover_room_num_null">　　　{{ cl.cover_room_unit }}</td>
                     <td class="cover_remark_null"></td>
-                    <td class="cover_name_null">　　　　さん</td>
+                    <td class="cover_name_null">　　　　{{ cl.cover_honorific }}</td>
                 </tr>
                 {% endfor %}
             {% endwith %}
         </table>
     </div>
-    <p class="cover_semi_title">その他備考</p>
+    <p class="cover_semi_title">{{ cl.cover_other_remarks }}</p>
     <div class="cover_others">
         <p>{{ others|linebreaksbr }}</p>
     </div>

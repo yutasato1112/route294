@@ -21,6 +21,21 @@ def get_csv_weekly():
             weekly_data[week] = {'jp': jp, 'en': en}
     return weekly_data
 
+def get_csv_preview_labels():
+    """preview_labels.csvからラベル辞書を読み込む。
+    戻り値: {'ja': {key: value, ...}, 'en': {key: value, ...}}"""
+    labels = {'ja': {}, 'en': {}}
+    try:
+        with open('static/csv/preview_labels.csv', newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                key = row['key'].strip()
+                labels['ja'][key] = row.get('ja', '')
+                labels['en'][key] = row.get('en', '')
+    except (FileNotFoundError, KeyError):
+        pass
+    return labels
+
 def get_room_type_times(request):
     """POSTからroom_type_time_S, room_type_time_T等を抽出 → {'S': 24, 'T': 28}を返す。
     レガシーsingle_time/twin_timeへのフォールバックあり。"""
@@ -435,6 +450,8 @@ def search_remarks_name_list(key_name_list, rooms):
     return remarks_list
 
 def select_person_from_room_change(room_changes, key_name_list, rooms):
+    labels = get_csv_preview_labels()
+    unsold_label = labels['ja'].get('cover_unsold_room', '未販売部屋')
     result = []
     for i in room_changes:
         clean_original_flag = False
@@ -448,9 +465,9 @@ def select_person_from_room_change(room_changes, key_name_list, rooms):
                     destination_name = key_name_list[j][1]
                     clean_destination_flag = True
             if clean_original_flag == False:
-                original_name = '未販売部屋'
+                original_name = unsold_label
             if clean_destination_flag == False:
-                destination_name = '未販売部屋'
+                destination_name = unsold_label
         tmp = {'original':i['original'], 'original_name':original_name, 'destination':i['destination'], 'destination_name':destination_name}
         result.append(tmp)
     return result
@@ -633,6 +650,8 @@ def calc_room_type_count(rooms, room_types=None):
     return room_type_count_str
 
 def calc_DD_list(house_data):
+    labels = get_csv_preview_labels()
+    floor_assignment = labels['ja'].get('cover_floor_assignment', 'F 担当')
     assignments = []
     for i in house_data:
         dd = i[3]
@@ -646,7 +665,7 @@ def calc_DD_list(house_data):
         else:
             assignments.append(None)
     result = [
-                None if x is None else " ".join(f"{i}F 担当" for i in x)
+                None if x is None else " ".join(f"{i}{floor_assignment}" for i in x)
                 for x in assignments
             ]
     return result
@@ -728,91 +747,17 @@ def translate(text):
 
 def language(str_id, lang_id, text):
     weekly_data = get_csv_weekly()
-    
-    language_dict = {
-        'ja': {
-            'charge':'担当',
-            'title':'さん',
-            'consecutive_nights':'連泊',
-            'eco':'エコ',
-            'duvet':'デュベ',
-            'remark':'備考',
-            'cleaned':'清掃済',
-            'inspection':'インスペ',
-            'public_bath_cleaning':'大浴場清掃',
-            'public_bath_cleaning_please':'大浴場清掃よろしくお願いいたします。',
-            'master_key_number':'マスターキー番号',
-            'target_completion_time_for_cleaning':'清掃終了目標時間',
-            'cleaning_completion_time':'清掃終了時間',
-            'spot_cleaning':'スポット清掃',
-            'meating':'ミーティング',
-            'author':'作成者',
-            'early_shift':'早番',
-            'inspection_charge':'インスペクション',
-            'sign':'印',
-            'notice':'連絡事項',
-            'special_cleaning':'特別清掃(該当に◯)',
-            'line_first':'　棚卸　　草取り',
-            'airconditioner_filter_cleaning':'エアコンフィルター清掃',
-            'units':'台',
-            'line_second':'新人研修　　改装関連',
-            'line_third':'　　ミーティング参加',
-            'room_number':'部屋番号',
-            'forget':'忘れ物',
-            'hotel_name':'ルートイン水海道駅前',
-            'declaration':'上記日程を終了致しました。',
-            'signature':'(清掃担当者)署名　　　　　　　　　　',
-            'Monday':weekly_data['Monday']['jp'],
-            'Tuesday':weekly_data['Tuesday']['jp'],
-            'Wednesday':weekly_data['Wednesday']['jp'],
-            'Thursday':weekly_data['Thursday']['jp'],
-            'Friday':weekly_data['Friday']['jp'],
-            'Saturday':weekly_data['Saturday']['jp'],
-            'Sunday':weekly_data['Sunday']['jp']
-        },
-        'en': {
-            'charge':'Charge',
-            'title':'',
-            'consecutive_nights':'Consecutive Nights',
-            'eco':'Eco',
-            'duvet':'Duvet',
-            'remark':'Remark',
-            'cleaned':'Cleaned',
-            'inspection':'Inspection',
-            'public_bath_cleaning':'Public Bath Cleaning',
-            'public_bath_cleaning_please':'Please clean the public bath.',
-            'master_key_number':'Master Key Number',
-            'target_completion_time_for_cleaning':'Target Completion Time for Cleaning',
-            'cleaning_completion_time':'Cleaning Completion Time',
-            'spot_cleaning':'Spot Cleaning',
-            'meating':'Meeting',
-            'author':'Author',
-            'early_shift':'Early Shift',
-            'inspection_charge':'Inspection Charge',
-            'sign':'Stamp',
-            'notice':'Notice',
-            'special_cleaning':'Special Cleaning (Circle if applicable)',
-            'line_first':'Inventory　　Weeding',
-            'airconditioner_filter_cleaning':'Air Conditioner Filter Cleaning',
-            'units':'Units',
-            'line_second':'New Employee Training　　Renovation Related',
-            'line_third':'　　　Meeting Participation',
-            'room_number':'Number',
-            'forget':'Forgotten Items',
-            'hotel_name':'RouteInn Mizkaido',
-            'declaration':'The above schedule has been completed.',
-            'signature':"(Cleaning Staff) Signature　　　　　　　　　　",
-            'Monday':weekly_data['Monday']['en'],
-            'Tuesday':weekly_data['Tuesday']['en'],
-            'Wednesday':weekly_data['Wednesday']['en'],
-            'Thursday':weekly_data['Thursday']['en'],
-            'Friday':weekly_data['Friday']['en'],
-            'Saturday':weekly_data['Saturday']['en'],
-            'Sunday':weekly_data['Sunday']['en']
-        }
-    }
-    if str_id != None and lang_id in language_dict:
-        return language_dict[lang_id].get(str_id, str_id)
+    labels = get_csv_preview_labels()
+
+    # weekly.csvのデータをラベル辞書にマージ
+    for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
+        if day in weekly_data:
+            labels['ja'][day] = weekly_data[day]['jp']
+            labels['en'][day] = weekly_data[day]['en']
+
+    if str_id is not None and lang_id in labels:
+        return labels[lang_id].get(str_id, str_id)
     else:
         res = translate(text)
         return res
+

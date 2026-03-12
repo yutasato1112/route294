@@ -1,0 +1,52 @@
+key,ja,en
+charge,担当,Charge
+title,さん,
+consecutive_nights,連泊,Consecutive Nights
+eco,エコ,Eco
+duvet,デュベ,Duvet
+remark,備考,Remark
+cleaned,清掃済,Cleaned
+inspection,インスペ,Inspection
+public_bath_cleaning,大浴場清掃,Public Bath Cleaning
+public_bath_cleaning_please,大浴場清掃よろしくお願いいたします。,Please clean the public bath.
+master_key_number,マスターキー番号,Master Key Number
+target_completion_time_for_cleaning,清掃終了目標時間,Target Completion Time for Cleaning
+cleaning_completion_time,清掃終了時間,Cleaning Completion Time
+spot_cleaning,スポット清掃,Spot Cleaning
+meating,ミーティング,Meeting
+author,作成者,Author
+early_shift,早番,Early Shift
+inspection_charge,インスペクション,Inspection Charge
+sign,印,Stamp
+notice,連絡事項,Notice
+special_cleaning,特別清掃(該当に◯),Special Cleaning (Circle if applicable)
+line_first,　棚卸　　草取り,Inventory　　Weeding
+airconditioner_filter_cleaning,エアコンフィルター清掃,Air Conditioner Filter Cleaning
+units,台,Units
+line_second,新人研修　　改装関連,New Employee Training　　Renovation Related
+line_third,　　ミーティング参加,　　　Meeting Participation
+room_number,部屋番号,Number
+forget,忘れ物,Forgotten Items
+hotel_name,ルートイン水海道駅前,RouteInn Mizkaido
+declaration,上記日程を終了致しました。,The above schedule has been completed.
+signature,(清掃担当者)署名　　　　　　　　　,(Cleaning Staff) Signature
+cover_title,清掃指示内容,Cleaning Instructions
+cover_house_person,ハウスさん,Housekeepers
+cover_people_counter,名,people
+cover_night_total,ナイト清掃指示部屋総数,Total Night Cleaning Rooms
+cover_rooms_unit,部屋,rooms
+cover_bath_person,大浴場担当者,Public Bath Staff
+cover_drain_water,湯抜き,Drain Water
+cover_highskite,ハイスキット,Highskite
+cover_chlorine,高濃度塩素消毒,High Concentration Chlorine
+cover_chemical_clean,循環配管薬品洗浄,Chemical Pipe Cleaning
+cover_public,パブリック,Public
+cover_room_change,ルームチェンジ,Room Change
+cover_room_unit,号室,Room
+cover_honorific,さん,
+cover_out_in,アウト/イン,Out/In
+cover_must_clean,ルームチェンジ等の為要清掃　理由,Room Change Cleaning Required - Reason
+cover_remark_instruction,入れ込み・回収指示,Delivery/Collection Instructions
+cover_other_remarks,その他備考,Other Remarks
+cover_unsold_room,未販売部屋,Unsold Room
+cover_floor_assignment,F 担当,F Assignment
