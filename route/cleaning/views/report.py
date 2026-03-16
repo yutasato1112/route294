@@ -54,6 +54,7 @@ class reportView(TemplateView):
         #データ取得
         emargency_level = request.POST.get('emargency_level')
         genre = request.POST.get('genre')
+        contact = request.POST.get('contact', '')
         detail = request.POST.get('detail')
 
         #メールメッセージ作成
@@ -79,7 +80,8 @@ class reportView(TemplateView):
             genre = 'ユーザビリティ改善要望'
         elif genre == 'other':
             genre = 'その他'
-        message = "送信者：" + name + "\n" + "緊急度：" + emargency_level + "\n" + "ジャンル：" + genre + "\n" + "詳細：" + detail
+        contact_line = "\n返信先：" + contact if contact else ""
+        message = "送信者：" + name + "\n" + "緊急度：" + emargency_level + "\n" + "ジャンル：" + genre + contact_line + "\n" + "詳細：" + detail
 
         #送信先取得
         if os.path.exists(os.path.join('static/email.json')):
