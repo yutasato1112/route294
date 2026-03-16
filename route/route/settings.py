@@ -134,6 +134,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Application version
+APP_VERSION = '1.4.17'
+
 #email settings
 if os.path.exists(os.path.join('static/email.json')):
     with open(os.path.join('static/email.json')) as email_file:
