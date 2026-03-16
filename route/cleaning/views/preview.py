@@ -94,6 +94,7 @@ class previewView(TemplateView):
         DD_list = calc_DD_list(house_data)
 
         total_data = []
+        date_jp_cover = changeDate(date,'ja')
         #パーソンごとにデータを整理
         key_name_list = []
         rooms = []
@@ -122,7 +123,6 @@ class previewView(TemplateView):
             rooms.append(room)
             time_of_end = calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, twin_rooms, room_type_times=room_type_times, bath_count=bath_count)
             date_jp = changeDate(date,lang)
-            date_jp_cover = changeDate(date,'ja')
             
             #連絡事項の分割
             contact = ''
