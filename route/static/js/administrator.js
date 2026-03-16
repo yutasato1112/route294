@@ -214,6 +214,7 @@ $(document).ready(function() {
 
 let currentFilename = null;
 let validateTimeout = null;
+let validRoomTypes = null; // times_by_type.csvから読み込んだ有効な部屋タイプ
 
 /**
  * CSVエディタモーダルを開く
@@ -224,21 +225,43 @@ function openCSVEditor(filename) {
 
     showLoading();
 
-    $.ajax({
-        url: '/administrator/get-csv/',
-        method: 'GET',
-        data: { filename },
-        success: function(response) {
-            hideLoading();
-            loadCSVIntoEditor(filename, response.data);
-            $('#csvEditorModal').modal('show');
-        },
-        error: function(xhr) {
-            hideLoading();
-            const message = xhr.responseJSON?.error || 'CSVファイルの読み込みに失敗しました';
-            showToast('danger', message);
-        }
-    });
+    function doOpen() {
+        $.ajax({
+            url: '/administrator/get-csv/',
+            method: 'GET',
+            data: { filename },
+            success: function(response) {
+                hideLoading();
+                loadCSVIntoEditor(filename, response.data);
+                $('#csvEditorModal').modal('show');
+            },
+            error: function(xhr) {
+                hideLoading();
+                const message = xhr.responseJSON?.error || 'CSVファイルの読み込みに失敗しました';
+                showToast('danger', message);
+            }
+        });
+    }
+
+    // room_info.csvの場合はtimes_by_type.csvから有効タイプを先読み
+    if (filename === 'room_info.csv') {
+        $.ajax({
+            url: '/administrator/get-csv/',
+            method: 'GET',
+            data: { filename: 'times_by_type.csv' },
+            success: function(typesResponse) {
+                // 1行目はヘッダー、typeカラム（0列目）を取得
+                validRoomTypes = typesResponse.data.slice(1).map(row => row[0]).filter(Boolean);
+                doOpen();
+            },
+            error: function() {
+                validRoomTypes = null;
+                doOpen();
+            }
+        });
+    } else {
+        doOpen();
+    }
 }
 
 /**
@@ -401,8 +424,12 @@ function validateRoomInfo(rows, errors) {
             errors.push(`行${index + 2}: 1列目（部屋番号）が不正（${roomNumber}）`);
         }
 
-        if (type && !['S', 'T'].includes(type)) {
-            errors.push(`行${index + 2}: 2列目（部屋タイプ）は S または T である必要があります`);
+        if (type) {
+            if (validRoomTypes && validRoomTypes.length > 0) {
+                if (!validRoomTypes.includes(type)) {
+                    errors.push(`行${index + 2}: 2列目（部屋タイプ）が不正（${type}）。有効なタイプ: ${validRoomTypes.join(', ')}`);
+                }
+            }
         }
 
         if (floor && !/^\d+$/.test(floor)) {
