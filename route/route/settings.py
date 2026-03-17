@@ -135,7 +135,7 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Application version
-APP_VERSION = '1.5.0_shimotsuma'
+APP_VERSION = '1.5.1_shimotsuma'
 
 #email settings
 EMAIL_JSON_PATH = BASE_DIR / 'static' / 'email.json'
