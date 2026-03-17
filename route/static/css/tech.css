@@ -76,6 +76,17 @@
     color: #475569;
 }
 
+.badge-version{
+    margin: 0.5rem 0 0;
+    font-size: 11px;
+    color: #fff;
+    background: #3b5998;
+    display: inline-block;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    float: right;
+}
+
 .card-grid{
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
