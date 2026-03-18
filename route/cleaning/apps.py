@@ -4,14 +4,18 @@ import threading
 
 
 def _save_startup_draft():
-    """起動時に前日ログをGmail下書きに保存する"""
+    """起動時に前日ログとworklogをGmail下書きに添付保存する"""
     import socket
     import imaplib
     import json
     import time
     import datetime
     import re
+    import glob as glob_mod
+    from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
+    from email.mime.base import MIMEBase
+    from email import encoders
     from pathlib import Path
 
     # インターネット接続確認
@@ -37,27 +41,57 @@ def _save_startup_draft():
     now = datetime.datetime.now()
     now_str = now.strftime('%Y-%m-%d %H:%M:%S')
 
-    # 前日ログ読み込み
-    yesterday = (now.date() - datetime.timedelta(days=1)).strftime('%Y%m%d')
     base_dir = Path(__file__).resolve().parent.parent
-    log_path = base_dir / 'logs' / f'log_{yesterday}.log'
-    if log_path.exists():
-        log_content = log_path.read_text(encoding='utf-8', errors='ignore')
-    else:
-        log_content = '(前日のログファイルが見つかりません)'
 
-    # メール本文作成
-    body = (
-        f'■ 起動日時: {now_str}\n'
-        f'■ バージョン: ver.{version}\n\n'
-        f'--- 前日 ({yesterday}) のログ ---\n\n'
-        f'{log_content}'
-    )
-
-    msg = MIMEText(body, 'plain', 'utf-8')
+    # メール作成（マルチパート）
+    msg = MIMEMultipart()
     msg['From'] = address
     msg['To'] = address
     msg['Subject'] = f'[route294] 起動ログ {now_str}'
+
+    # 本文
+    body = (
+        f'■ 起動日時: {now_str}\n'
+        f'■ バージョン: ver.{version}\n\n'
+        f'添付ファイル:\n'
+        f'  - 前日ログファイル (.log)\n'
+        f'  - 直近のワークログ (.json)\n'
+    )
+    msg.attach(MIMEText(body, 'plain', 'utf-8'))
+
+    # 前日ログをファイルとして添付
+    yesterday = (now.date() - datetime.timedelta(days=1)).strftime('%Y%m%d')
+    log_path = base_dir / 'logs' / f'log_{yesterday}.log'
+    if log_path.exists():
+        log_content = log_path.read_bytes()
+        log_attachment = MIMEBase('text', 'plain')
+        log_attachment.set_payload(log_content)
+        encoders.encode_base64(log_attachment)
+        log_attachment.add_header(
+            'Content-Disposition', 'attachment',
+            filename=f'log_{yesterday}.log'
+        )
+        msg.attach(log_attachment)
+
+    # 直近のworklogを添付
+    media_dir = base_dir / 'media'
+    if media_dir.exists():
+        worklog_files = sorted(
+            media_dir.glob('worklog_*.json'),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True
+        )
+        if worklog_files:
+            latest_worklog = worklog_files[0]
+            wl_content = latest_worklog.read_bytes()
+            wl_attachment = MIMEBase('application', 'json')
+            wl_attachment.set_payload(wl_content)
+            encoders.encode_base64(wl_attachment)
+            wl_attachment.add_header(
+                'Content-Disposition', 'attachment',
+                filename=latest_worklog.name
+            )
+            msg.attach(wl_attachment)
 
     # Gmail 下書きフォルダに保存 (IMAP APPEND)
     try:
