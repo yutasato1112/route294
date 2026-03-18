@@ -4,7 +4,7 @@
 ; ========================================
 
 #define MyAppName "Route294"
-#define MyAppVersion "1.5.2"
+#define MyAppVersion "1.5.3"
 #define MyAppPublisher "YutaSato -University of Tsukuba-"
 #define MyAppURL "http://localhost:8000/"
 #define MyAppExeName "launcher.bat"
