@@ -101,12 +101,12 @@ class roomingListView(TemplateView):
             today = datetime.date.today()
         
         #連泊部屋入力欄対応
-        padded_rooms = [''] * 100
-        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]      
+        padded_rooms = [''] * 153
+        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
         # multiple_rooms の値を上から順に埋める
         index = 0
-        for r in range(10):
-            for c in range(10):
+        for r in range(len(multiple_rows)):
+            for c in range(len(multiple_rows[r])):
                 if index < len(multiple_room_list):
                     multiple_rows[r][c] = multiple_room_list[index]
                     index += 1

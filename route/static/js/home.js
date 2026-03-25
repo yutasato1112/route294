@@ -1202,6 +1202,12 @@ $(document).ready(function () {
                 ecoRooms.add(val);
             }
         });
+        $(".input_soto_ame").each(function () {
+            const val = $(this).val().trim();
+            if (val !== "") {
+                ecoRooms.add(val);
+            }
+        });
 
         const assignedNos = [...new Set(assignments.map(a => a.no))].sort((a, b) => parseInt(a) - parseInt(b));
 
