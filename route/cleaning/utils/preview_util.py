@@ -372,11 +372,12 @@ def calc_room(room_inputs, eco_rooms, duvet_rooms, ame_rooms, remarks, person, s
         room_info = {
             'room_num': room_num,
             'eco': eco,
+            'soto_ame': soto_ame,
             'duvet': duvet,
             'remark': remark_comment,
             'room_type': room_type,
             'multiple': multiple,
-            'spot_content': spot_comment 
+            'spot_content': spot_comment
         }
         manage_rooms.append(room_info)
     floor_sorted = sorted(set(int(r) for r in floor))
@@ -391,7 +392,7 @@ def calc_end_time(single_time, twin_time, bath_time, bath, room, single_rooms, t
     bath_time = int(bath_time)
     total_time = 0
     for i in range(len(room)):
-        if room[i]['eco'] == True:
+        if room[i]['eco'] == True or room[i].get('soto_ame', False) == True:
             total_time += 5
         elif room_type_times and room[i].get('room_type', 'E') != 'E':
             total_time += room_type_times.get(room[i]['room_type'], 0)

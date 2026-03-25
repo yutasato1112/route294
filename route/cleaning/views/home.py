@@ -84,8 +84,8 @@ class homeView(TemplateView):
             room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms, soto_ame_rooms)
 
             #連泊部屋入力欄対応
-            padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
-            multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]
+            padded_rooms = multiple_rooms + [''] * (153 - len(multiple_rooms))
+            multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
 
             #大浴場追加要員
             add_bath = []
@@ -195,10 +195,10 @@ class homeView(TemplateView):
             today = datetime.date.today()
         
         #連泊部屋入力欄対応
-        padded_rooms = [''] * 100
-        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]      
-        
-        
+        padded_rooms = [''] * 153
+        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
+
+
         context = {
             'method':method,
             'single_time':next((rt['time'] for rt in room_types if rt['code']=='S'), 24),
@@ -275,8 +275,8 @@ class homeView(TemplateView):
             else:
                 today = datetime.date.today()
 
-            padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
-            multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]
+            padded_rooms = multiple_rooms + [''] * (153 - len(multiple_rooms))
+            multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
 
             context = {
                 'method': method,
@@ -421,9 +421,9 @@ class homeView(TemplateView):
                 add_bath.append(i)
                 
         #連泊部屋入力欄対応
-        padded_rooms = multiple_rooms + [''] * (100 - len(multiple_rooms))
-        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 100, 10)]      
-        
+        padded_rooms = multiple_rooms + [''] * (153 - len(multiple_rooms))
+        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
+
         context = {
             'method':method,
             'single_time':single_time,
