@@ -86,8 +86,8 @@ class homeView(TemplateView):
             room_char_list = room_char(eco_rooms, ame_rooms, duvet_rooms, soto_ame_rooms)
 
             #連泊部屋入力欄対応
-            padded_rooms = multiple_rooms + [''] * (153 - len(multiple_rooms))
-            multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
+            padded_rooms = multiple_rooms + [''] * (197 - len(multiple_rooms))
+            multiple_rows = [padded_rooms[i:i+10] for i in range(0, 197, 10)]
 
             #大浴場追加要員（男浴・女浴）
             male_add_bath = [p for p in male_bath_only if p != '']
@@ -197,8 +197,8 @@ class homeView(TemplateView):
             today = datetime.date.today()
         
         #連泊部屋入力欄対応
-        padded_rooms = [''] * 153
-        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
+        padded_rooms = [''] * 197
+        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 197, 10)]
 
 
         context = {
@@ -277,8 +277,8 @@ class homeView(TemplateView):
             else:
                 today = datetime.date.today()
 
-            padded_rooms = multiple_rooms + [''] * (153 - len(multiple_rooms))
-            multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
+            padded_rooms = multiple_rooms + [''] * (197 - len(multiple_rooms))
+            multiple_rows = [padded_rooms[i:i+10] for i in range(0, 197, 10)]
 
             context = {
                 'method': method,
@@ -424,8 +424,8 @@ class homeView(TemplateView):
         female_add_bath = [i for i in original_female_add_bath if i != '']
                 
         #連泊部屋入力欄対応
-        padded_rooms = multiple_rooms + [''] * (153 - len(multiple_rooms))
-        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 153, 10)]
+        padded_rooms = multiple_rooms + [''] * (197 - len(multiple_rooms))
+        multiple_rows = [padded_rooms[i:i+10] for i in range(0, 197, 10)]
 
         context = {
             'method':method,
